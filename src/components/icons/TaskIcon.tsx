@@ -1,8 +1,8 @@
 function TaskIcon() {
   return (
     <svg
-      width="40"
-      height="55"
+      width="35"
+      height="35"
       fill="black"
       className="bi bi-clipboard-check"
       viewBox="0 0 16 16"

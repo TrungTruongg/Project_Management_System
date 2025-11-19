@@ -1,128 +1,285 @@
-import { useState } from "react";
-import { FaBriefcase as ProjectIcon } from "react-icons/fa";
-import { FaHome as DashboardIcon } from "react-icons/fa";
-import { FaUsers as EmployeesIcon } from "react-icons/fa";
-import { MdLogout as LogoutIcon } from "react-icons/md";
+import { Fragment, useState } from "react";
 import {
+  Avatar,
   Box,
-  Divider,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Paper,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import TaskIcon from "./icons/TaskIcon";
-
-const drawerWidth = 240;
+import Sidebar from "./Sidebar";
+import SearchInput from "./SearchInput";
+import { ChevronRight, Info, Notifications } from "@mui/icons-material";
+import { employees, taskCards, projectCards } from "../constants/constants";
+import WelcomeIcon from "./icons/WelcomeIcon";
 
 function Dashboard() {
-  const [activeTab, setActiveTab] = useState<number>(0);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+    dashboard: true,
+  });
 
-  const menuItems = [
-    { id: "dashboard", text: "Dashboard", icon: <DashboardIcon /> },
-    {
-      id: "projects",
-      text: "Projects",
-      icon: <ProjectIcon />,
-      submenu: ["Projects", "Tasks", "Timesheet"],
-    },
-    {
-      id: "employees",
-      text: "Employees",
-      icon: <EmployeesIcon />,
-      submenu: ["Staff", "Staff Profile", "Attendace Staff"],
-    },
-  ];
+  const toggleMenu = (menu: string) => {
+    setOpenMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
+  };
 
-  const navigate = useNavigate();
   return (
-    <Box sx={{ display: "flex" }}>
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-            backgroundColor: "#1e293b",
-            color: "white",
-          },
-        }}
-      >
-        <Toolbar
+    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "row" }}>
+      <Sidebar openMenus={openMenus} toggleMenu={toggleMenu} />
+
+      {/* Main Content */}
+      <Box sx={{ flex: 1, p: 4 }}>
+        {/* Header */}
+        <Box
           sx={{
             display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            justifyContent: "flex-start",
-            gap: 2,
-            paddingTop: "10px",
+            mb: 4,
           }}
         >
-          <Box
-            sx={{
-              aligItems: "center",
-              backgroundColor: "white",
-              display: "flex",
-              height: "60px",
-              justifyContent: "center",
-              lineHeight: "60px",
-              width: "60px",
-              borderRadius: "50%",
-              margin: "inherit",
-            }}
-          >
-            <TaskIcon />
-          </Box>
+          <SearchInput />
 
-          <Typography variant="h6" noWrap>
-            My-Task
-          </Typography>
-        </Toolbar>
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.12)" }} />
-        <List>
-          {menuItems.map((item, index) => (
-            <ListItem key={item.id} disablePadding>
-              <ListItemButton
-                selected={activeTab === index}
-                onClick={() => setActiveTab(index)}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <IconButton sx={{ bgcolor: "white" }}>
+              <Info color="primary" />
+            </IconButton>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              {employees.map((e, i) => (
+                <Avatar
+                  key={i}
+                  sx={{
+                    width: 35,
+                    height: 35,
+                    fontSize: 18,
+                    ml: i > 0 ? -1 : 0,
+                    border: "2px solid white",
+                  }}
+                >
+                  {e.avatar}
+                </Avatar>
+              ))}
+            </Box>
+            <IconButton sx={{ bgcolor: "white" }}>
+              <Notifications />
+            </IconButton>
+            <Box sx={{ textAlign: "right" }}>
+              <Typography variant="body2" fontWeight="bold">
+                Trung
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Admin Profile
+              </Typography>
+            </Box>
+            <Avatar sx={{ bgcolor: "#FF6B6B", width: 45, height: 45 }}>
+              👨‍💼
+            </Avatar>
+          </Box>
+        </Box>
+
+        {/* Task Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {taskCards.map((card, index) => (
+            <Grid size={{ xs: 12, md: 4 }} key={index}>
+              <Card
+                elevation={0}
                 sx={{
-                  "&.Mui-selected": {
-                    backgroundColor: "#3b82f6",
-                    "&:hover": {
-                      backgroundColor: "#2563eb",
-                    },
-                  },
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                  },
+                  backgroundColor: "white",
+                  position: "relative",
+                  overflow: "visible",
+                  border: "1px solid #f0f0f0",
                 }}
               >
-                <ListItemIcon sx={{ color: "inherit" }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </ListItem>
+                <CardContent
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    py: 3,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      bgcolor: "#FFE28C",
+                      borderRadius: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 32,
+                    }}
+                  >
+                    {card.icon}
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      flex: "1 1 auto",
+                      marginLeft: "1.5rem",
+                    }}
+                  >
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
+                      fontWeight="500"
+                    >
+                      {card.title}
+                    </Typography>
+                    <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                      {card.value}
+                    </Typography>
+                  </Box>
+                  <ChevronRight sx={{ fontSize: 40, opacity: 0.5 }} />
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
-        </List>
-        <Box sx={{ flexGrow: 1 }} />
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => navigate("/")}>
-              <ListItemIcon sx={{ color: "inherit" }}>
-                <LogoutIcon />
-              </ListItemIcon>
-              <ListItemText primary="Back to Home" />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Drawer>
+        </Grid>
+
+        {/* Main Content Grid */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* Welcome Section */}
+          <Grid size={{ xs: 13 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                border: "1px solid #f0f0f0",
+                gap: 4,
+              }}
+            >
+              <Box sx={{ flex: 1, maxWidth: "60%" }}>
+                <Typography variant="h4" fontWeight="bold" gutterBottom>
+                  Welcome to My-task, a Project Management System
+                </Typography>
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
+                  component="p"
+                  sx={{ lineHeight: "24px", mb: 3 }}
+                >
+                  Manage projects with ease and boost team productivity. Our
+                  intuitive platform helps you plan, execute, and track every
+                  aspect of your projects. From task assignment to deadline
+                  management, everything you need is at your fingertips.
+                </Typography>
+                <Button
+                  variant="contained"
+                  sx={{
+                    bgcolor: "#f19828",
+                    borderRadius: 2,
+                    textTransform: "none",
+                    px: 4,
+                    py: 1.5,
+                    "&:hover": { bgcolor: "#F57C00" },
+                  }}
+                >
+                  Free Inquire
+                </Button>
+              </Box>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  maxWidth: "40%",
+                }}
+              >
+                <WelcomeIcon />
+              </Box>
+            </Paper>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <Paper elevation={0} sx={{ p: 3, border: "1px solid #f0f0f0" }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Project Timeline
+              </Typography>
+              <Box
+                sx={{
+                  height: 100,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  Timeline visualization area
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Project Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {projectCards.map((card, index) => (
+            <Grid size={{ xs: 12, md: 4 }} key={index}>
+              <Card
+                elevation={0}
+                sx={{
+                  backgroundColor: "#484c7f",
+                  position: "relative",
+                  overflow: "visible",
+                  border: "1px solid #f0f0f0",
+                  color: "white",
+                }}
+              >
+                <CardContent
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    py: 3,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 60,
+                      height: 10,
+                      borderRadius: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 32,
+                    }}
+                  >
+                    {card.icon}
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      flex: "1 1 auto",
+                      marginLeft: "1.5rem",
+                    }}
+                  >
+                    <Typography variant="h6" fontWeight="500">
+                      {card.title}
+                    </Typography>
+                    <Typography sx={{ marginBottom: 0 }}>
+                      {card.value}
+                    </Typography>
+                  </Box>
+                  <ChevronRight sx={{ fontSize: 40, opacity: 0.5 }} />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     </Box>
   );
 }
