@@ -1,24 +1,53 @@
-import { Box, Collapse, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Typography } from "@mui/material"
-import TaskIcon from "./icons/TaskIcon"
-import { menuItems } from "../constants/constants"
+import {
+  Box,
+  Collapse,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Switch,
+  Typography,
+} from "@mui/material";
+import TaskIcon from "./icons/TaskIcon";
+import { menuItems } from "../constants/constants";
 import { Fragment } from "react";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { ArrowBack, ExpandLess, ExpandMore } from "@mui/icons-material";
 
-function Sidebar({openMenus, toggleMenu}: any) {
+function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
+  const isMenuActive = (item: any) => {
+    if (!item.submenu) {
+      return activePage === item.text;
+    }
+    return item.submenu.includes(activePage);
+  };
   return (
     <Box
+      sx={{
+        width: 260,
+        bgcolor: "#484c7f",
+        color: "white",
+        overflowY: "auto",
+        p: 3,
+        borderRadius: "1.1rem",
+        height: "calc(100vh - 50px)",
+        margin: "25px",
+        order: 1,
+        zIndex: 99999,
+        overflow: "hidden",
+      }}
+    >
+      <Box
         sx={{
-          width: 280,
-          bgcolor: "#484c7f",
-          color: "white",
-          p: 3,
-          overflowY: "auto",
-          borderRadius: "1.1rem",
-          margin: "25px"
+          pt: 3,
+          pb: 2,
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
         }}
       >
         {/* Logo */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 4, gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box
             sx={{
               aligItems: "center",
@@ -30,7 +59,7 @@ function Sidebar({openMenus, toggleMenu}: any) {
               width: "60px",
               borderRadius: "50%",
               margin: "inherit",
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
             <TaskIcon />
@@ -41,69 +70,125 @@ function Sidebar({openMenus, toggleMenu}: any) {
         </Box>
 
         {/* Menu Items */}
-        <List>
-          {menuItems.map((item, index) => (
-            <Fragment key={index}>
-              <ListItem disablePadding sx={{ mb: 0.5 }}>
-                <ListItemButton
-                  onClick={() => item.submenu && toggleMenu(item.id)}
-                  sx={{
-                    borderRadius: 1,
-                    bgcolor:
-                      item.id === "dashboard" && openMenus[item.id]
-                        ? "rgba(255,255,255,0.1)"
-                        : "transparent",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      color: item.id === "dashboard" ? "#FFA726" : "white",
-                      minWidth: 40,
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.text}
-                    slotProps={{
-                      primary: {
-                        color: item.id === "dashboard" ? "#FFA726" : "white",
-                      },
-                    }}
-                  />
-                  {item.submenu &&
-                    (openMenus[item.id] ? <ExpandLess /> : <ExpandMore />)}
-                </ListItemButton>
-              </ListItem>
-              {item.submenu && (
-                <Collapse in={openMenus[item.id]} timeout="auto" unmountOnExit>
-                  <List component="div" disablePadding>
-                    {item.submenu.map((subitem, subindex) => (
-                      <ListItem disablePadding key={subindex}>
-                        <ListItemButton
-                          sx={{
-                            pl: 6,
-                            borderRadius: 1,
-                            color:
-                              subitem === "Project Dashboard"
-                                ? "#FFA726"
-                                : "rgba(255,255,255,0.7)",
-                            "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
-                          }}
-                        >
-                          <ListItemText primary={subitem} />
-                        </ListItemButton>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Collapse>
-              )}
-            </Fragment>
-          ))}
-        </List>
+        <Box sx={{ flex: 1, overflowY: "auto" }}>
+          <List sx={{ py: 5, flexGrow: 1 }}>
+            {menuItems.map((item, index) => {
+              const isActive = isMenuActive(item);
+
+              return (
+                <Fragment key={index}>
+                  <ListItem disablePadding sx={{ mb: 0.5 }}>
+                    <ListItemButton
+                      onClick={() => {
+                        if (item.submenu) {
+                          toggleMenu(item.id);
+                        } else {
+                          onMenuClick(item.text);
+                        }
+                      }}
+                      sx={{
+                        borderRadius: 1,
+                        fontSize: "20px",
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          color: isActive ? "#FFA726" : "white",
+                          minWidth: 40,
+                        }}
+                      >
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.text}
+                        slotProps={{
+                          primary: {
+                            color: isActive ? "#FFA726" : "white",
+                            fontSize: "18px",
+                            fontWeight: 400,
+                          },
+                        }}
+                      />
+                      {item.submenu &&
+                        (openMenus[item.id] ? <ExpandLess /> : <ExpandMore />)}
+                    </ListItemButton>
+                  </ListItem>
+                  {item.submenu && (
+                    <Collapse in={openMenus[item.id]} timeout={0} unmountOnExit>
+                      <List component="div" disablePadding>
+                        {item.submenu.map((subitem, subindex) => (
+                          <ListItem disablePadding key={subindex}>
+                            <ListItemButton
+                              onClick={() => onMenuClick(subitem)}
+                              sx={{
+                                pl: 6,
+                                borderRadius: 1,
+
+                                color:
+                                  activePage === subitem
+                                    ? "#FFA726"
+                                    : "rgba(255,255,255,0.7)",
+                              }}
+                            >
+                              <ListItemText
+                                primary={subitem}
+                                slotProps={{
+                                  primary: {
+                                    textAlign: "left",
+                                    fontWeight: 400,
+                                  },
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Collapse>
+                  )}
+                </Fragment>
+              );
+            })}
+          </List>
+        </Box>
+
+        {/* Bottom Section - Dark Mode và RTL */}
+        <Box
+          sx={{
+            py: 2.5,
+            borderTop: "1px solid rgba(255,255,255,0.1)",
+            flexShrink: 0,
+            mt: "auto",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
+            <Switch size="small" sx={{ mr: 1 }} />
+            <Typography variant="body2">Enable Dark Mode!</Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
+            <Switch size="small" sx={{ mr: 1 }} />
+            <Typography variant="body2">Enable RTL Mode!</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <ArrowBack sx={{ color: "white", opacity: 0.7 }} />
+          </Box>
+        </Box>
       </Box>
-  )
+    </Box>
+  );
 }
 
-export default Sidebar
+export default Sidebar;

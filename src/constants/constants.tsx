@@ -119,6 +119,7 @@ export const projectCards = [
 
 export const projects = [
     {
+      id: 1,
       title: 'Box of Crayons',
       dateStart: '23-02-2021',
       deadline: '1 Month',
@@ -129,6 +130,7 @@ export const projects = [
       stageColor: '#FFA726'
     },
     {
+      id: 2,
       title: 'Fast Cad',
       dateStart: '14-04-2021',
       deadline: '2 Month',
@@ -139,6 +141,7 @@ export const projects = [
       stageColor: '#FFA726'
     },
     {
+      id: 3,
       title: 'Gob Geeklords',
       dateStart: '16-03-2021',
       deadline: '10 Month',
@@ -149,6 +152,7 @@ export const projects = [
       stageColor: '#66BB6A'
     },
     {
+      id: 4,
       title: 'Java Dalia',
       dateStart: '17-03-2021',
       deadline: '8 Month',
@@ -159,6 +163,7 @@ export const projects = [
       stageColor: '#FFA726'
     },
     {
+      id: 5,
       title: 'Practice to Perfect',
       dateStart: '12-02-2021',
       deadline: '1 Month',
@@ -169,6 +174,7 @@ export const projects = [
       stageColor: '#66BB6A'
     },
     {
+      id: 6,
       title: 'Rhinestone',
       dateStart: '18-02-2021',
       deadline: '2 Month',
@@ -179,6 +185,7 @@ export const projects = [
       stageColor: '#EF5350'
     },
     {
+      id: 7,
       title: 'Social Geek Made',
       dateStart: '10-01-2021',
       deadline: '4 Month',
