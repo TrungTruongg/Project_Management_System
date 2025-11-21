@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { GoPlusCircle as AddProjectIcon } from "react-icons/go";
 import Header from "./Header";
-import { employees, projects } from "../constants/constants";
+import { projects, users } from "../constants/constants";
 import {
   AccessTime,
   AttachFile,
@@ -23,6 +23,17 @@ import {
 
 function Projects() {
   const filterTabs = ["All", "Started", "Approval", "Completed"];
+
+  const calculateDeadline = (dateStart: string, dateEnd: string) => {
+    const startDate = new Date(dateStart);
+    const endDate = new Date(dateEnd);
+
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  };
+
   return (
     <Box
       sx={{ p: 4, order: 3, flex: "1 1", overflowY: "auto", height: "100vh" }}
@@ -83,7 +94,7 @@ function Projects() {
       <Box
         sx={{
           display: "grid",
-         gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
           gap: 3,
         }}
       >
@@ -111,7 +122,7 @@ function Projects() {
                   mb: 3,
                 }}
               >
-                <Box >
+                <Box>
                   <Typography variant="h6" fontWeight="bold">
                     {project.title}
                   </Typography>
@@ -126,13 +137,12 @@ function Projects() {
                 </Box>
               </Box>
 
-
               {/* Members */}
               <Box sx={{ mb: 2 }}>
                 <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
-                  {employees.map((member, index) => (
+                  {users.map((member) => (
                     <Avatar
-                      key={index}
+                      key={member.id}
                       sx={{
                         width: 32,
                         height: 32,
@@ -154,36 +164,30 @@ function Projects() {
                   mb: 2,
                   flexWrap: "wrap",
                   gap: 2,
-                  pt: 2
+                  pt: 2,
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <AttachFile sx={{ fontSize: 16, color: "text.secondary" }} />
-                  <Typography color="text.secondary">
-                    0 Attach
-                  </Typography>
+                  <Typography color="text.secondary">0 Attach</Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <AccessTime sx={{ fontSize: 16, color: "text.secondary" }} />
                   <Typography color="text.secondary">
-                    {project.dateStart}
+                    {project.startDate}
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <Group sx={{ fontSize: 16, color: "text.secondary" }} />
-                  <Typography color="text.secondary">
-                    2 Members
-                  </Typography>
+                  <Typography color="text.secondary">2 Members</Typography>
                 </Box>
-                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                   <Group sx={{ fontSize: 16, color: "text.secondary" }} />
-                  <Typography  color="text.secondary">
-                    2 Members
-                  </Typography>
+                  <Typography color="text.secondary">2 Members</Typography>
                 </Box>
               </Box>
 
-              <Divider sx={{ mb: 3}} />
+              <Divider sx={{ mb: 3 }} />
 
               {/* Progress */}
               <Box>
@@ -198,7 +202,10 @@ function Projects() {
                     Progress
                   </Typography>
                   <Chip
-                    label={`${project.deadline} Days Left`}
+                    label={`${calculateDeadline(
+                      project.startDate,
+                      project.endDate
+                    )} Days Left`}
                     size="small"
                     sx={{
                       bgcolor: "#FFEBEE",

@@ -20,59 +20,65 @@ export const menuItems = [
     id: "employees",
     text: "Employees",
     icon: <EmployeesIcon />,
-    submenu: ["Staff", "Staff Profile", "Attendace Staff"],
+    submenu: ["Members", "Members Profile", "Attendace Employees"],
   },
 ];
 
-export const employees = [
+export const users = [
   {
     id: 1,
+    email: "trungtt089@gmail.com",
+    password: "123456",
     name: "Trung",
-    role: "UI/UX Designer",
+    role: "UI/UX Design",
     avatar: "👨",
-    tasks: "04",
-    projects: "04",
+    joinDate: "2024-01-15",
   },
   {
     id: 2,
+    email: "quynh123@gmail.com",
+    password: "123456",
     name: "Quynh",
-    role: "Quality Assurance",
+    role: "Website Design",
     avatar: "👩",
-    tasks: "04",
-    projects: "04",
+    joinDate: "2024-01-16",
   },
   {
     id: 3,
+    email: "uyen11111@gmail.com",
+    password: "123456",
     name: "Uyen",
-    role: "Website Designer",
+    role: "Mobile App Development",
     avatar: "👩",
-    tasks: "04",
-    projects: "04",
+    joinDate: "2024-01-17",
+  }
+];
+
+export const projectMembers = [
+  {
+    id: 1,
+    projectId: 1,
+    userId: 1,
+    role: "leader",
+    joinDate: "2025-01-01",
+    status: "active",
   },
   {
-    id: 4,
-    name: "Khoa",
-    role: "Developer",
-    avatar: "👨‍💼",
-    tasks: "04",
-    projects: "04",
+    id: 2,
+    projectId: 1,
+    userId: 2,
+    role: "member",
+    joinDate: "2025-01-02",
+    status: "active",
   },
   {
-    id: 5,
-    name: "Luan",
-    role: "QA/QC Engineer",
-    avatar: "👨‍💼",
-    tasks: "04",
-    projects: "04",
-  },
-  {
-    id: 6,
-    name: "Ngan",
-    role: "Mobile developer",
-    avatar: "👩",
-    tasks: "04",
-    projects: "04",
-  },
+    id: 3,
+    projectId: 1,
+    userId: 3,
+    role: "member",
+    joinDate: "2025-01-03",
+    status: "active",
+  }
 ];
 
 export const taskCards = [
@@ -118,81 +124,78 @@ export const projectCards = [
 ];
 
 export const projects = [
-    {
-      id: 1,
-      title: 'Box of Crayons',
-      dateStart: '23-02-2021',
-      deadline: '1 Month',
-      leader: 'Peter',
-      avatar: '👨',
-      completion: 65,
-      stage: 'MEDIUM',
-      stageColor: '#FFA726'
-    },
-    {
-      id: 2,
-      title: 'Fast Cad',
-      dateStart: '14-04-2021',
-      deadline: '2 Month',
-      leader: 'Benjamin',
-      avatar: '👨‍🦰',
-      completion: 76,
-      stage: 'MEDIUM',
-      stageColor: '#FFA726'
-    },
-    {
-      id: 3,
-      title: 'Gob Geeklords',
-      dateStart: '16-03-2021',
-      deadline: '10 Month',
-      leader: 'Evan',
-      avatar: '👨‍💼',
-      completion: 60,
-      stage: 'LOW',
-      stageColor: '#66BB6A'
-    },
-    {
-      id: 4,
-      title: 'Java Dalia',
-      dateStart: '17-03-2021',
-      deadline: '8 Month',
-      leader: 'Connor',
-      avatar: '👩',
-      completion: 48,
-      stage: 'MEDIUM',
-      stageColor: '#FFA726'
-    },
-    {
-      id: 5,
-      title: 'Practice to Perfect',
-      dateStart: '12-02-2021',
-      deadline: '1 Month',
-      leader: 'Colin',
-      avatar: '👨',
-      completion: 80,
-      stage: 'LOW',
-      stageColor: '#66BB6A'
-    },
-    {
-      id: 6,
-      title: 'Rhinestone',
-      dateStart: '18-02-2021',
-      deadline: '2 Month',
-      leader: 'Adam',
-      avatar: '👨‍🦱',
-      completion: 90,
-      stage: 'HIGH',
-      stageColor: '#EF5350'
-    },
-    {
-      id: 7,
-      title: 'Social Geek Made',
-      dateStart: '10-01-2021',
-      deadline: '4 Month',
-      leader: 'Keith',
-      avatar: '👨‍💼',
-      completion: 78,
-      stage: 'MEDIUM',
-      stageColor: '#FFA726'
-    }
-  ];
+  {
+    id: 1,
+    title: "Website Project",
+    description: "Build a project website for company",
+    startDate: "2025-02-23",
+    endDate: "2025-05-23",
+    leaderId: 1,
+    completion: 65,
+  },
+  {
+    id: 2,
+    title: "Mobile App Project",
+    description: "Build a mobile app project for company",
+    startDate: "2025-04-14",
+    endDate: "2025-06-14",
+    leaderId: 2,
+    completion: 76,
+  },
+  {
+    id: 3,
+    title: "AI App Project",
+    description: "Build an AI app project for company",
+    startDate: "2025-09-14",
+    endDate: "2025-12-14",
+    leaderId: 3,
+    completion: 16,
+  },
+];
+
+export const tasks = [
+  {
+    id: 1,
+    projectId: 1,
+    title: "UI Design",
+    description: "Build an user interface for web",
+    startDate: "2025-02-23",
+    endDate: "2025-04-23",
+    assignedTo: [],
+    status: "in-progress",
+    priority: "high",
+  },
+  {
+    id: 2,
+    projectId: 1,
+    title: "UX Design",
+    description: "Make website simplier to use",
+    startDate: "2025-02-23",
+    endDate: "2025-04-23",
+    assignedTo: [],
+    status: "in-progress",
+    priority: "low",
+  },
+  {
+    id: 3,
+    projectId: 2,
+    title: "Java for Android Studio",
+    description: "Display data in virtual phone",
+    startDate: "2025-04-14",
+    endDate: "2025-05-14",
+    assignedTo: [],
+    status: "completed",
+    priority: "medium",
+  },
+  {
+    id: 4,
+    projectId: 3,
+    title: "Python for AI App",
+    description: "Make AI response with prompts",
+    startDate: "2025-09-14",
+    endDate: "2025-11-14",
+    assignedTo: [],
+    status: "completed",
+    priority: "high",
+  },
+];

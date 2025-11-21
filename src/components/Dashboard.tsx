@@ -5,7 +5,8 @@ import Sidebar from "./Sidebar";
 
 import DashboardContent from "./DashboardContent";
 import Projects from "./Projects";
-import EmployeeList from "./EmployeeList";
+import MemberList from "./MemberList";
+import Tasks from "./Tasks";
 
 function Dashboard() {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
@@ -29,8 +30,10 @@ function Dashboard() {
         return <DashboardContent />;
       case "Projects":
         return <Projects />;
-      case "Employees":
-        return <EmployeeList />;
+      case "Tasks":
+        return <Tasks />;
+      case "Members":
+        return <MemberList />;
       default:
         return <DashboardContent />;
     }
