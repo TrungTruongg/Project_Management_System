@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
 import DashboardContent from "./DashboardContent";

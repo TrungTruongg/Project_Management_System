@@ -10,11 +10,38 @@ import {
   Typography,
 } from "@mui/material";
 import TaskIcon from "./icons/TaskIcon";
-import { menuItems } from "../constants/constants";
-import { Fragment } from "react";
+import { FaBriefcase as ProjectIcon } from "react-icons/fa";
+import { FaHome as DashboardIcon } from "react-icons/fa";
+import { FaUsers as EmployeesIcon } from "react-icons/fa";
+// import { menuItems } from "../constants/constants";
+import { Fragment, useEffect, useState } from "react";
 import { ArrowBack, ExpandLess, ExpandMore } from "@mui/icons-material";
+import axios from "axios";
+
+const iconMapping: any = {
+  DashboardIcon: DashboardIcon,
+  ProjectIcon: ProjectIcon,
+  EmployeesIcon: EmployeesIcon,
+};
 
 function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
+  const [menuItems, setMenuItems] = useState([]);
+
+  const fetchSidebar = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/menuItems?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setMenuItems(response.data.data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSidebar();
+  }, []);
+
   const isMenuActive = (item: any) => {
     if (!item.submenu) {
       return activePage === item.text;
@@ -72,18 +99,19 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
         {/* Menu Items */}
         <Box sx={{ flex: 1, overflowY: "auto" }}>
           <List sx={{ py: 5, flexGrow: 1 }}>
-            {menuItems.map((item, index) => {
+            {menuItems?.map((item: any, index) => {
               const isActive = isMenuActive(item);
+              const IconComponent = iconMapping[item.icon];
 
               return (
                 <Fragment key={index}>
                   <ListItem disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       onClick={() => {
-                        if (item.submenu) {
-                          toggleMenu(item.id);
+                        if (item?.submenu) {
+                          toggleMenu(item?.id);
                         } else {
-                          onMenuClick(item.text);
+                          onMenuClick(item?.text);
                         }
                       }}
                       sx={{
@@ -97,7 +125,7 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
                           minWidth: 40,
                         }}
                       >
-                        {item.icon}
+                        {IconComponent && <IconComponent />}
                       </ListItemIcon>
                       <ListItemText
                         primary={item.text}
@@ -116,7 +144,7 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
                   {item.submenu && (
                     <Collapse in={openMenus[item.id]} timeout={0} unmountOnExit>
                       <List component="div" disablePadding>
-                        {item.submenu.map((subitem, subindex) => (
+                        {item.submenu.map((subitem: any, subindex: any) => (
                           <ListItem disablePadding key={subindex}>
                             <ListItemButton
                               onClick={() => onMenuClick(subitem)}
