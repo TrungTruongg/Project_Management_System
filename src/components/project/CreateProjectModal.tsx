@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import { projectMembers, tasks, users } from "../constants/constants";
+import { projectMembers, tasks, users } from "../../constants/constants";
 
 function CreateProjectModal({
   titleModal = "",
@@ -24,7 +24,9 @@ function CreateProjectModal({
   open,
   onClose,
   onSave,
+  onUpdate,
   projectList = [],
+  selectedProject = null,
 }: any) {
   const [title, setTitle] = useState(titleModal);
   const [description, setDescription] = useState(desModal);
@@ -33,26 +35,33 @@ function CreateProjectModal({
   const [priority, setPriority] = useState(priorityModal);
   const [assignedTo, setAssignedTo] = useState(assignedToModal);
   const [showError, setShowError] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const isUpdate = selectedProject !== null;
 
   useEffect(() => {
     if (open) {
-      setTitle(titleModal || "");
-      setDescription(desModal || "");
-      setStartDate(startDateModal || "");
-      setEndDate(endDateModal || "");
-      setPriority(priorityModal || "");
-      setAssignedTo(assignedToModal || "");
+      if (selectedProject) {
+        // Edit 
+        setTitle(selectedProject.title || "");
+        setDescription(selectedProject.description || "");
+        setStartDate(selectedProject.startDate || "");
+        setEndDate(selectedProject.endDate || "");
+        setPriority(selectedProject.priority || "");
+        setAssignedTo(selectedProject.leaderId || "");
+      } else {
+        // Create 
+        setTitle("");
+        setDescription("");
+        setStartDate("");
+        setEndDate("");
+        setPriority("");
+        setAssignedTo("");
+      }
       setShowError(false);
+      setLoading(false);
     }
-  }, [
-    open,
-    titleModal,
-    desModal,
-    startDateModal,
-    endDateModal,
-    assignedToModal,
-    priorityModal,
-  ]);
+  }, [open, selectedProject]);
 
   if (!open) return null;
 
@@ -64,37 +73,60 @@ function CreateProjectModal({
       return;
     }
 
-    const maxId =
-      projectList.length > 0
-        ? Math.max(...projectList.map((p: any) => p.id))
-        : 0;
-
-    const newTask = {
-      id: maxId + 1,
-      title: title,
-      description: description,
-      startDate: startDate,
-      endDate: endDate,
-      leaderId: assignedTo,
-      priority: priority.toLowerCase(),
-      completion: 0,
-    };
+    setLoading(true);
 
     try {
-      const response = await axios.post(
-        "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2",
-        newTask
-      );
+      if (isUpdate) {
+        const updatedProject = {
+          id: selectedProject.id,
+          title: title,
+          description: description,
+          startDate: startDate,
+          endDate: endDate,
+          leaderId: assignedTo,
+          priority: priority.toLowerCase(),
+          completion: selectedProject.completion || 0,
+        };
 
-      const result = response.data.data;
-      console.log("Created project:", response);
-      onSave(result);
-      onClose();
+        const response = await axios.put(
+          `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+          updatedProject
+        );
+
+        console.log(selectedProject.id)
+
+        onUpdate(response.data.data);
+        onClose();
+      } else {
+        const maxId =
+          projectList.length > 0
+            ? Math.max(...projectList.map((p: any) => p.id))
+            : 0;
+
+        const newProject = {
+          id: maxId + 1,
+          title: title,
+          description: description,
+          startDate: startDate,
+          endDate: endDate,
+          leaderId: assignedTo,
+          priority: priority.toLowerCase(),
+          completion: 0,
+        };
+
+        const response = await axios.post(
+          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2",
+          newProject
+        );
+
+        onSave(response.data.data);
+        onClose();
+      }
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false); 
     }
-
-    onClose();
   };
 
   return (
@@ -115,7 +147,7 @@ function CreateProjectModal({
               fontWeight: 600,
             }}
           >
-            Create Project
+            {isUpdate ? "Update Project" : "Create Project"}
           </Typography>
           <Button
             onClick={onClose}
@@ -133,7 +165,7 @@ function CreateProjectModal({
               transition: "all 0.2s",
             }}
           >
-            <CloseIcon />
+            <CloseIcon className="w-10 h-10" />
           </Button>
         </Box>
 
@@ -344,6 +376,8 @@ function CreateProjectModal({
               fullWidth
               variant="contained"
               type="submit"
+              loading={loading}
+              loadingPosition="end"
               sx={{
                 textTransform: "none",
                 backgroundColor: "#9333ea",
@@ -355,7 +389,7 @@ function CreateProjectModal({
                 },
               }}
             >
-              Save
+              {isUpdate ? "Update" : "Save"}
             </Button>
           </Box>
         </Box>

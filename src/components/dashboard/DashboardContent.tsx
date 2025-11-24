@@ -1,9 +1,9 @@
 import { Box, Button, Card, CardContent, Grid, Paper, Typography } from "@mui/material"
 import { ChevronRight } from "@mui/icons-material"
-import { projectCards, taskCards } from "../constants/constants"
-import WelcomeIcon from "./icons/WelcomeIcon"
+import { projectCards, taskCards } from "../../constants/constants"
+import WelcomeIcon from "../icons/WelcomeIcon"
 import DashboardProjectInformation from "./DashboardProjectInformation"
-import Header from "./Header"
+import Header from "../Header"
 
 function DashboardContent() {
   return (

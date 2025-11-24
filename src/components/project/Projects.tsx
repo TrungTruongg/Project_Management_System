@@ -6,20 +6,19 @@ import {
   Card,
   CardContent,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   IconButton,
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddProjectIcon } from "react-icons/go";
-import Header from "./Header";
-import { projects, users } from "../constants/constants";
-import {
-  AccessTime,
-  AttachFile,
-  Delete,
-  Edit,
-  Group,
-} from "@mui/icons-material";
+import Header from "../Header";
+import { users } from "../../constants/constants";
+import { AccessTime, Delete, Edit } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateProjectModal from "./CreateProjectModal";
 import axios from "axios";
@@ -28,8 +27,10 @@ function Projects() {
   const filterTabs = ["All", "Started", "Approval", "Completed"];
 
   const [open, setOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectList, setProjectList] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   const calculateDeadline = (dateStart: string, dateEnd: string) => {
     const startDate = new Date(dateStart);
@@ -43,16 +44,12 @@ function Projects() {
 
   const fetchProjects = async () => {
     try {
-      setIsLoading(true);
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      console.log(response.data.data.data);
       setProjectList(response.data.data.data);
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -60,8 +57,60 @@ function Projects() {
     fetchProjects();
   }, []);
 
+  const handleOpenModal = () => {
+    setSelectedProject(null);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedProject(null);
+  };
+
+  const handleEditProject = (project: any) => {
+    setSelectedProject(project);
+    setOpen(true);
+  };
+
   const handleSaveProject = (newProject: any) => {
     setProjectList([...projectList, newProject]);
+  };
+
+  const handleUpdateProject = (updateProject: any) => {
+    setProjectList(
+      projectList.map((project: any) =>
+        project.id === updateProject.id ? updateProject : project
+      )
+    );
+  };
+
+  const handleOpenDeleteDialog = (deleteProject: any) => {
+    setSelectedProject(deleteProject);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setSelectedProject(null);
+  };
+
+  const handleDeleteProject = async () => {
+    
+    try {
+      await axios.delete(
+        `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=69205e8dbf3939eacf2e89f2`
+      );
+
+      setProjectList(
+        projectList.filter((project: any) => project.id !== selectedProject.id)
+      );
+
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,7 +138,7 @@ function Projects() {
               variant="contained"
               size="large"
               startIcon={<AddProjectIcon />}
-              onClick={() => setOpen(true)}
+              onClick={handleOpenModal}
               sx={{
                 backgroundColor: "#484c7f",
                 color: "white",
@@ -160,10 +209,18 @@ function Projects() {
                     </Typography>
                   </Box>
                   <Box sx={{ display: "flex", gap: 1 }}>
-                    <IconButton size="small" sx={{ color: "#4CAF50" }}>
+                    <IconButton
+                      size="small"
+                      sx={{ color: "#4CAF50" }}
+                      onClick={() => handleEditProject(project)}
+                    >
                       <Edit fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" sx={{ color: "#EF5350" }}>
+                    <IconButton
+                      size="small"
+                      sx={{ color: "#EF5350" }}
+                      onClick={() => handleOpenDeleteDialog(project)}
+                    >
                       <Delete fontSize="small" />
                     </IconButton>
                   </Box>
@@ -199,27 +256,72 @@ function Projects() {
                     pt: 2,
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <AttachFile
-                      sx={{ fontSize: 16, color: "text.secondary" }}
-                    />
-                    <Typography color="text.secondary">0 Attach</Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <AccessTime
-                      sx={{ fontSize: 16, color: "text.secondary" }}
-                    />
-                    <Typography color="text.secondary">
-                      {project.startDate}
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "text.secondary",
+                      }}
+                    >
+                      Start Date:
                     </Typography>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <AccessTime
+                        sx={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "text.secondary",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "text.secondary",
+                        }}
+                      >
+                        {project.startDate}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Group sx={{ fontSize: 16, color: "text.secondary" }} />
-                    <Typography color="text.secondary">2 Members</Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Group sx={{ fontSize: 16, color: "text.secondary" }} />
-                    <Typography color="text.secondary">2 Members</Typography>
+
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "text.secondary",
+                      }}
+                    >
+                      End Date:
+                    </Typography>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <AccessTime
+                        sx={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "text.secondary",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "text.secondary",
+                        }}
+                      >
+                        {project.endDate}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
 
@@ -276,10 +378,56 @@ function Projects() {
       </Box>
       <CreateProjectModal
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={handleClose}
         onSave={handleSaveProject}
+        onUpdate={handleUpdateProject}
+        onDelete={handleDeleteProject}
         projectList={projectList}
+        selectedProject={selectedProject}
       />
+
+      {/* ← Thêm Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirm delete project</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete the project "
+            <strong>{selectedProject?.title}</strong>"? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseDeleteDialog}
+            disabled={loading}
+            sx={{
+              textTransform: "none",
+              color: "#374151",
+            }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={handleDeleteProject}
+            disabled={loading}
+            variant="contained"
+            sx={{
+              textTransform: "none",
+              backgroundColor: "#EF5350",
+              "&:hover": {
+                backgroundColor: "#D32F2F",
+              },
+            }}
+          >
+            {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

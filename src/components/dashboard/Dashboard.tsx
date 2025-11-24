@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
-import Sidebar from "./Sidebar";
+import Sidebar from "../Sidebar";
 
 import DashboardContent from "./DashboardContent";
-import Projects from "./Projects";
-import MemberList from "./MemberList";
-import Tasks from "./Tasks";
+import Projects from "../project/Projects";
+import MemberList from "../member/MemberList";
+import Tasks from "../task/Tasks";
 
 function Dashboard() {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({

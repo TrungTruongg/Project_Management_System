@@ -14,8 +14,8 @@ import {
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddIcon } from "react-icons/go";
-import { projectMembers, users } from "../constants/constants";
-import Header from "./Header";
+import { projectMembers, users } from "../../constants/constants";
+import Header from "../Header";
 
 function MemberList({ onViewProfile }: any) {
   return (

@@ -9,7 +9,7 @@ import {
   Typography,
   LinearProgress,
 } from "@mui/material";
-import { projects, users } from "../constants/constants";
+import { projects, users } from "../../constants/constants";
 
 function DashboardProjectInformation() {
   const calculateDeadline = (dateStart: string, dateEnd: string) => {
