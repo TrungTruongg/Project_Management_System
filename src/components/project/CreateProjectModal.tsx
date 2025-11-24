@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import { projectMembers, tasks, users } from "../../constants/constants";
+import { projectMembers, users } from "../../constants/constants";
 
 function CreateProjectModal({
   titleModal = "",

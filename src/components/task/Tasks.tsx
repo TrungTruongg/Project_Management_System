@@ -12,20 +12,41 @@ import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
 import Header from "../Header";
 import { projects, tasks, users } from "../../constants/constants";
 import { CalendarToday } from "@mui/icons-material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateTaskModal from "./CreateTaskModal";
+import axios from "axios";
 
 function Tasks() {
-  //   const calculateDeadline = (dateStart: string, dateEnd: string) => {
-  //     const startDate = new Date(dateStart);
-  //     const endDate = new Date(dateEnd);
-
-  //     const diffTime = endDate.getTime() - startDate.getTime();
-  //     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  //     return diffDays;
-  //   };
   const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskList, setTaskList] = useState<any[]>([]);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const calculateDeadline = (dateStart: string, dateEnd: string) => {
+    const startDate = new Date(dateStart);
+    const endDate = new Date(dateEnd);
+
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setTaskList(response.data.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
   const tasksByStatus = () => {
     return {
@@ -49,7 +70,54 @@ function Tasks() {
 
   const handleCloseModal = () => {
     setOpenCreateTaskModal(false);
+    setSelectedTask(null);
   };
+
+  const handleEditTask = (task: any) => {
+    setSelectedTask(task);
+    setOpenCreateTaskModal(true);
+  };
+
+  const handleSaveTask = (newTask: any) => {
+    setTaskList([...taskList, newTask]);
+  };
+
+  const handleUpdateTask = (updateTask: any) => {
+    setTaskList(
+      taskList.map((task: any) =>
+        task.id === updateTask.id ? updateTask : task
+      )
+    );
+  };
+
+  const handleDeleteTask = async () => { 
+    try {
+      await axios.delete(
+        `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=69205e8dbf3939eacf2e89f2`
+      );
+
+      setTaskList(
+        taskList.filter((task: any) => task.id !== selectedTask.id)
+      );
+
+      handleCloseDeleteDialog();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleOpenDeleteDialog = (deleteTask: any) => {
+    setSelectedTask(deleteTask);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setSelectedTask(null);
+  };
+
 
   const renderTaskCard = (task: any) => {
     const user = users.find((u) => u.id === task.assignedTo);
@@ -204,13 +272,13 @@ function Tasks() {
         </Grid>
       </Box>
       <CreateTaskModal
-        open={open}
-        // onClose={handleClose}
-        // onSave={handleSaveProject}
-        // onUpdate={handleUpdateProject}
-        // onDelete={handleDeleteProject}
-        // projectList={projectList}
-        // selectedProject={selectedProject}
+        open={openCreateTaskModal}
+        onClose={handleCloseModal}
+        onSave={handleSaveTask}
+        onUpdate={handleUpdateTask}
+        onDelete={handleDeleteTask}
+        taskList={taskList}
+        selectedTask={selectedTask}
       />
     </>
   );

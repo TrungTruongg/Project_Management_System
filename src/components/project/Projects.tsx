@@ -94,8 +94,7 @@ function Projects() {
     setSelectedProject(null);
   };
 
-  const handleDeleteProject = async () => {
-    
+  const handleDeleteProject = async () => { 
     try {
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=69205e8dbf3939eacf2e89f2`
@@ -386,7 +385,7 @@ function Projects() {
         selectedProject={selectedProject}
       />
 
-      {/* ← Thêm Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
@@ -410,7 +409,7 @@ function Projects() {
               color: "#374151",
             }}
           >
-            Hủy
+            Cancel
           </Button>
           <Button
             onClick={handleDeleteProject}

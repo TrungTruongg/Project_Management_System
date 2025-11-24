@@ -1,6 +1,6 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "./App.css";
-import Dashboard from "./components/Dashboard";
+import Dashboard from "./components/dashboard/Dashboard";
 import Login from "./components/Login";
 import { createTheme, StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";

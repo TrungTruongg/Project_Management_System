@@ -52,7 +52,7 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
     <Box
       sx={{
         width: 260,
-        bgcolor: "#484c7f",
+        backgroundColor: "#484c7f",
         color: "white",
         overflowY: "auto",
         p: 3,
@@ -61,7 +61,6 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
         margin: "25px",
         order: 1,
         zIndex: 99999,
-        overflow: "hidden",
       }}
     >
       <Box
@@ -97,7 +96,17 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
         </Box>
 
         {/* Menu Items */}
-        <Box sx={{ flex: 1, overflowY: "auto" }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            "&::-webkit-scrollbar": {
+              display: "none",
+            },
+            scrollbarWidth: "none",
+            msOverflowStyle: "none"
+          }}
+        >
           <List sx={{ py: 5, flexGrow: 1 }}>
             {menuItems?.map((item: any, index) => {
               const isActive = isMenuActive(item);
