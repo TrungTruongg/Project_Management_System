@@ -1,8 +1,4 @@
-import {
-  CalendarToday,
-  CommentOutlined,
-  People,
-} from "@mui/icons-material";
+import { CalendarToday, CommentOutlined, People } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -14,10 +10,40 @@ import {
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddIcon } from "react-icons/go";
-import { projectMembers, users } from "../../constants/constants";
 import Header from "../Header";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 function MemberList({ onViewProfile }: any) {
+  const [users, setUsers] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setMembers(response.data.data.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchMember = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setUsers(response.data.data.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+    fetchMember();
+  },[])
   return (
     <Box
       sx={{ p: 4, order: 3, flex: "1 1", overflowY: "auto", height: "100vh" }}
@@ -49,9 +75,8 @@ function MemberList({ onViewProfile }: any) {
       </Box>
 
       <Grid container spacing={3}>
-        {projectMembers.map((member) => {
-          const userProject = users.find(u => u.id === member.userId)
-          console.log(userProject)
+        {members.map((member: any) => {
+          const memberProject = users.find((user: any) => user.id === member.userId);
           return (
             <Grid size={{ xs: 12, md: 6 }} key={member.id}>
               <Card
@@ -71,15 +96,15 @@ function MemberList({ onViewProfile }: any) {
                         flexShrink: 0,
                       }}
                     >
-                      {userProject?.avatar}
+                      {memberProject?.avatar}
                     </Avatar>
 
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="h6" fontWeight="bold" gutterBottom>
-                        {userProject?.name}
+                        {memberProject?.name}
                       </Typography>
                       <Chip
-                        label={member.role}
+                        label={memberProject?.role}
                         size="small"
                         sx={{ bgcolor: "#E1BEE7", color: "#6A1B9A", mb: 2 }}
                       />
@@ -119,7 +144,7 @@ function MemberList({ onViewProfile }: any) {
                             sx={{ fontSize: 18, color: "text.secondary" }}
                           />
                           <Typography variant="body2">
-                            {member.projectId}
+                            {memberProject?.projectId}
                           </Typography>
                         </Box>
                       </Box>

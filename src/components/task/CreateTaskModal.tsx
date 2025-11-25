@@ -12,15 +12,16 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import { projectMembers, tasks, users } from "../../constants/constants";
 
 function CreateTaskModal({
   titleModal = "",
+  projectModal = "",
   desModal = "",
   startDateModal = "",
   endDateModal = "",
   priorityModal = "",
   assignedToModal = 1,
+  statusModal = "in-progress",
   open,
   onClose,
   onSave,
@@ -29,41 +30,55 @@ function CreateTaskModal({
   selectedTask = null,
 }: any) {
   const [title, setTitle] = useState(titleModal);
+  const [projectId, setProjectId] = useState(projectModal);
   const [description, setDescription] = useState(desModal);
   const [startDate, setStartDate] = useState(startDateModal);
   const [endDate, setEndDate] = useState(endDateModal);
   const [priority, setPriority] = useState(priorityModal);
-  const [assignedTo, setAssignedTo] = useState(assignedToModal);
+  const [assignedTo, setAssignedTo] = useState<number[]>([]);
+  const [status, setStatus] = useState(statusModal);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [projects, setProjects] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [projectMembers, setProjectMembers] = useState<any[]>([]);
+
   const isUpdate = selectedTask !== null;
 
-  useEffect(() => {
-    if (open) {
-      if (selectedTask) {
-        // Edit 
-        setTitle(selectedTask.title || "");
-        setDescription(selectedTask.description || "");
-        setStartDate(selectedTask.startDate || "");
-        setEndDate(selectedTask.endDate || "");
-        setPriority(selectedTask.priority || "");
-        setAssignedTo(selectedTask.projectMember || "");
-      } else {
-        // Create 
-        setTitle("");
-        setDescription("");
-        setStartDate("");
-        setEndDate("");
-        setPriority("");
-        setAssignedTo(1);
-      }
-      setShowError(false);
-      setLoading(false);
-    }
-  }, [open, selectedTask]);
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+      );
 
-  if (!open) return null;
+      setProjects(response.data.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setUsers(response.data.data.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchProjectMembers = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setProjectMembers(response.data.data.data);
+    } catch (error) {
+      console.error("Error fetching project members:", error);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,8 +99,9 @@ function CreateTaskModal({
           description: description,
           startDate: startDate,
           endDate: endDate,
-          leaderId: assignedTo,
+          assignedTo: assignedTo,
           priority: priority.toLowerCase(),
+          status: status,
           completion: selectedTask.completion || 0,
         };
 
@@ -98,19 +114,18 @@ function CreateTaskModal({
         onClose();
       } else {
         const maxId =
-          taskList.length > 0
-            ? Math.max(...taskList.map((p: any) => p.id))
-            : 0;
+          taskList.length > 0 ? Math.max(...taskList.map((p: any) => p.id)) : 0;
 
         const newTask = {
           id: maxId + 1,
-          projectId: 1,
+          projectId: projectId,
           title: title,
           description: description,
           startDate: startDate,
           endDate: endDate,
           assignedTo: assignedTo,
           priority: priority.toLowerCase(),
+          status: status,
           completion: 0,
         };
 
@@ -125,9 +140,46 @@ function CreateTaskModal({
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (open) {
+      if (selectedTask) {
+        // Edit
+        setTitle(selectedTask.title || "");
+        setProjectId(selectedTask.projectId || "");
+        setDescription(selectedTask.description || "");
+        setStartDate(selectedTask.startDate || "");
+        setEndDate(selectedTask.endDate || "");
+        setPriority(selectedTask.priority || "");
+        setAssignedTo(
+          Array.isArray(selectedTask.assignedTo)
+            ? selectedTask.assignedTo
+            : selectedTask.assignedTo
+            ? [selectedTask.assignedTo]
+            : []
+        );
+        setStatus(selectedTask.status || "");
+      } else {
+        // Create
+        setTitle("");
+        setProjectId("");
+        setDescription("");
+        setStartDate("");
+        setEndDate("");
+        setPriority("");
+        setAssignedTo([]);
+        setStatus("in-progress");
+      }
+      setShowError(false);
+      setLoading(false);
+    }
+    fetchProjects();
+    fetchUsers();
+    fetchProjectMembers();
+  }, [open, selectedTask]);
 
   return (
     <Modal
@@ -199,6 +251,40 @@ function CreateTaskModal({
                 Title is required
               </Typography>
             )}
+          </Box>
+
+          <Box className="gap-4">
+            <Typography
+              sx={{
+                fontWeight: 500,
+                mb: 0.5,
+                color: "#374151",
+              }}
+              className="text-[14px]"
+            >
+              Project
+            </Typography>
+            <Select
+              fullWidth
+              displayEmpty
+              size="small"
+              value={projectId}
+              onChange={(e) => setProjectId(Number(e.target.value))}
+              sx={{
+                fontSize: "14px",
+                color: priority === "" ? "#9ca3af" : "#111827",
+              }}
+            >
+              <MenuItem value="" disabled>
+                Choose Project
+              </MenuItem>
+
+              {projects.map((project) => (
+                <MenuItem key={project.id} value={project.id}>
+                  {project.title}
+                </MenuItem>
+              ))}
+            </Select>
           </Box>
 
           <Box className="gap-4">
@@ -297,10 +383,33 @@ function CreateTaskModal({
             <Select
               fullWidth
               size="small"
+              multiple
+              onChange={(e) => {
+                const value = e.target.value;
+                setAssignedTo(typeof value === "string" ? [] : value);
+              }}
               value={assignedTo}
-              onChange={(e) => setAssignedTo(Number(e.target.value))}
+              renderValue={(selected) => {
+                if (selected.length === 0) {
+                  return (
+                    <span style={{ color: "#9ca3af" }}>
+                      {!projectId
+                        ? "Please select a project first"
+                        : "Choose members"}
+                    </span>
+                  );
+                }
+
+                const selectedNames = selected.map((userId: number) => {
+                  const member = users.find((m: any) => m.id === userId);
+                  return member?.name || "Unknown";
+                });
+
+                return selectedNames.join(", ");
+              }}
               sx={{
                 fontSize: "14px",
+                color: assignedTo.length === 0 ? "#9ca3af" : "#111827",
               }}
             >
               {projectMembers.map((member) => {
@@ -349,6 +458,36 @@ function CreateTaskModal({
               <MenuItem value="high">High</MenuItem>
               <MenuItem value="medium">Medium</MenuItem>
               <MenuItem value="low">Low</MenuItem>
+            </Select>
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              sx={{
+                fontWeight: 500,
+                mb: 0.5,
+                color: "#374151",
+              }}
+              className="text-[14px]"
+            >
+              Status
+            </Typography>
+            <Select
+              fullWidth
+              displayEmpty
+              size="small"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              sx={{
+                fontSize: "14px",
+                color: status === "" ? "#9ca3af" : "#111827",
+              }}
+            >
+              <MenuItem value="" disabled>
+                Choose status
+              </MenuItem>
+              <MenuItem value="in-progress">In progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
             </Select>
           </Box>
 

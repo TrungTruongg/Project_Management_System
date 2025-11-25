@@ -93,8 +93,6 @@ function CreateProjectModal({
           updatedProject
         );
 
-        console.log(selectedProject.id)
-
         onUpdate(response.data.data);
         onClose();
       } else {

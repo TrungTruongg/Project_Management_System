@@ -1,25 +1,29 @@
 import {
   Avatar,
+  AvatarGroup,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
   Grid,
+  IconButton,
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
 import Header from "../Header";
-import { projects, tasks, users } from "../../constants/constants";
-import { CalendarToday } from "@mui/icons-material";
+import { CalendarToday, Delete, Edit } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateTaskModal from "./CreateTaskModal";
 import axios from "axios";
+import DeleteConfirmDialog from "../DeleteConfirmDialog";
 
 function Tasks() {
   const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskList, setTaskList] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +37,7 @@ function Tasks() {
     return diffDays;
   };
 
-  const fetchProjects = async () => {
+  const fetchTasks = async () => {
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
@@ -44,20 +48,44 @@ function Tasks() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setProjects(response.data.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setUsers(response.data.data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
+    fetchTasks();
     fetchProjects();
+    fetchUsers();
   }, []);
 
   const tasksByStatus = () => {
     return {
-      inProgress: tasks.filter((t) => t.status === "in-progress"),
-      completed: tasks.filter((t) => t.status === "completed"),
+      inProgress: taskList.filter((t) => t.status === "in-progress"),
+      completed: taskList.filter((t) => t.status === "completed"),
     };
   };
 
   const getPriorityChip = (priority: "high" | "medium" | "low") => {
     const config = {
-      high: { label: "MEDIUM", bgcolor: "#FFF3E0", color: "#F57C00" },
+      high: { label: "HIGH", bgcolor: "#FFEBEE", color: "#C62828" },
       medium: { label: "MEDIUM", bgcolor: "#FFF9C4", color: "#F57F17" },
       low: { label: "LOW", bgcolor: "#C8E6C9", color: "#388E3C" },
     };
@@ -90,15 +118,13 @@ function Tasks() {
     );
   };
 
-  const handleDeleteTask = async () => { 
+  const handleDeleteTask = async () => {
     try {
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=69205e8dbf3939eacf2e89f2`
       );
 
-      setTaskList(
-        taskList.filter((task: any) => task.id !== selectedTask.id)
-      );
+      setTaskList(taskList.filter((task: any) => task.id !== selectedTask.id));
 
       handleCloseDeleteDialog();
     } catch (error) {
@@ -107,9 +133,9 @@ function Tasks() {
       setLoading(false);
     }
   };
-  
-  const handleOpenDeleteDialog = (deleteTask: any) => {
-    setSelectedTask(deleteTask);
+
+  const handleOpenDeleteDialog = (task: any) => {
+    setSelectedTask(task);
     setDeleteDialogOpen(true);
   };
 
@@ -118,11 +144,20 @@ function Tasks() {
     setSelectedTask(null);
   };
 
-
   const renderTaskCard = (task: any) => {
-    const user = users.find((u) => u.id === task.assignedTo);
     const priorityConfig = getPriorityChip(task.priority);
     const project = projects.find((p) => p.id === task.projectId);
+
+    const assignedUserIds = Array.isArray(task.assignedTo)
+      ? task.assignedTo
+      : task.assignedTo
+      ? [task.assignedTo]
+      : [];
+
+    const assignedUsers = assignedUserIds
+      .map((userId: number) => users.find((u) => u.id === userId))
+      .filter(Boolean);
+
     return (
       <Card
         key={task.id}
@@ -134,7 +169,13 @@ function Tasks() {
         }}
       >
         <CardContent>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              mb: 1,
+            }}
+          >
             <Chip
               label={task.title}
               size="small"
@@ -145,18 +186,23 @@ function Tasks() {
                 fontSize: "0.75rem",
               }}
             />
-            {user && (
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  fontSize: "14px",
-                  bgcolor: "#FFB74D",
-                }}
+
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <IconButton
+                size="small"
+                sx={{ color: "#4CAF50" }}
+                onClick={() => handleEditTask(task)}
               >
-                {user.avatar}
-              </Avatar>
-            )}
+                <Edit fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                sx={{ color: "#EF5350" }}
+                onClick={() => handleOpenDeleteDialog(task)}
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            </Box>
           </Box>
 
           <Chip
@@ -169,14 +215,36 @@ function Tasks() {
               mb: 1,
             }}
           />
+          
+          <Box sx={{ mb: 2 }}>
+            <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+              {assignedUsers.map((user: any) => (
+                <Avatar
+                  key={user.id}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    fontSize: "16px",
+                    bgcolor: "#E0E0E0",
+                  }}
+                >
+                  {user.avatar}
+                </Avatar>
+              ))}
+            </AvatarGroup>
+          </Box>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 2, minHeight: 40 }}
-          >
-            {task.description}
-          </Typography>
+          {task.description && (
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 2, minHeight: 40 }}
+              >
+                {task.description}
+              </Typography>
+            </Box>
+          )}
 
           <Box
             sx={{
@@ -185,26 +253,40 @@ function Tasks() {
               alignItems: "center",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
-              <Typography variant="caption">
-                {new Date(task.endDate).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                })}
-              </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
+                <Typography variant="caption">
+                  {new Date(task.startDate).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                  })}
+                </Typography>
+              </Box>
+              -
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
+                <Typography variant="caption">
+                  {new Date(task.endDate).toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                  })}
+                </Typography>
+              </Box>
             </Box>
 
-            <Chip
-              label={project?.title}
-              size="small"
-              sx={{
-                bgcolor: "#F3E5F5",
-                color: "#7B1FA2",
-                fontSize: "0.65rem",
-                height: 22,
-              }}
-            />
+            {project && (
+              <Chip
+                label={project.title}
+                size="small"
+                sx={{
+                  bgcolor: "#F3E5F5",
+                  color: "#7B1FA2",
+                  fontSize: "0.85rem",
+                   
+                }}
+              />
+            )}
           </Box>
         </CardContent>
       </Card>
@@ -214,7 +296,18 @@ function Tasks() {
   return (
     <>
       <Box
-        sx={{ p: 4, order: 3, flex: "1 1", overflowY: "auto", height: "100vh" }}
+        sx={{
+          p: 4,
+          order: 3,
+          flex: "1 1",
+          overflowY: "auto",
+          height: "100vh",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
       >
         <Header />
 
@@ -253,10 +346,9 @@ function Tasks() {
 
           {/* Tasks Grid */}
           <Grid container spacing={3} sx={{ width: "100%" }}>
-            {/* In Progress */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
-                In Progress
+                In Progress ({tasksByStatus().inProgress.length})
               </Typography>
               {tasksByStatus().inProgress.map(renderTaskCard)}
             </Grid>
@@ -264,7 +356,7 @@ function Tasks() {
             {/* Completed */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Completed
+                Completed ({tasksByStatus().completed.length})
               </Typography>
               {tasksByStatus().completed.map(renderTaskCard)}
             </Grid>
@@ -279,6 +371,14 @@ function Tasks() {
         onDelete={handleDeleteTask}
         taskList={taskList}
         selectedTask={selectedTask}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        onDelete={handleDeleteTask}
+        selected={selectedTask ? selectedTask.title : ""}
+        loading={loading}
       />
     </>
   );

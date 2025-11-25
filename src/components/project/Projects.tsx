@@ -22,6 +22,7 @@ import { AccessTime, Delete, Edit } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateProjectModal from "./CreateProjectModal";
 import axios from "axios";
+import DeleteConfirmDialog from "../DeleteConfirmDialog";
 
 function Projects() {
   const filterTabs = ["All", "Started", "Approval", "Completed"];
@@ -94,7 +95,7 @@ function Projects() {
     setSelectedProject(null);
   };
 
-  const handleDeleteProject = async () => { 
+  const handleDeleteProject = async () => {
     try {
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=69205e8dbf3939eacf2e89f2`
@@ -384,49 +385,13 @@ function Projects() {
         projectList={projectList}
         selectedProject={selectedProject}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <DeleteConfirmDialog
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Confirm delete project</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete the project "
-            <strong>{selectedProject?.title}</strong>"? This action cannot be
-            undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseDeleteDialog}
-            disabled={loading}
-            sx={{
-              textTransform: "none",
-              color: "#374151",
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteProject}
-            disabled={loading}
-            variant="contained"
-            sx={{
-              textTransform: "none",
-              backgroundColor: "#EF5350",
-              "&:hover": {
-                backgroundColor: "#D32F2F",
-              },
-            }}
-          >
-            {loading ? "Deleting..." : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onDelete={handleDeleteProject}
+        selected={selectedProject ? selectedProject.title : ""}
+        loading={loading}
+      />
     </>
   );
 }
