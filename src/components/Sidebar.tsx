@@ -13,10 +13,10 @@ import TaskIcon from "./icons/TaskIcon";
 import { FaBriefcase as ProjectIcon } from "react-icons/fa";
 import { FaHome as DashboardIcon } from "react-icons/fa";
 import { FaUsers as EmployeesIcon } from "react-icons/fa";
-// import { menuItems } from "../constants/constants";
 import { Fragment, useEffect, useState } from "react";
 import { ArrowBack, ExpandLess, ExpandMore } from "@mui/icons-material";
 import axios from "axios";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const iconMapping: any = {
   DashboardIcon: DashboardIcon,
@@ -24,8 +24,19 @@ const iconMapping: any = {
   EmployeesIcon: EmployeesIcon,
 };
 
-function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
+const routeMapping: Record<string, string> = {
+  Dashboard: "/",
+  "Project Dashboard": "/",
+  Projects: "/project",
+  "Create Project": "/project",
+  Tasks: "/task",
+  Members: "/member",
+};
+
+function Sidebar({ openMenus, toggleMenu }: any) {
   const [menuItems, setMenuItems] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const fetchSidebar = async () => {
     try {
@@ -44,9 +55,21 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
 
   const isMenuActive = (item: any) => {
     if (!item.submenu) {
-      return activePage === item.text;
+      const route = routeMapping[item.text];
+      return location.pathname === route;
     }
-    return item.submenu.includes(activePage);
+
+    return item.submenu.some((subitem: string) => {
+      const route = routeMapping[subitem];
+      return location.pathname === route;
+    });
+  };
+
+  const handleMenuClick = (menuText: string) => {
+    const route = routeMapping[menuText];
+    if (route) {
+      navigate(route);
+    }
   };
   return (
     <Box
@@ -104,7 +127,7 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
               display: "none",
             },
             scrollbarWidth: "none",
-            msOverflowStyle: "none"
+            msOverflowStyle: "none",
           }}
         >
           <List sx={{ py: 5, flexGrow: 1 }}>
@@ -120,7 +143,7 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
                         if (item?.submenu) {
                           toggleMenu(item?.id);
                         } else {
-                          onMenuClick(item?.text);
+                          handleMenuClick(item?.text);
                         }
                       }}
                       sx={{
@@ -153,32 +176,35 @@ function Sidebar({ openMenus, toggleMenu, activePage, onMenuClick }: any) {
                   {item.submenu && (
                     <Collapse in={openMenus[item.id]} timeout={0} unmountOnExit>
                       <List component="div" disablePadding>
-                        {item.submenu.map((subitem: any, subindex: any) => (
-                          <ListItem disablePadding key={subindex}>
-                            <ListItemButton
-                              onClick={() => onMenuClick(subitem)}
-                              sx={{
-                                pl: 6,
-                                borderRadius: 1,
+                        {item.submenu.map((subitem: any, subindex: any) => {
+                          const subRoute = routeMapping[subitem];
+                          const isSubActive = location.pathname === subRoute;
 
-                                color:
-                                  activePage === subitem
+                          return (
+                            <ListItem disablePadding key={subindex}>
+                              <ListItemButton
+                                onClick={() => handleMenuClick(subitem)}
+                                sx={{
+                                  pl: 6,
+                                  borderRadius: 1,
+                                  color: isSubActive
                                     ? "#FFA726"
                                     : "rgba(255,255,255,0.7)",
-                              }}
-                            >
-                              <ListItemText
-                                primary={subitem}
-                                slotProps={{
-                                  primary: {
-                                    textAlign: "left",
-                                    fontWeight: 400,
-                                  },
                                 }}
-                              />
-                            </ListItemButton>
-                          </ListItem>
-                        ))}
+                              >
+                                <ListItemText
+                                  primary={subitem}
+                                  slotProps={{
+                                    primary: {
+                                      textAlign: "left",
+                                      fontWeight: 400,
+                                    },
+                                  }}
+                                />
+                              </ListItemButton>
+                            </ListItem>
+                          );
+                        })}
                       </List>
                     </Collapse>
                   )}

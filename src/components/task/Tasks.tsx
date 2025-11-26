@@ -27,15 +27,15 @@ function Tasks() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const calculateDeadline = (dateStart: string, dateEnd: string) => {
-    const startDate = new Date(dateStart);
-    const endDate = new Date(dateEnd);
+  // const calculateDeadline = (dateStart: string, dateEnd: string) => {
+  //   const startDate = new Date(dateStart);
+  //   const endDate = new Date(dateEnd);
 
-    const diffTime = endDate.getTime() - startDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  //   const diffTime = endDate.getTime() - startDate.getTime();
+  //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    return diffDays;
-  };
+  //   return diffDays;
+  // };
 
   const fetchTasks = async () => {
     try {
