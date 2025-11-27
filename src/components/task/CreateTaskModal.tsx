@@ -20,7 +20,6 @@ function CreateTaskModal({
   startDateModal = "",
   endDateModal = "",
   priorityModal = "",
-  assignedToModal = 1,
   statusModal = "in-progress",
   open,
   onClose,

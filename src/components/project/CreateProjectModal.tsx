@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import { projectMembers, users } from "../../constants/constants";
 
 function CreateProjectModal({
   titleModal = "",
@@ -34,36 +33,12 @@ function CreateProjectModal({
   const [endDate, setEndDate] = useState(endDateModal);
   const [priority, setPriority] = useState(priorityModal);
   const [assignedTo, setAssignedTo] = useState(assignedToModal);
+  const [member, setMember] = useState<number[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const isUpdate = selectedProject !== null;
-
-  useEffect(() => {
-    if (open) {
-      if (selectedProject) {
-        // Edit 
-        setTitle(selectedProject.title || "");
-        setDescription(selectedProject.description || "");
-        setStartDate(selectedProject.startDate || "");
-        setEndDate(selectedProject.endDate || "");
-        setPriority(selectedProject.priority || "");
-        setAssignedTo(selectedProject.leaderId || "");
-      } else {
-        // Create 
-        setTitle("");
-        setDescription("");
-        setStartDate("");
-        setEndDate("");
-        setPriority("");
-        setAssignedTo("");
-      }
-      setShowError(false);
-      setLoading(false);
-    }
-  }, [open, selectedProject]);
-
-  if (!open) return null;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +59,7 @@ function CreateProjectModal({
           startDate: startDate,
           endDate: endDate,
           leaderId: assignedTo,
+          member: member,
           priority: priority.toLowerCase(),
           completion: selectedProject.completion || 0,
         };
@@ -108,6 +84,7 @@ function CreateProjectModal({
           startDate: startDate,
           endDate: endDate,
           leaderId: assignedTo,
+          member: member,
           priority: priority.toLowerCase(),
           completion: 0,
         };
@@ -123,9 +100,53 @@ function CreateProjectModal({
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setUsers(response.data.data.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      if (selectedProject) {
+        // Edit
+        setTitle(selectedProject.title || "");
+        setDescription(selectedProject.description || "");
+        setStartDate(selectedProject.startDate || "");
+        setEndDate(selectedProject.endDate || "");
+        setPriority(selectedProject.priority || "");
+        setAssignedTo(selectedProject.leaderId || "");
+        setMember(
+          Array.isArray(selectedProject.member)
+            ? selectedProject.member
+            : selectedProject.member
+            ? [selectedProject.member]
+            : []
+        );
+      } else {
+        // Create
+        setTitle("");
+        setDescription("");
+        setStartDate("");
+        setEndDate("");
+        setPriority("");
+        setAssignedTo("");
+        setMember([]);
+      }
+      setShowError(false);
+      setLoading(false);
+    }
+    fetchUsers();
+  }, [open, selectedProject]);
 
   return (
     <Modal
@@ -185,7 +206,7 @@ function CreateProjectModal({
               size="small"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Type title of task"
+              placeholder="Type title of project..."
               sx={{
                 "& .MuiOutlinedInput-root": {
                   fontSize: "14px",
@@ -280,7 +301,7 @@ function CreateProjectModal({
             </Box>
           </Box>
 
-          <Box sx={{ mb: 3 }}>
+          {/* <Box sx={{ mb: 3 }}>
             <Typography
               sx={{
                 fontSize: "14px",
@@ -312,7 +333,66 @@ function CreateProjectModal({
                       fontSize: "14px",
                     }}
                   >
-                    {assignedMember?.name}
+                    {assignedMember?.firstName} {assignedMember?.lastName}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+          </Box> */}
+
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: 500,
+                mb: 0.5,
+                color: "#374151",
+              }}
+            >
+              Task Assign Person
+            </Typography>
+
+            <Select
+              fullWidth
+              size="small"
+              multiple
+              onChange={(e) => {
+                const value = e.target.value;
+                setMember(typeof value === "string" ? [] : value);
+              }}
+              value={member}
+              renderValue={(selected) => {
+                if (selected.length === 0) {
+                  return (
+                    <span style={{ color: "#9ca3af" }}>
+                      {!selectedProject
+                        ? "Please select a project first"
+                        : "Choose members"}
+                    </span>
+                  );
+                }
+                const selectedNames = selected.map((userId: number) => {
+                  const member = users.find((m: any) => m.id === userId);
+                  return `${member?.firstName} ${member?.lastName}` || "Unknown";
+                });
+
+                return selectedNames.join(", ");
+              }}
+              sx={{
+                fontSize: "14px",
+                color: member.length === 0 ? "#9ca3af" : "#111827",
+              }}
+            >
+              {users.map((user) => {
+                return (
+                  <MenuItem
+                    value={user?.id}
+                    key={user?.id}
+                    sx={{
+                      fontSize: "14px",
+                    }}
+                  >
+                    {user?.firstName} {user?.lastName}
                   </MenuItem>
                 );
               })}
