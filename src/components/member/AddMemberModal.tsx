@@ -170,7 +170,7 @@ function AddMemberModal({
               </MenuItem>
               {availableUsers.length === 0 ? (
                 <MenuItem value="" disabled>
-                  All users have been added to this project
+                  All users have been added 
                 </MenuItem>
               ) : (
                 availableUsers.map((user) => (
@@ -269,9 +269,11 @@ function AddMemberModal({
               <MenuItem value="" disabled>
                 Choose role
               </MenuItem>
-              <MenuItem value="leader">Leader</MenuItem>
-              <MenuItem value="member">Member</MenuItem>
-              <MenuItem value="developer">Developer</MenuItem>
+              <MenuItem value="project_manager">Project Manager</MenuItem>
+              <MenuItem value="fe_developer">Frontend Developer</MenuItem>
+              <MenuItem value="be_developer">Backend Developer</MenuItem>
+              <MenuItem value="fullstack_developer">Fullstack Developer</MenuItem>
+              <MenuItem value="mobile_developer">Mobile App Developer</MenuItem>
               <MenuItem value="designer">Designer</MenuItem>
               <MenuItem value="tester">Tester</MenuItem>
             </Select>

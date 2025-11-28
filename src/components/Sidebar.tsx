@@ -31,6 +31,7 @@ const routeMapping: Record<string, string> = {
   "Create Project": "/project",
   Tasks: "/task",
   Members: "/member",
+  "Members Profile": "/member-profile",
 };
 
 function Sidebar({ openMenus, toggleMenu }: any) {

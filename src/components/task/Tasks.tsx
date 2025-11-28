@@ -215,22 +215,32 @@ function Tasks() {
               mb: 1,
             }}
           />
-          
+
           <Box sx={{ mb: 2 }}>
             <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
-              {assignedUsers.map((user: any) => (
-                <Avatar
-                  key={user.id}
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    fontSize: "16px",
-                    bgcolor: "#E0E0E0",
-                  }}
+              {assignedUsers.length > 0 ? (
+                assignedUsers.map((user: any) => (
+                  <Avatar
+                    key={user.id}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      fontSize: "16px",
+                      bgcolor: "#E0E0E0",
+                    }}
+                  >
+                    {user.firstName?.[0]}
+                    {user.lastName?.[0]}
+                  </Avatar>
+                ))
+              ) : (
+                <Typography
+                  variant="caption"
+                  sx={{ color: "text.secondary", fontStyle: "italic" }}
                 >
-                  {user.avatar}
-                </Avatar>
-              ))}
+                  No assigned members
+                </Typography>
+              )}
             </AvatarGroup>
           </Box>
 
@@ -283,7 +293,6 @@ function Tasks() {
                   bgcolor: "#F3E5F5",
                   color: "#7B1FA2",
                   fontSize: "0.85rem",
-                   
                 }}
               />
             )}

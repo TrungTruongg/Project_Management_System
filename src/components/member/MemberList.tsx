@@ -18,7 +18,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AddMemberModal from "./AddMemberModal";
 
-function MemberList({ onViewProfile }: any) {
+function MemberList() {
   const [users, setUsers] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
@@ -89,6 +89,10 @@ function MemberList({ onViewProfile }: any) {
   const handleCloseModal = () => {
     setOpen(false);
   };
+
+  const handleViewProfile = (member: any) => {
+    navigate("/member-profile", { state: { member } });
+  }
 
   return (
     <>
@@ -169,10 +173,10 @@ function MemberList({ onViewProfile }: any) {
 
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="h6" fontWeight="bold" gutterBottom>
-                          {memberProject?.name}
+                          {memberProject?.firstName} {memberProject?.lastName}
                         </Typography>
                         <Chip
-                          label={memberProject?.role}
+                          label={member?.role}
                           size="small"
                           sx={{ bgcolor: "#E1BEE7", color: "#6A1B9A", mb: 2 }}
                         />
@@ -238,7 +242,7 @@ function MemberList({ onViewProfile }: any) {
                             size="small"
                             startIcon={<People />}
                             sx={{ bgcolor: "#5C6BC0", textTransform: "none" }}
-                            onClick={() => onViewProfile(member)}
+                            onClick={() => handleViewProfile(member)}
                           >
                             Profile
                           </Button>

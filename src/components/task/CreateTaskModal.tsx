@@ -41,7 +41,6 @@ function CreateTaskModal({
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [projectMembers, setProjectMembers] = useState<any[]>([]);
 
   const isUpdate = selectedTask !== null;
 
@@ -68,15 +67,25 @@ function CreateTaskModal({
     }
   };
 
-  const fetchProjectMembers = async () => {
-    try {
-      const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
-      );
-      setProjectMembers(response.data.data.data);
-    } catch (error) {
-      console.error("Error fetching project members:", error);
+  const getProjectMembers = () => {
+    if (!projectId) return [];
+
+    const selectedProject = projects.find((p) => p.id === projectId);
+
+    if (
+      !selectedProject ||
+      !selectedProject.member ||
+      !Array.isArray(selectedProject.member)
+    ) {
+      return [];
     }
+
+    return users.filter((user) => selectedProject.member.includes(user.id));
+  };
+
+  const handleProjectChange = (newProjectId: number) => {
+    setProjectId(newProjectId);
+    setAssignedTo([]);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -177,8 +186,9 @@ function CreateTaskModal({
     }
     fetchProjects();
     fetchUsers();
-    fetchProjectMembers();
   }, [open, selectedTask]);
+
+  const projectMembers = getProjectMembers();
 
   return (
     <Modal
@@ -268,21 +278,23 @@ function CreateTaskModal({
               displayEmpty
               size="small"
               value={projectId}
-              onChange={(e) => setProjectId(Number(e.target.value))}
+              onChange={(e) => handleProjectChange(Number(e.target.value))}
               sx={{
                 fontSize: "14px",
-                color: priority === "" ? "#9ca3af" : "#111827",
+                color: projectId === "" ? "#9ca3af" : "#111827",
               }}
             >
               <MenuItem value="" disabled>
                 Choose Project
               </MenuItem>
 
-              {projects.map((project) => (
-                <MenuItem key={project.id} value={project.id}>
-                  {project.title}
-                </MenuItem>
-              ))}
+              {projects.map((project) => {
+                return (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.title}
+                  </MenuItem>
+                );
+              })}
             </Select>
           </Box>
 
@@ -382,6 +394,8 @@ function CreateTaskModal({
             <Select
               fullWidth
               size="small"
+              displayEmpty
+              disabled={!projectId}
               multiple
               onChange={(e) => {
                 const value = e.target.value;
@@ -394,6 +408,8 @@ function CreateTaskModal({
                     <span style={{ color: "#9ca3af" }}>
                       {!projectId
                         ? "Please select a project first"
+                        : projectMembers.length === 0
+                        ? "No members in this project"
                         : "Choose members"}
                     </span>
                   );
@@ -401,7 +417,9 @@ function CreateTaskModal({
 
                 const selectedNames = selected.map((userId: number) => {
                   const member = users.find((m: any) => m.id === userId);
-                  return member?.name || "Unknown";
+                  return (
+                    `${member?.firstName} ${member?.lastName}` || "Unknown"
+                  );
                 });
 
                 return selectedNames.join(", ");
@@ -411,21 +429,31 @@ function CreateTaskModal({
                 color: assignedTo.length === 0 ? "#9ca3af" : "#111827",
               }}
             >
-              {projectMembers.map((member) => {
-                const assignedMember = users.find((u) => u.id === member.id);
-
-                return (
+              {projectMembers.length === 0 ? (
+                <MenuItem disabled>
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      fontStyle: "italic",
+                      color: "#9ca3af",
+                    }}
+                  >
+                    No members available in this project
+                  </Typography>
+                </MenuItem>
+              ) : (
+                projectMembers.map((member: any) => (
                   <MenuItem
-                    value={assignedMember?.id}
-                    key={assignedMember?.id}
+                    value={member.id}
+                    key={member.id}
                     sx={{
                       fontSize: "14px",
                     }}
                   >
-                    {assignedMember?.name}
+                    {member.firstName} {member.lastName}
                   </MenuItem>
-                );
-              })}
+                ))
+              )}
             </Select>
           </Box>
 

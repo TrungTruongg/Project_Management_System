@@ -8,12 +8,13 @@ import {
   ThemeProvider,
 } from "@mui/material/styles";
 import { GlobalStyles } from "@mui/material";
+import { UserProvider } from "./components/context/UserContext";
 import Projects from "./components/project/Projects";
 import Tasks from "./components/task/Tasks";
 import MemberList from "./components/member/MemberList";
 import DashboardContent from "./components/dashboard/DashboardContent";
-import { UserProvider } from "./components/context/UserContext";
 import Register from "./components/Register";
+import MemberProfile from "./components/member/MemberProfile";
 
 function App() {
   const theme = createTheme({
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/project" element={<Projects />} />
                 <Route path="/task" element={<Tasks />} />
                 <Route path="/member" element={<MemberList />} />
+                <Route path="/member-profile" element={<MemberProfile />} />
               </Route>
 
               <Route path="/login" element={<Login />} />
