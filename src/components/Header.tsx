@@ -80,16 +80,19 @@ function Header() {
                 fontSize: 18,
                 ml: user.id > 0 ? -1 : 0,
                 border: "2px solid white",
+                textTransform: "uppercase"
               }}
-            />
-
+            >
+              {user.firstName?.[0]}
+              {user.lastName?.[0]}
+            </Avatar>
           ))}
         </Box>
         <IconButton sx={{ bgcolor: "white" }}>
           <Notifications />
         </IconButton>
         <Box sx={{ textAlign: "right" }}>
-          <Typography variant="body2" fontWeight="bold">
+          <Typography variant="body2" fontWeight="bold" sx={{ textTransform: "capitalize" }}>
             {user ? `${user.firstName} ${user.lastName}` : "Guest User"}
           </Typography>
           <Typography variant="caption" color="text.secondary">
@@ -108,8 +111,12 @@ function Header() {
                   sx={{
                     width: { xs: 32, sm: 36, md: 40 },
                     height: { xs: 32, sm: 36, md: 40 },
+                    textTransform: "uppercase"
                   }}
-                />
+                >
+                  {user.firstName?.[0]}
+                  {user.lastName?.[0]}
+                </Avatar>
               </IconButton>
             </Tooltip>
           ) : (

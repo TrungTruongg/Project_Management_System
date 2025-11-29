@@ -5,6 +5,9 @@ import {
   Typography,
   Grid,
   Alert,
+  Select,
+  MenuItem,
+  InputAdornment,
 } from "@mui/material";
 import TaskIcon from "./icons/TaskIcon";
 import { useState } from "react";
@@ -19,6 +22,8 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhoneNumber] = useState("");
+  const [location, setLocation] = useState("");
   const [errors, setErrors] = useState<any>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,6 +54,9 @@ function Register() {
     } else if (password !== confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
+    if (!/^[3-9][0-9]{8}$/.test(phone)) {
+      newErrors.phone = "Invalid Vietnamese number";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -64,14 +72,13 @@ function Register() {
     setLoading(true);
 
     try {
-      // Check if email already exists
       const checkResponse = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      
+
       const existingUsers = checkResponse.data.data.data;
       const emailExists = existingUsers.some((user: any) => user.email === email);
-      
+
       if (emailExists) {
         setErrors({ ...errors, email: "Email already exists" });
         setLoading(false);
@@ -90,8 +97,10 @@ function Register() {
         password: password,
         firstName: firstName,
         lastName: lastName,
-        role: "member", 
-        avatar: "", 
+        phone: `+84 ${phone}`,
+        location: location,
+        role: "member",
+        avatar: "",
         joinDate: new Date().toISOString().split("T")[0],
       };
 
@@ -103,7 +112,7 @@ function Register() {
       if (response.data) {
         setUser(response.data.data.data);
         setSuccessMessage("Registration successful! Redirecting to login...");
-        
+
         // Navigate to login after 2 seconds
         setTimeout(() => {
           navigate("/login");
@@ -111,9 +120,9 @@ function Register() {
       }
     } catch (error: any) {
       console.error("Registration failed:", error);
-      setErrors({ 
-        ...errors, 
-        submit: "Registration failed. Please try again." 
+      setErrors({
+        ...errors,
+        submit: "Registration failed. Please try again."
       });
     } finally {
       setLoading(false);
@@ -282,6 +291,7 @@ function Register() {
                         backgroundColor: "white",
                         borderRadius: "8px",
                         fontSize: "14px",
+
                         "& fieldset": {
                           borderColor: errors.firstName
                             ? "#f44336"
@@ -299,6 +309,7 @@ function Register() {
                       },
                       "& .MuiOutlinedInput-input": {
                         padding: "13px 16px",
+                        textTransform: "capitalize"
                       },
                     }}
                   />
@@ -343,6 +354,7 @@ function Register() {
                       },
                       "& .MuiOutlinedInput-input": {
                         padding: "13px 16px",
+                        textTransform: "capitalize"
                       },
                     }}
                   />
@@ -501,6 +513,106 @@ function Register() {
                   },
                 }}
               />
+            </Box>
+
+            {/* Phone Number */}
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                sx={{
+                  color: "white",
+                  mb: 1,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                Phone Number
+              </Typography>
+              <TextField
+                fullWidth
+                type="text"
+                placeholder="Enter your phone number"
+                value={phone}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                error={!!errors.phone}
+                helperText={
+                  errors.phone && (
+                    <span style={{ color: "#ffcdd2" }}>
+                      {errors.phone}
+                    </span>
+                  )
+                }
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        +84
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    "& fieldset": {
+                      borderColor: errors.phone
+                        ? "#f44336"
+                        : "transparent",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: errors.phone
+                        ? "#f44336"
+                        : "rgba(72, 76, 127, 0.3)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: errors.phone
+                        ? "#f44336"
+                        : "#5C6BC0",
+                      borderWidth: "2px",
+                    },
+                  },
+                  "& .MuiOutlinedInput-input": {
+                    padding: "13px 16px",
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Select City */}
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                sx={{
+                  color: "white",
+                  mb: 1,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                Location
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                size="small"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                sx={{
+                  fontSize: "14px",
+                  color: location === "" ? "#9ca3af" : "#111827",
+                  bgcolor: "white",
+                  borderRadius: "8px"
+                }}
+              >
+                <MenuItem value="" disabled>
+                  Choose Location
+                </MenuItem>
+                <MenuItem value="Ha Noi">Ha Noi</MenuItem>
+                <MenuItem value="Ho Chi Minh City">Ho Chi Minh City</MenuItem>
+                <MenuItem value="Da Nang">Da Nang</MenuItem>
+                <MenuItem value="Hai Phong">Hai Phong</MenuItem>
+                <MenuItem value="Can Tho">Can Tho</MenuItem>
+              </Select>
             </Box>
 
             {/* Sign Up Button */}

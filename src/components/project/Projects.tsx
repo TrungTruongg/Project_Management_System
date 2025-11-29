@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Divider,
   IconButton,
   Typography,
@@ -39,6 +40,7 @@ function Projects() {
   };
 
   const fetchProjects = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
@@ -46,10 +48,13 @@ function Projects() {
       setProjectList(response.data.data.data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchUsers = async () => {
+
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
@@ -57,6 +62,8 @@ function Projects() {
       setUsers(response.data.data.data);
     } catch (error) {
       console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -127,6 +134,24 @@ function Projects() {
 
     return users.filter((user) => project.member.includes(user.id));
   };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          p: 4,
+          order: 3,
+          flex: "1 1",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>

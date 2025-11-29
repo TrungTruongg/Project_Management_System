@@ -301,45 +301,6 @@ function CreateProjectModal({
             </Box>
           </Box>
 
-          {/* <Box sx={{ mb: 3 }}>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-            >
-              Task Assign Person
-            </Typography>
-
-            <Select
-              fullWidth
-              size="small"
-              value={assignedTo}
-              onChange={(e) => setAssignedTo(e.target.value)}
-              sx={{
-                fontSize: "14px",
-              }}
-            >
-              {projectMembers.map((member) => {
-                const assignedMember = users.find((u) => u.id === member.id);
-
-                return (
-                  <MenuItem
-                    value={assignedMember?.id}
-                    key={assignedMember?.id}
-                    sx={{
-                      fontSize: "14px",
-                    }}
-                  >
-                    {assignedMember?.firstName} {assignedMember?.lastName}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </Box> */}
-
           <Box sx={{ mb: 3 }}>
             <Typography
               sx={{

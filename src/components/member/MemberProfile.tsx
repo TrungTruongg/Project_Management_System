@@ -14,6 +14,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Divider,
   Grid,
   IconButton,
@@ -32,6 +33,7 @@ function MemberProfile() {
   const [projects, setProjects] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (selectedMember) {
@@ -43,6 +45,7 @@ function MemberProfile() {
   }, [selectedMember]);
 
   const fetchUserDetails = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2`
@@ -53,10 +56,13 @@ function MemberProfile() {
       setUser(foundUser);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchProjects = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2`
@@ -67,10 +73,13 @@ function MemberProfile() {
       setProjects(userProjects);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchAllProjects = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2`
@@ -78,10 +87,13 @@ function MemberProfile() {
       setAllProjects(response.data.data.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2`
@@ -95,6 +107,8 @@ function MemberProfile() {
       setTasks(userTasks);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,6 +126,42 @@ function MemberProfile() {
     return allProjects.find((p) => p.id === taskProjectId);
   };
 
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          p: 4,
+          order: 3,
+          flex: "1 1",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Box
+        sx={{
+          p: 4,
+          order: 3,
+          flex: "1 1",
+          height: "100vh",
+        }}
+      >
+        <Header />
+        <Typography variant="h5" sx={{ mt: 4, textAlign: "center" }}>
+          User not found
+        </Typography>
+      </Box>
+    );
+  }
+  
   return (
     <Box
       sx={{
@@ -148,6 +198,7 @@ function MemberProfile() {
                     width: 120,
                     height: 120,
                     fontSize: "48px",
+                    textTransform: "uppercase"
                   }}
                 >
                   {user?.firstName?.[0]}
@@ -162,7 +213,7 @@ function MemberProfile() {
                       alignItems: "center"
                     }}
                   >
-                    <Typography variant="h5" fontWeight="bold" gutterBottom>
+                    <Typography variant="h5" fontWeight="bold" sx={{ textTransform: "capitalize"}} gutterBottom>
                       {user?.firstName} {user?.lastName}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1 }}>
@@ -196,7 +247,7 @@ function MemberProfile() {
                       >
                         <Phone sx={{ fontSize: 18, color: "text.secondary" }} />
                         <Typography variant="body2">
-                          {user?.phone || "202-555-0174"}
+                          {user?.phone || ""}
                         </Typography>
                       </Box>
                     </Grid>
@@ -228,8 +279,8 @@ function MemberProfile() {
                           sx={{ fontSize: 18, color: "text.secondary" }}
                         />
                         <Typography variant="body2">
-                          {user?.address ||
-                            "2734 West Fork Street, EASTON 02334"}
+                          {user?.location ||
+                            ""}
                         </Typography>
                       </Box>
                     </Grid>
@@ -246,218 +297,237 @@ function MemberProfile() {
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
                 Current Work Project
               </Typography>
-
-              {projects.map((project) => (
-                <Card key={project.id} sx={{ mb: 3 }}>
-                  <CardContent>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        mb: 2,
-                      }}
-                    >
-                      <Typography
-                        variant="h6"
-                        fontWeight="bold"
-                        sx={{ textTransform: "capitalize" }}
-                      >
-                        {project.title}
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <IconButton
-                          size="small"
-                          sx={{ color: "#4CAF50" }}
-                          //onClick={() => handleEditProject(project)}
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          sx={{ color: "#EF5350" }}
-                          //onClick={() => handleOpenDeleteDialog(project)}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </Box>
-
-                    <Box sx={{ mb: 2 }}>
-                      <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
-                        {project.member?.length > 0 ? (
-                          <Avatar
-                            key={project.id}
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              fontSize: "12px",
-                              bgcolor: "#E0E0E0",
-                              color: "#484c7f",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {user?.firstName?.[0]}
-                            {user?.lastName?.[0]}
-                          </Avatar>
-                        ) : (
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: "text.secondary",
-                              fontStyle: "italic",
-                            }}
-                          >
-                            No members yet
-                          </Typography>
-                        )}
-                      </AvatarGroup>
-                    </Box>
-
-                    {/* Stats */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        mb: 2,
-                        flexWrap: "wrap",
-                        gap: 2,
-                        pt: 2,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 0.5,
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "text.secondary",
-                          }}
-                        >
-                          Start Date:
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                          }}
-                        >
-                          <AccessTime
-                            sx={{
-                              fontSize: 14,
-                              fontWeight: 700,
-                              color: "text.secondary",
-                            }}
-                          />
-                          <Typography
-                            sx={{
-                              fontSize: 13,
-                              fontWeight: 700,
-                              color: "text.secondary",
-                            }}
-                          >
-                            {project.startDate}
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 0.5,
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "text.secondary",
-                          }}
-                        >
-                          End Date:
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                          }}
-                        >
-                          <AccessTime
-                            sx={{
-                              fontSize: 14,
-                              fontWeight: 700,
-                              color: "text.secondary",
-                            }}
-                          />
-                          <Typography
-                            sx={{
-                              fontSize: 13,
-                              fontWeight: 700,
-                              color: "text.secondary",
-                            }}
-                          >
-                            {project.endDate}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-
-                    <Divider sx={{ mb: 3 }} />
-
-                    {/* Progress */}
-                    <Box>
+              {projects.length > 0 ? (
+                projects.map((project) => (
+                  <Card key={project.id} sx={{ mb: 3 }}>
+                    <CardContent>
                       <Box
                         sx={{
                           display: "flex",
                           justifyContent: "space-between",
-                          mb: 1,
+                          mb: 2,
                         }}
                       >
-                        <Typography variant="caption" fontWeight="600">
-                          Progress
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          sx={{ textTransform: "capitalize" }}
+                        >
+                          {project.title}
                         </Typography>
-                        <Chip
-                          label={`${calculateDeadline(
-                            project.startDate,
-                            project.endDate
-                          )} Days Left`}
-                          size="small"
-                          sx={{
-                            bgcolor: "#FFEBEE",
-                            color: "#C62828",
-                            height: 20,
-                            fontSize: "0.7rem",
-                            fontWeight: 600,
-                          }}
-                        />
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <IconButton
+                            size="small"
+                            sx={{ color: "#4CAF50" }}
+                            //onClick={() => handleEditProject(project)}
+                          >
+                            <Edit fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            sx={{ color: "#EF5350" }}
+                            //onClick={() => handleOpenDeleteDialog(project)}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Box>
                       </Box>
-                      <Box sx={{ display: "flex", gap: 0.5 }}>
-                        {[1, 2, 3, 4].map((i) => (
-                          <Box
-                            key={i}
+
+                      <Box sx={{ mb: 2 }}>
+                        <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+                          {project.member?.length > 0 ? (
+                            <Avatar
+                              key={project.id}
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                fontSize: "12px",
+                                bgcolor: "#E0E0E0",
+                                color: "#484c7f",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {user?.firstName?.[0]}
+                              {user?.lastName?.[0]}
+                            </Avatar>
+                          ) : (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "text.secondary",
+                                fontStyle: "italic",
+                              }}
+                            >
+                              No members yet
+                            </Typography>
+                          )}
+                        </AvatarGroup>
+                      </Box>
+
+                      {/* Stats */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 2,
+                          flexWrap: "wrap",
+                          gap: 2,
+                          pt: 2,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                          }}
+                        >
+                          <Typography
                             sx={{
-                              flex: 1,
-                              height: 8,
-                              bgcolor:
-                                i <= Math.floor(project.completion / 25)
-                                  ? "#FF9800"
-                                  : "#E0E0E0",
-                              borderRadius: 1,
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "text.secondary",
+                            }}
+                          >
+                            Start Date:
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <AccessTime
+                              sx={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: "text.secondary",
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: "text.secondary",
+                              }}
+                            >
+                              {project.startDate}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "text.secondary",
+                            }}
+                          >
+                            End Date:
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
+                            <AccessTime
+                              sx={{
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: "text.secondary",
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: "text.secondary",
+                              }}
+                            >
+                              {project.endDate}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+
+                      <Divider sx={{ mb: 3 }} />
+
+                      {/* Progress */}
+                      <Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            mb: 1,
+                          }}
+                        >
+                          <Typography variant="caption" fontWeight="600">
+                            Progress
+                          </Typography>
+                          <Chip
+                            label={`${calculateDeadline(
+                              project.startDate,
+                              project.endDate
+                            )} Days Left`}
+                            size="small"
+                            sx={{
+                              bgcolor: "#FFEBEE",
+                              color: "#C62828",
+                              height: 20,
+                              fontSize: "0.7rem",
+                              fontWeight: 600,
                             }}
                           />
-                        ))}
+                        </Box>
+                        <Box sx={{ display: "flex", gap: 0.5 }}>
+                          {[1, 2, 3, 4].map((i) => (
+                            <Box
+                              key={i}
+                              sx={{
+                                flex: 1,
+                                height: 8,
+                                bgcolor:
+                                  i <= Math.floor(project.completion / 25)
+                                    ? "#FF9800"
+                                    : "#E0E0E0",
+                                borderRadius: 1,
+                              }}
+                            />
+                          ))}
+                        </Box>
                       </Box>
-                    </Box>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                  }}
+                  elevation={0}
+                >
+                  <CardContent>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      align="center"
+                    >
+                      No projects assigned
+                    </Typography>
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </Grid>
 
             {/* Right Column - Tasks */}
@@ -469,7 +539,6 @@ function MemberProfile() {
               {tasks.length > 0 ? (
                 tasks.map((task) => {
                   const taskProject = getProjectByTaskId(task.projectId);
-                  //   const priorityConfig = getPriorityChip(task.priority);
 
                   return (
                     <Card
@@ -514,18 +583,6 @@ function MemberProfile() {
                             </IconButton>
                           </Box>
                         </Box>
-
-                        {/* <Chip
-                          label={priorityConfig.label}
-                          size="small"
-                          sx={{
-                            bgcolor: priorityConfig.bgcolor,
-                            color: priorityConfig.color,
-                            fontSize: "0.65rem",
-                            height: 20,
-                            mb: 1,
-                          }}
-                        /> */}
 
                         <Box sx={{ mb: 2 }}>
                           <AvatarGroup

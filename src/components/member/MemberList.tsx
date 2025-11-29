@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Grid,
   Typography,
 } from "@mui/material";
@@ -27,6 +28,7 @@ function MemberList() {
   const navigate = useNavigate();
 
   const fetchUser = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
@@ -34,10 +36,13 @@ function MemberList() {
       setUsers(response.data.data.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchMember = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
@@ -45,10 +50,13 @@ function MemberList() {
       setMembers(response.data.data.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
@@ -56,6 +64,8 @@ function MemberList() {
       setTasks(response.data.data.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,6 +102,24 @@ function MemberList() {
 
   const handleViewProfile = (member: any) => {
     navigate("/member-profile", { state: { member } });
+  }
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          p: 4,
+          order: 3,
+          flex: "1 1",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (

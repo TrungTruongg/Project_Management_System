@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Grid,
   IconButton,
   Typography,
@@ -38,6 +39,7 @@ function Tasks() {
   // };
 
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
@@ -45,10 +47,13 @@ function Tasks() {
       setTaskList(response.data.data.data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchProjects = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
@@ -56,10 +61,13 @@ function Tasks() {
       setProjects(response.data.data.data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
@@ -67,6 +75,8 @@ function Tasks() {
       setUsers(response.data.data.data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -151,12 +161,30 @@ function Tasks() {
     const assignedUserIds = Array.isArray(task.assignedTo)
       ? task.assignedTo
       : task.assignedTo
-      ? [task.assignedTo]
-      : [];
+        ? [task.assignedTo]
+        : [];
 
     const assignedUsers = assignedUserIds
       .map((userId: number) => users.find((u) => u.id === userId))
       .filter(Boolean);
+
+    if (loading) {
+      return (
+        <Box
+          sx={{
+            p: 4,
+            order: 3,
+            flex: "1 1",
+            height: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      );
+    }
 
     return (
       <Card
