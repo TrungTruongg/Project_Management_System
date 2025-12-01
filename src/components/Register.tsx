@@ -97,7 +97,7 @@ function Register() {
         password: password,
         firstName: firstName,
         lastName: lastName,
-        phone: `+84 ${phone}`,
+        phone: phone,
         location: location,
         role: "member",
         avatar: "",

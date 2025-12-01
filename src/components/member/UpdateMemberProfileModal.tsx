@@ -169,7 +169,9 @@ function UpdateMemberProfileModal({
                                 sx={{
                                     "& .MuiOutlinedInput-root": {
                                         fontSize: "14px",
+                                        textTransform: "capitalize"
                                     },
+                                    textTransform: "capitalize"
                                 }}
                             />
                         </Box>

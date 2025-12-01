@@ -42,12 +42,14 @@ function Projects() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const responseProject = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
-      );
-      const responseUser = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
-      );
+      const [responseProject, responseUser] = await Promise.all([
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+      ]);
       setProjectList(responseProject.data.data.data);
       setUsers(responseUser.data.data.data);
     } catch (error) {
@@ -55,7 +57,7 @@ function Projects() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchAllData();
@@ -123,8 +125,6 @@ function Projects() {
 
     return users.filter((user) => project.member.includes(user.id));
   };
-
-
 
   return (
     <>
@@ -270,7 +270,7 @@ function Projects() {
                                 bgcolor: "#E0E0E0",
                                 color: "#484c7f",
                                 fontWeight: 600,
-                                textTransform: "uppercase"
+                                textTransform: "uppercase",
                               }}
                               title={`${member.firstName} ${member.lastName}`}
                             >
@@ -281,7 +281,10 @@ function Projects() {
                         ) : (
                           <Typography
                             variant="caption"
-                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                            sx={{
+                              color: "text.secondary",
+                              fontStyle: "italic",
+                            }}
                           >
                             No members yet
                           </Typography>
@@ -317,7 +320,11 @@ function Projects() {
                           Start Date:
                         </Typography>
                         <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
                         >
                           <AccessTime
                             sx={{
@@ -355,7 +362,11 @@ function Projects() {
                           End Date:
                         </Typography>
                         <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                          }}
                         >
                           <AccessTime
                             sx={{
@@ -426,8 +437,7 @@ function Projects() {
                   </CardContent>
                 </Card>
               );
-            })
-            }
+            })}
           </Box>
         )}
       </Box>

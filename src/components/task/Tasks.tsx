@@ -41,15 +41,18 @@ function Tasks() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const responseTask = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
-      );
-      const responseProject = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
-      );
-      const responseUser = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
-      );
+      const [responseTask, responseProject, responseUser] = await Promise.all([
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+      ]);
+
       setTaskList(responseTask.data.data.data);
       setProjects(responseProject.data.data.data);
       setUsers(responseUser.data.data.data);
@@ -58,7 +61,7 @@ function Tasks() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchAllData();
@@ -139,8 +142,8 @@ function Tasks() {
     const assignedUserIds = Array.isArray(task.assignedTo)
       ? task.assignedTo
       : task.assignedTo
-        ? [task.assignedTo]
-        : [];
+      ? [task.assignedTo]
+      : [];
 
     const assignedUsers = assignedUserIds
       .map((userId: number) => users.find((u) => u.id === userId))
@@ -374,7 +377,6 @@ function Tasks() {
             </Grid>
           )}
         </Grid>
-
       </Box>
       <CreateTaskModal
         open={openCreateTaskModal}

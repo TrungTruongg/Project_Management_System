@@ -23,18 +23,20 @@ import {
 import Header from "../Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import UpdateMemberProfileModal from "./UpdateMemberProfileModal";
+import DeleteConfirmDialog from "../DeleteConfirmDialog";
 
 function MemberProfile() {
   const location = useLocation();
+  const navigate = useNavigate();
   const selectedMember = location.state?.member;
 
   const [user, setUser] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [allProjects, setAllProjects] = useState<any[]>([]);
-  const [projectMembers, setProjectMembers] = useState<any[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [open, setOpen] = useState(false);
@@ -48,20 +50,21 @@ function MemberProfile() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [usersRes, projectsRes, tasksRes, projectMembersRes] = await Promise.all([
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
-      ]);
+      const [usersRes, projectsRes, tasksRes, projectMembersRes] =
+        await Promise.all([
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+        ]);
 
       // Process users
       const foundUser = usersRes.data.data.data.find(
@@ -86,10 +89,6 @@ function MemberProfile() {
         return task.assignedTo === selectedMember.userId;
       });
       setTasks(userTasks);
-
-      // Store all project members
-      setProjectMembers(projectMembersRes.data.data.data);
-
     } catch (err) {
       console.error("Error loading data:", err);
     } finally {
@@ -117,11 +116,44 @@ function MemberProfile() {
 
   const handleClose = () => {
     setOpen(false);
-  }
+  };
 
   const handleEditMemberProfile = () => {
     setOpen(true);
-  }
+  };
+
+  const handleOpenDeleteDialog = () => {
+    console.log(selectedMember);
+
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleDeleteMember = async () => {
+    setLoading(true);
+    try {
+      await axios.delete(
+        `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=69205e8dbf3939eacf2e89f2`
+      );
+
+      // Xóa projectMember tương ứng
+      await axios.delete(
+        `https://mindx-mockup-server.vercel.app/api/resources/projectMembers/${selectedMember._id}?apiKey=69205e8dbf3939eacf2e89f2`
+      );
+
+      handleCloseDeleteDialog();
+
+      // Quay lại trang member list
+      navigate("/member");
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -195,7 +227,7 @@ function MemberProfile() {
                     width: 120,
                     height: 120,
                     fontSize: "48px",
-                    textTransform: "uppercase"
+                    textTransform: "uppercase",
                   }}
                 >
                   {user?.firstName?.[0]}
@@ -207,10 +239,15 @@ function MemberProfile() {
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                   >
-                    <Typography variant="h5" fontWeight="bold" sx={{ textTransform: "capitalize" }} gutterBottom>
+                    <Typography
+                      variant="h5"
+                      fontWeight="bold"
+                      sx={{ textTransform: "capitalize" }}
+                      gutterBottom
+                    >
                       {user?.firstName} {user?.lastName}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1 }}>
@@ -224,20 +261,18 @@ function MemberProfile() {
                       <IconButton
                         size="small"
                         sx={{ color: "#EF5350" }}
-                      //onClick={() => handleOpenDeleteDialog(project)}
+                        onClick={handleOpenDeleteDialog}
                       >
                         <Delete fontSize="small" />
                       </IconButton>
                     </Box>
                   </Box>
 
-
                   <Chip
                     label={selectedMember?.role || user?.role}
                     size="small"
                     sx={{ bgcolor: "#E1BEE7", color: "#6A1B9A", mb: 2 }}
                   />
-
 
                   <Grid container spacing={2} sx={{ mt: 4 }}>
                     <Grid size={{ xs: 6 }}>
@@ -247,12 +282,15 @@ function MemberProfile() {
                         <Phone sx={{ fontSize: 18, color: "text.secondary" }} />
                         {user?.phone ? (
                           <Typography variant="body2">
-                            {user?.phone}
+                            +84 {user?.phone}
                           </Typography>
                         ) : (
                           <Typography
                             variant="body2"
-                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                            sx={{
+                              color: "text.secondary",
+                              fontStyle: "italic",
+                            }}
                           >
                             No phone number
                           </Typography>
@@ -265,13 +303,14 @@ function MemberProfile() {
                       >
                         <Email sx={{ fontSize: 18, color: "text.secondary" }} />
                         {user?.email ? (
-                          <Typography variant="body2">
-                            {user?.email}
-                          </Typography>
+                          <Typography variant="body2">{user?.email}</Typography>
                         ) : (
                           <Typography
                             variant="body2"
-                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                            sx={{
+                              color: "text.secondary",
+                              fontStyle: "italic",
+                            }}
                           >
                             No Email Address
                           </Typography>
@@ -287,15 +326,21 @@ function MemberProfile() {
                         />
                         {user?.joinDate ? (
                           <Typography variant="body2">
-                            {new Date(user.joinDate).toLocaleDateString("en-GB", {
-                              day: "2-digit",
-                              month: "short",
-                            })}
+                            {new Date(user.joinDate).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                              }
+                            )}
                           </Typography>
                         ) : (
                           <Typography
                             variant="body2"
-                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                            sx={{
+                              color: "text.secondary",
+                              fontStyle: "italic",
+                            }}
                           >
                             No Joined Date
                           </Typography>
@@ -316,7 +361,10 @@ function MemberProfile() {
                         ) : (
                           <Typography
                             variant="body2"
-                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                            sx={{
+                              color: "text.secondary",
+                              fontStyle: "italic",
+                            }}
                           >
                             No Location
                           </Typography>
@@ -358,14 +406,14 @@ function MemberProfile() {
                           <IconButton
                             size="small"
                             sx={{ color: "#4CAF50" }}
-                          //onClick={() => handleEditProject(project)}
+                            //onClick={() => handleEditProject(project)}
                           >
                             <Edit fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"
                             sx={{ color: "#EF5350" }}
-                          //onClick={() => handleOpenDeleteDialog(project)}
+                            //onClick={() => handleOpenDeleteDialog(project)}
                           >
                             <Delete fontSize="small" />
                           </IconButton>
@@ -373,7 +421,10 @@ function MemberProfile() {
                       </Box>
 
                       <Box sx={{ mb: 2 }}>
-                        <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+                        <AvatarGroup
+                          max={5}
+                          sx={{ justifyContent: "flex-end" }}
+                        >
                           {project.member?.length > 0 ? (
                             <Avatar
                               key={project.id}
@@ -757,6 +808,13 @@ function MemberProfile() {
         onClose={handleClose}
         onUpdate={handleUpdateUser}
         selectedUser={user}
+      />
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        onDelete={handleDeleteMember}
+        selected={user ? user.email : ""}
+        loading={loading}
       />
     </Box>
   );
