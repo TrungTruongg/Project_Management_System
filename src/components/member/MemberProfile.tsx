@@ -24,6 +24,7 @@ import Header from "../Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
+import UpdateMemberProfileModal from "./UpdateMemberProfileModal";
 
 function MemberProfile() {
   const location = useLocation();
@@ -33,80 +34,64 @@ function MemberProfile() {
   const [projects, setProjects] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [allProjects, setAllProjects] = useState<any[]>([]);
+  const [projectMembers, setProjectMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (selectedMember) {
-      fetchUserDetails();
-      fetchProjects();
-      fetchTasks();
-      fetchAllProjects();
+      loadAllData();
     }
   }, [selectedMember]);
 
-  const fetchUserDetails = async () => {
+  const loadAllData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2`
-      );
-      const foundUser = response.data.data.data.find(
+      const [usersRes, projectsRes, tasksRes, projectMembersRes] = await Promise.all([
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+      ]);
+
+      // Process users
+      const foundUser = usersRes.data.data.data.find(
         (u: any) => u.id === selectedMember.userId
       );
       setUser(foundUser);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2`
-      );
-      const userProjects = response.data.data.data.filter((project: any) =>
+      // Process projects
+      const allProjectsData = projectsRes.data.data.data;
+      setAllProjects(allProjectsData);
+
+      const userProjects = allProjectsData.filter((project: any) =>
         project.member?.includes(selectedMember.userId)
       );
       setProjects(userProjects);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchAllProjects = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2`
-      );
-      setAllProjects(response.data.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2`
-      );
-      const userTasks = response.data.data.data.filter((task: any) => {
+      // Process tasks
+      const userTasks = tasksRes.data.data.data.filter((task: any) => {
         if (Array.isArray(task.assignedTo)) {
           return task.assignedTo.includes(selectedMember.userId);
         }
         return task.assignedTo === selectedMember.userId;
       });
       setTasks(userTasks);
+
+      // Store all project members
+      setProjectMembers(projectMembersRes.data.data.data);
+
     } catch (err) {
-      console.error(err);
+      console.error("Error loading data:", err);
     } finally {
       setLoading(false);
     }
@@ -125,6 +110,18 @@ function MemberProfile() {
   const getProjectByTaskId = (taskProjectId: number) => {
     return allProjects.find((p) => p.id === taskProjectId);
   };
+
+  const handleUpdateUser = (updatedUser: any) => {
+    setUser(updatedUser);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  }
+
+  const handleEditMemberProfile = () => {
+    setOpen(true);
+  }
 
   if (loading) {
     return (
@@ -161,7 +158,7 @@ function MemberProfile() {
       </Box>
     );
   }
-  
+
   return (
     <Box
       sx={{
@@ -213,32 +210,34 @@ function MemberProfile() {
                       alignItems: "center"
                     }}
                   >
-                    <Typography variant="h5" fontWeight="bold" sx={{ textTransform: "capitalize"}} gutterBottom>
+                    <Typography variant="h5" fontWeight="bold" sx={{ textTransform: "capitalize" }} gutterBottom>
                       {user?.firstName} {user?.lastName}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 1 }}>
                       <IconButton
                         size="small"
                         sx={{ color: "#4CAF50" }}
-                        //onClick={() => handleEditProject(project)}
+                        onClick={handleEditMemberProfile}
                       >
                         <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         size="small"
                         sx={{ color: "#EF5350" }}
-                        //onClick={() => handleOpenDeleteDialog(project)}
+                      //onClick={() => handleOpenDeleteDialog(project)}
                       >
                         <Delete fontSize="small" />
                       </IconButton>
                     </Box>
                   </Box>
 
+
                   <Chip
-                    label={user?.role}
+                    label={selectedMember?.role || user?.role}
                     size="small"
                     sx={{ bgcolor: "#E1BEE7", color: "#6A1B9A", mb: 2 }}
                   />
+
 
                   <Grid container spacing={2} sx={{ mt: 4 }}>
                     <Grid size={{ xs: 6 }}>
@@ -246,9 +245,18 @@ function MemberProfile() {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Phone sx={{ fontSize: 18, color: "text.secondary" }} />
-                        <Typography variant="body2">
-                          {user?.phone || ""}
-                        </Typography>
+                        {user?.phone ? (
+                          <Typography variant="body2">
+                            {user?.phone}
+                          </Typography>
+                        ) : (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                          >
+                            No phone number
+                          </Typography>
+                        )}
                       </Box>
                     </Grid>
                     <Grid size={{ xs: 6 }}>
@@ -256,7 +264,18 @@ function MemberProfile() {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Email sx={{ fontSize: 18, color: "text.secondary" }} />
-                        <Typography variant="body2">{user?.email}</Typography>
+                        {user?.email ? (
+                          <Typography variant="body2">
+                            {user?.email}
+                          </Typography>
+                        ) : (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                          >
+                            No Email Address
+                          </Typography>
+                        )}
                       </Box>
                     </Grid>
                     <Grid size={{ xs: 6 }}>
@@ -266,9 +285,21 @@ function MemberProfile() {
                         <CalendarToday
                           sx={{ fontSize: 18, color: "text.secondary" }}
                         />
-                        <Typography variant="body2">
-                          {user?.joinDate || "19/03/1980"}
-                        </Typography>
+                        {user?.joinDate ? (
+                          <Typography variant="body2">
+                            {new Date(user.joinDate).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                            })}
+                          </Typography>
+                        ) : (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                          >
+                            No Joined Date
+                          </Typography>
+                        )}
                       </Box>
                     </Grid>
                     <Grid size={{ xs: 6 }}>
@@ -278,10 +309,18 @@ function MemberProfile() {
                         <LocationOn
                           sx={{ fontSize: 18, color: "text.secondary" }}
                         />
-                        <Typography variant="body2">
-                          {user?.location ||
-                            ""}
-                        </Typography>
+                        {user?.location ? (
+                          <Typography variant="body2">
+                            {user?.location}
+                          </Typography>
+                        ) : (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                          >
+                            No Location
+                          </Typography>
+                        )}
                       </Box>
                     </Grid>
                   </Grid>
@@ -319,14 +358,14 @@ function MemberProfile() {
                           <IconButton
                             size="small"
                             sx={{ color: "#4CAF50" }}
-                            //onClick={() => handleEditProject(project)}
+                          //onClick={() => handleEditProject(project)}
                           >
                             <Edit fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"
                             sx={{ color: "#EF5350" }}
-                            //onClick={() => handleOpenDeleteDialog(project)}
+                          //onClick={() => handleOpenDeleteDialog(project)}
                           >
                             <Delete fontSize="small" />
                           </IconButton>
@@ -713,6 +752,12 @@ function MemberProfile() {
           </Grid>
         </Grid>
       </Grid>
+      <UpdateMemberProfileModal
+        open={open}
+        onClose={handleClose}
+        onUpdate={handleUpdateUser}
+        selectedUser={user}
+      />
     </Box>
   );
 }

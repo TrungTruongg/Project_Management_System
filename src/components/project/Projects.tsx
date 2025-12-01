@@ -39,37 +39,26 @@ function Projects() {
     return diffDays;
   };
 
-  const fetchProjects = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
+      const responseProject = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      setProjectList(response.data.data.data);
+      const responseUser = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+      );
+      setProjectList(responseProject.data.data.data);
+      setUsers(responseUser.data.data.data);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchUsers = async () => {
-
-    try {
-      const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
-      );
-      setUsers(response.data.data.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }
 
   useEffect(() => {
-    fetchProjects();
-    fetchUsers();
+    fetchAllData();
   }, []);
 
   const handleOpenModal = () => {
@@ -135,23 +124,7 @@ function Projects() {
     return users.filter((user) => project.member.includes(user.id));
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          p: 4,
-          order: 3,
-          flex: "1 1",
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+
 
   return (
     <>
@@ -212,233 +185,251 @@ function Projects() {
         </Box>
 
         {/* Projects Grid */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 3,
-          }}
-        >
-          {projectList.map((project: any) => {
-            const projectMembers = getProjectMembers(project);
-            return (
-              <Card
-                key={project.id}
-                elevation={0}
-                sx={{
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 2,
-                  transition: "all 0.3s",
-                  "&:hover": {
-                    boxShadow: 3,
-                    transform: "translateY(-4px)",
-                  },
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  {/* Header with Icon and Actions */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 3,
-                    }}
-                  >
-                    <Box>
-                      <Typography variant="h6" fontWeight="bold">
-                        {project.title}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <IconButton
-                        size="small"
-                        sx={{ color: "#4CAF50" }}
-                        onClick={() => handleEditProject(project)}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        sx={{ color: "#EF5350" }}
-                        onClick={() => handleOpenDeleteDialog(project)}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Box>
 
-                  {/* Members */}
-                  <Box sx={{ mb: 2 }}>
-                    <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
-                      {projectMembers.length > 0 ? (
-                        projectMembers.map((member) => (
-                          <Avatar
-                            key={member.id}
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              fontSize: "12px",
-                              bgcolor: "#E0E0E0",
-                              color: "#484c7f",
-                              fontWeight: 600,
-                            }}
-                            title={`${member.firstName} ${member.lastName}`}
-                          >
-                            {member.firstName?.[0]}
-                            {member.lastName?.[0]}
-                          </Avatar>
-                        ))
-                      ) : (
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "text.secondary", fontStyle: "italic" }}
-                        >
-                          No members yet
-                        </Typography>
-                      )}
-                    </AvatarGroup>
-                  </Box>
-
-                  {/* Stats */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 2,
-                      flexWrap: "wrap",
-                      gap: 2,
-                      pt: 2,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 0.5,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: "text.secondary",
-                        }}
-                      >
-                        Start Date:
-                      </Typography>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        <AccessTime
-                          sx={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: "text.secondary",
-                          }}
-                        />
-                        <Typography
-                          sx={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "text.secondary",
-                          }}
-                        >
-                          {project.startDate}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 0.5,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: "text.secondary",
-                        }}
-                      >
-                        End Date:
-                      </Typography>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        <AccessTime
-                          sx={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: "text.secondary",
-                          }}
-                        />
-                        <Typography
-                          sx={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "text.secondary",
-                          }}
-                        >
-                          {project.endDate}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  <Divider sx={{ mb: 3 }} />
-
-                  {/* Progress */}
-                  <Box>
+        {loading ? (
+          <Box
+            sx={{
+              order: 3,
+              flex: "1 1",
+              height: "60vh",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 3,
+            }}
+          >
+            {projectList.map((project: any) => {
+              const projectMembers = getProjectMembers(project);
+              return (
+                <Card
+                  key={project.id}
+                  elevation={0}
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    transition: "all 0.3s",
+                    "&:hover": {
+                      boxShadow: 3,
+                      transform: "translateY(-4px)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    {/* Header with Icon and Actions */}
                     <Box
                       sx={{
                         display: "flex",
                         justifyContent: "space-between",
-                        mb: 1,
+                        alignItems: "center",
+                        mb: 3,
                       }}
                     >
-                      <Typography variant="caption" fontWeight="600">
-                        Progress
-                      </Typography>
-                      <Chip
-                        label={`${calculateDeadline(
-                          project.startDate,
-                          project.endDate
-                        )} Days Left`}
-                        size="small"
-                        sx={{
-                          bgcolor: "#FFEBEE",
-                          color: "#C62828",
-                          height: 20,
-                          fontSize: "0.7rem",
-                          fontWeight: 600,
-                        }}
-                      />
+                      <Box>
+                        <Typography variant="h6" fontWeight="bold">
+                          {project.title}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: "flex", gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          sx={{ color: "#4CAF50" }}
+                          onClick={() => handleEditProject(project)}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          sx={{ color: "#EF5350" }}
+                          onClick={() => handleOpenDeleteDialog(project)}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </Box>
-                    <Box sx={{ display: "flex", gap: 0.5 }}>
-                      {[1, 2, 3, 4].map((i) => (
-                        <Box
-                          key={i}
+
+                    {/* Members */}
+                    <Box sx={{ mb: 2 }}>
+                      <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+                        {projectMembers.length > 0 ? (
+                          projectMembers.map((member) => (
+                            <Avatar
+                              key={member.id}
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                fontSize: "12px",
+                                bgcolor: "#E0E0E0",
+                                color: "#484c7f",
+                                fontWeight: 600,
+                                textTransform: "uppercase"
+                              }}
+                              title={`${member.firstName} ${member.lastName}`}
+                            >
+                              {member.firstName?.[0]}
+                              {member.lastName?.[0]}
+                            </Avatar>
+                          ))
+                        ) : (
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "text.secondary", fontStyle: "italic" }}
+                          >
+                            No members yet
+                          </Typography>
+                        )}
+                      </AvatarGroup>
+                    </Box>
+
+                    {/* Stats */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 2,
+                        flexWrap: "wrap",
+                        gap: 2,
+                        pt: 2,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.5,
+                        }}
+                      >
+                        <Typography
                           sx={{
-                            flex: 1,
-                            height: 8,
-                            bgcolor:
-                              i <= Math.floor(project.completion / 25)
-                                ? "#FF9800"
-                                : "#E0E0E0",
-                            borderRadius: 1,
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "text.secondary",
+                          }}
+                        >
+                          Start Date:
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                        >
+                          <AccessTime
+                            sx={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: "text.secondary",
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "text.secondary",
+                            }}
+                          >
+                            {project.startDate}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.5,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "text.secondary",
+                          }}
+                        >
+                          End Date:
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                        >
+                          <AccessTime
+                            sx={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: "text.secondary",
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "text.secondary",
+                            }}
+                          >
+                            {project.endDate}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Divider sx={{ mb: 3 }} />
+
+                    {/* Progress */}
+                    <Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography variant="caption" fontWeight="600">
+                          Progress
+                        </Typography>
+                        <Chip
+                          label={`${calculateDeadline(
+                            project.startDate,
+                            project.endDate
+                          )} Days Left`}
+                          size="small"
+                          sx={{
+                            bgcolor: "#FFEBEE",
+                            color: "#C62828",
+                            height: 20,
+                            fontSize: "0.7rem",
+                            fontWeight: 600,
                           }}
                         />
-                      ))}
+                      </Box>
+                      <Box sx={{ display: "flex", gap: 0.5 }}>
+                        {[1, 2, 3, 4].map((i) => (
+                          <Box
+                            key={i}
+                            sx={{
+                              flex: 1,
+                              height: 8,
+                              bgcolor:
+                                i <= Math.floor(project.completion / 25)
+                                  ? "#FF9800"
+                                  : "#E0E0E0",
+                              borderRadius: 1,
+                            }}
+                          />
+                        ))}
+                      </Box>
                     </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </Box>
+                  </CardContent>
+                </Card>
+              );
+            })
+            }
+          </Box>
+        )}
       </Box>
       <CreateProjectModal
         open={open}

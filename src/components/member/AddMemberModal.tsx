@@ -9,7 +9,6 @@ import {
   MenuItem,
   Modal,
   Select,
-  TextareaAutosize,
   TextField,
   Typography,
 } from "@mui/material";
@@ -269,13 +268,13 @@ function AddMemberModal({
               <MenuItem value="" disabled>
                 Choose role
               </MenuItem>
-              <MenuItem value="project_manager">Project Manager</MenuItem>
-              <MenuItem value="fe_developer">Frontend Developer</MenuItem>
-              <MenuItem value="be_developer">Backend Developer</MenuItem>
-              <MenuItem value="fullstack_developer">Fullstack Developer</MenuItem>
-              <MenuItem value="mobile_developer">Mobile App Developer</MenuItem>
-              <MenuItem value="designer">Designer</MenuItem>
-              <MenuItem value="tester">Tester</MenuItem>
+              <MenuItem value="Project Manager">Project Manager</MenuItem>
+              <MenuItem value="Frontend Developer">Frontend Developer</MenuItem>
+              <MenuItem value="Backend Developer">Backend Developer</MenuItem>
+              <MenuItem value="Fullstack Developer">Fullstack Developer</MenuItem>
+              <MenuItem value="Mobile App Developer">Mobile App Developer</MenuItem>
+              <MenuItem value="Designer">Designer</MenuItem>
+              <MenuItem value="Tester">Tester</MenuItem>
             </Select>
             {showError && !role.trim() && (
               <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>

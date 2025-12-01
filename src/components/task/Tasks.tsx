@@ -38,52 +38,30 @@ function Tasks() {
   //   return diffDays;
   // };
 
-  const fetchTasks = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
+      const responseTask = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      setTaskList(response.data.data.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
+      const responseProject = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      setProjects(response.data.data.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
+      const responseUser = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      setUsers(response.data.data.data);
+      setTaskList(responseTask.data.data.data);
+      setProjects(responseProject.data.data.data);
+      setUsers(responseUser.data.data.data);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
-    fetchTasks();
-    fetchProjects();
-    fetchUsers();
+    fetchAllData();
   }, []);
 
   const tasksByStatus = () => {
@@ -167,24 +145,6 @@ function Tasks() {
     const assignedUsers = assignedUserIds
       .map((userId: number) => users.find((u) => u.id === userId))
       .filter(Boolean);
-
-    if (loading) {
-      return (
-        <Box
-          sx={{
-            p: 4,
-            order: 3,
-            flex: "1 1",
-            height: "100vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      );
-    }
 
     return (
       <Card
@@ -382,23 +342,39 @@ function Tasks() {
           </Box>
 
           {/* Tasks Grid */}
-          <Grid container spacing={3} sx={{ width: "100%" }}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                In Progress ({tasksByStatus().inProgress.length})
-              </Typography>
-              {tasksByStatus().inProgress.map(renderTaskCard)}
-            </Grid>
+          {loading ? (
+            <Box
+              sx={{
+                order: 3,
+                flex: "1 1",
+                height: "60vh",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Grid container spacing={3} sx={{ width: "100%" }}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  In Progress ({tasksByStatus().inProgress.length})
+                </Typography>
+                {tasksByStatus().inProgress.map(renderTaskCard)}
+              </Grid>
 
-            {/* Completed */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Completed ({tasksByStatus().completed.length})
-              </Typography>
-              {tasksByStatus().completed.map(renderTaskCard)}
+              {/* Completed */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  Completed ({tasksByStatus().completed.length})
+                </Typography>
+                {tasksByStatus().completed.map(renderTaskCard)}
+              </Grid>
             </Grid>
-          </Grid>
+          )}
         </Grid>
+
       </Box>
       <CreateTaskModal
         open={openCreateTaskModal}

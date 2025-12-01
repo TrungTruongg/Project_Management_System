@@ -27,52 +27,31 @@ function MemberList() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const fetchUser = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
+      const responseUser = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      setUsers(response.data.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMember = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
+      const responseMember = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      setMembers(response.data.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTasks = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
+      const responseTask = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
       );
-      setTasks(response.data.data.data);
-    } catch (err) {
-      console.error(err);
+
+      setUsers(responseUser.data.data.data);
+      setMembers(responseMember.data.data.data);
+      setTasks(responseTask.data.data.data);
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
-    fetchUser();
-    fetchMember();
-    fetchTasks();
+    fetchAllData();
   }, []);
 
   const handleAddMember = (newMember: any) => {
@@ -179,9 +158,11 @@ function MemberList() {
                             height: 100,
                             fontSize: "48px",
                             flexShrink: 0,
+                            textTransform: "uppercase"
                           }}
                         >
-                          {memberProject?.avatar}
+                          {memberProject?.firstName?.[0]}
+                          {memberProject?.lastName?.[0]}
                         </Avatar>
                         <Box
                           sx={{
@@ -200,7 +181,7 @@ function MemberList() {
                       </Box>
 
                       <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" fontWeight="bold" gutterBottom>
+                        <Typography variant="h6" fontWeight="bold" sx={{ textTransform: "capitalize" }} gutterBottom>
                           {memberProject?.firstName} {memberProject?.lastName}
                         </Typography>
                         <Chip
