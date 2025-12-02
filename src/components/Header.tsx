@@ -1,10 +1,12 @@
 import {
   Avatar,
+  AvatarGroup,
   Box,
   Button,
   IconButton,
   Menu,
   MenuItem,
+  Skeleton,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -18,12 +20,14 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Header() {
-  const { user } = useUser();
+  const { setUser, user } = useUser();
   const [users, setUsers] = useState<any[]>([]);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const fetchUser = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
@@ -31,6 +35,8 @@ function Header() {
       setUsers(response.data.data.data);
     } catch (error) {
       console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,6 +45,10 @@ function Header() {
   }, []);
 
   const handleLogout = async () => {
+    localStorage.removeItem("auth");
+    localStorage.removeItem("user");
+
+    setUser(null);
     navigate("/login");
   };
 
@@ -69,25 +79,44 @@ function Header() {
         <IconButton sx={{ bgcolor: "white" }}>
           <Info color="primary" />
         </IconButton>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          {user && users.map((user) => (
-            <Avatar
-              key={user.id}
-              src={user.avatar || "/images/user_avatar.jpg"}
-              sx={{
-                width: 35,
-                height: 35,
-                fontSize: 18,
-                ml: user.id > 0 ? -1 : 0,
-                border: "2px solid white",
-                textTransform: "uppercase"
-              }}
-            >
-              {user.firstName?.[0]}
-              {user.lastName?.[0]}
-            </Avatar>
-          ))}
-        </Box>
+        <AvatarGroup
+          max={5}
+          sx={{
+            '& .MuiAvatar-root': {
+              width: 35,
+              height: 35,
+              fontSize: 15,
+              border: "2px solid white",
+            }
+          }}
+        >
+          {loading ? (
+            <>
+              {[1, 2, 3, 4, 5].map((index) => (
+                <Skeleton
+                  key={index}
+                  variant="circular"
+                  animation="wave"
+                  width={35}
+                  height={35}
+                  sx={{ border: "2px solid white", ml: index > 0 ? -1 : 0 }}
+                />
+              ))}
+            </>
+          ) : (
+
+            users.map((user) => (
+              <Avatar
+                key={user.id}
+                src={user.avatar || "/images/user_avatar.jpg"}
+                sx={{ textTransform: "uppercase", ml: user.id > 0 ? -1 : 0, }}
+              >
+                {user.firstName?.[0]}
+                {user.lastName?.[0]}
+              </Avatar>
+            ))
+          )}
+        </AvatarGroup>
         <IconButton sx={{ bgcolor: "white" }}>
           <Notifications />
         </IconButton>
@@ -109,8 +138,9 @@ function Header() {
                 <Avatar
                   src={user?.avatar || "/images/user_avatar.jpg"}
                   sx={{
-                    width: { xs: 32, sm: 36, md: 40 },
-                    height: { xs: 32, sm: 36, md: 40 },
+                    width: { xs: 10, sm: 36, md: 40 },
+                    height: { xs: 10, sm: 36, md: 40 },
+                    fontSize: "15px",
                     textTransform: "uppercase"
                   }}
                 >

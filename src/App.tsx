@@ -15,6 +15,7 @@ import MemberList from "./components/member/MemberList";
 import DashboardContent from "./components/dashboard/DashboardContent";
 import Register from "./components/Register";
 import MemberProfile from "./components/member/MemberProfile";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const theme = createTheme({
@@ -29,14 +30,15 @@ function App() {
         <UserProvider>
           <Router>
             <Routes>
-              <Route element={<Dashboard />}>
-                <Route path="/" element={<DashboardContent />} />
-                <Route path="/project" element={<Projects />} />
-                <Route path="/task" element={<Tasks />} />
-                <Route path="/member" element={<MemberList />} />
-                <Route path="/member-profile" element={<MemberProfile />} />
+              <Route element={<ProtectedRoute />} >
+                <Route element={<Dashboard />}>
+                  <Route path="/" element={<DashboardContent />} />
+                  <Route path="/project" element={<Projects />} />
+                  <Route path="/task" element={<Tasks />} />
+                  <Route path="/member" element={<MemberList />} />
+                  <Route path="/member-profile" element={<MemberProfile />} />
+                </Route>
               </Route>
-
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Routes>

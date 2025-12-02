@@ -45,9 +45,12 @@ function Login() {
         (user: any) => user.email === email && user.password === password
       );
 
+
       if (matchedUser) {
         setUser(matchedUser);
 
+        localStorage.setItem("auth", "true");
+        localStorage.setItem("user", JSON.stringify(matchedUser));
         navigate("/");
       } else {
         setError("Invalid email or password");
@@ -59,7 +62,7 @@ function Login() {
     }
   };
 
-  const handleGoogleSignIn = () => {};
+  const handleGoogleSignIn = () => { };
   return (
     <Box
       sx={{

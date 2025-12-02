@@ -50,7 +50,7 @@ function MemberProfile() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [usersRes, projectsRes, tasksRes, projectMembersRes] =
+      const [usersRes, projectsRes, tasksRes] =
         await Promise.all([
           axios.get(
             "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
@@ -139,14 +139,12 @@ function MemberProfile() {
         `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=69205e8dbf3939eacf2e89f2`
       );
 
-      // Xóa projectMember tương ứng
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/projectMembers/${selectedMember._id}?apiKey=69205e8dbf3939eacf2e89f2`
       );
 
       handleCloseDeleteDialog();
 
-      // Quay lại trang member list
       navigate("/member");
     } catch (error) {
       console.error("Error deleting project:", error);

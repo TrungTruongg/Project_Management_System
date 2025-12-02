@@ -1,216 +1,609 @@
-import { Box, Button, Card, CardContent, Grid, Paper, Typography } from "@mui/material"
+import { Box, Button, Card, CardContent, CircularProgress, Grid, IconButton, Paper, Typography } from "@mui/material"
 import { ChevronRight } from "@mui/icons-material"
-import { projectCards, taskCards } from "../../constants/constants"
+import { BsJournalCheck as TotalTaskIcon } from "react-icons/bs";
+import { BsListCheck as CompleteTaskIcon } from "react-icons/bs";
+import { BsClipboardData as ProgressTaskIcon } from "react-icons/bs";
+import { AiOutlineFundProjectionScreen as TotalProjectIcon } from "react-icons/ai";
+import { BiTask as CompleteProjectIcon } from "react-icons/bi";
+import { TbSubtask as ProgressProjectIcon } from "react-icons/tb";
 import WelcomeIcon from "../icons/WelcomeIcon"
 import DashboardProjectInformation from "./DashboardProjectInformation"
 import Header from "../Header"
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { useNavigate } from "react-router-dom";
 
 function DashboardContent() {
+  const [tasks, setTasks] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const totalTask = tasks.length;
+  const totalCompletedTasks = tasks.filter((task: any) => task.status === "completed").length;
+  const totalProgressTasks = tasks.filter((task: any) => task.completion > 0).length;
+
+  const totalProjects = projects.length;
+  const totalCompletedProjects = projects.filter((project: any) => project.completion === 100).length;
+  const totalProgressProjects = projects.filter((project: any) => project.completion > 0).length;
+
+  const fetchAllDatas = async () => {
+    setLoading(true);
+    try {
+      const [projectsRes, tasksRes] =
+        await Promise.all([
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+          )
+        ]);
+      setProjects(projectsRes.data.data.data);
+      setTasks(tasksRes.data.data.data);
+    } catch (err) {
+      console.error(err)
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    fetchAllDatas();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          p: 4,
+          order: 3,
+          flex: "1 1",
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-      <Box sx={{ p: 4, order: 3, flex: "1 1", overflowY: "auto", height: "100vh" }}>
-        <Header />
-
-        {/* Task Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {taskCards.map((card, index) => (
-            <Grid size={{ xs: 12, md: 4 }} key={index}>
-              <Card
-                elevation={0}
-                sx={{
-                  backgroundColor: "white",
-                  position: "relative",
-                  overflow: "visible",
-                  border: "1px solid #f0f0f0",
-                }}
-              >
-                <CardContent
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    py: 3,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 60,
-                      height: 60,
-                      bgcolor: "#FFE28C",
-                      borderRadius: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 32,
-                    }}
-                  >
-                    {card.icon}
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      flex: "1 1 auto",
-                      marginLeft: "1.5rem",
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
-                      color="text.secondary"
-                      fontWeight="500"
-                    >
-                      {card.title}
-                    </Typography>
-                    <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                      {card.value}
-                    </Typography>
-                  </Box>
-                  <ChevronRight sx={{ fontSize: 40, opacity: 0.5 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Main Content Grid */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {/* Welcome Section */}
-          <Grid size={{ xs: 13 }}>
-            <Paper
-              elevation={0}
+    <Box sx={{ p: 4, order: 3, flex: "1 1", overflowY: "auto", height: "100vh" }}>
+      <Header />
+      {/* Task Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Total Task Cards */}
+        <Grid size={{ xs: 12, md: 4 }} >
+          <Card
+            elevation={0}
+            sx={{
+              backgroundColor: "white",
+              position: "relative",
+              overflow: "visible",
+              border: "1px solid #f0f0f0",
+            }}
+          >
+            <CardContent
               sx={{
-                p: 4,
                 display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
                 justifyContent: "space-between",
-                border: "1px solid #f0f0f0",
-                gap: 4,
+                alignItems: "center",
+                py: 3,
               }}
             >
-              <Box sx={{ flex: 1, maxWidth: "60%" }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
-                  Welcome to My-task, a Project Management System
-                </Typography>
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  bgcolor: "#FFE28C",
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 32,
+                }}
+              >
+                <TotalTaskIcon />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  marginLeft: "1.5rem",
+                }}
+              >
                 <Typography
                   variant="body1"
                   color="text.secondary"
-                  component="p"
-                  sx={{ lineHeight: "24px", mb: 3 }}
+                  fontWeight="500"
                 >
-                  Manage projects with ease and boost team productivity. Our
-                  intuitive platform helps you plan, execute, and track every
-                  aspect of your projects. From task assignment to deadline
-                  management, everything you need is at your fingertips.
+                  Total Tasks
                 </Typography>
-                <Button
-                  variant="contained"
-                  sx={{
-                    bgcolor: "#f19828",
-                    borderRadius: 2,
-                    textTransform: "none",
-                    px: 4,
-                    py: 1.5,
-                    "&:hover": { bgcolor: "#F57C00" },
-                  }}
-                >
-                  Free Inquire
-                </Button>
+                <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                  {totalTask}
+                </Typography>
               </Box>
-
-              <Box
+              <IconButton
+                onClick={() => navigate("/task")}
                 sx={{
-                  flex: 1,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  maxWidth: "40%",
+                  borderRadius: 1,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.04)",
+                    transform: "translateX(4px)",
+                    "& .MuiSvgIcon-root": {
+                      opacity: 0.8,
+                    }
+                  },
+                  "&:active": {
+                    transform: "scale(0.95)",
+                  }
                 }}
               >
-                <WelcomeIcon />
-              </Box>
-            </Paper>
-          </Grid>
+                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
+              </IconButton>
 
-          <Grid size={{ xs: 12 }}>
-            <Paper elevation={0} sx={{ p: 3, border: "1px solid #f0f0f0" }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Project Timeline
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Total Completed Tasks */}
+        <Grid size={{ xs: 12, md: 4 }} >
+          <Card
+            elevation={0}
+            sx={{
+              backgroundColor: "white",
+              position: "relative",
+              overflow: "visible",
+              border: "1px solid #f0f0f0",
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  bgcolor: "#FFE28C",
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 32,
+                }}
+              >
+                <CompleteTaskIcon />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  marginLeft: "1.5rem",
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
+                  fontWeight="500"
+                >
+                  Total Completed Tasks
+                </Typography>
+                <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                  {totalCompletedTasks}
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={() => navigate("/task")}
+                sx={{
+                  borderRadius: 1,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.04)",
+                    transform: "translateX(4px)",
+                    "& .MuiSvgIcon-root": {
+                      opacity: 0.8,
+                    }
+                  },
+                  "&:active": {
+                    transform: "scale(0.95)",
+                  }
+                }}
+              >
+                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
+              </IconButton>
+
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Total Progress Tasks */}
+        <Grid size={{ xs: 12, md: 4 }} >
+          <Card
+            elevation={0}
+            sx={{
+              backgroundColor: "white",
+              position: "relative",
+              overflow: "visible",
+              border: "1px solid #f0f0f0",
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  bgcolor: "#FFE28C",
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 32,
+                }}
+              >
+                <ProgressTaskIcon />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  marginLeft: "1.5rem",
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
+                  fontWeight="500"
+                >
+                  Total Process Tasks
+                </Typography>
+                <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                  {totalProgressTasks}
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={() => navigate("/task")}
+                sx={{
+                  borderRadius: 1,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.04)",
+                    transform: "translateX(4px)",
+                    "& .MuiSvgIcon-root": {
+                      opacity: 0.8,
+                    }
+                  },
+                  "&:active": {
+                    transform: "scale(0.95)",
+                  }
+                }}
+              >
+                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
+              </IconButton>
+
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Main Content Grid */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Welcome Section */}
+        <Grid size={{ xs: 13 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 4,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              border: "1px solid #f0f0f0",
+              gap: 4,
+            }}
+          >
+            <Box sx={{ flex: 1, maxWidth: "60%" }}>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Welcome to My-task, a Project Management System
               </Typography>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                component="p"
+                sx={{ lineHeight: "24px", mb: 3 }}
+              >
+                Manage projects with ease and boost team productivity. Our
+                intuitive platform helps you plan, execute, and track every
+                aspect of your projects. From task assignment to deadline
+                management, everything you need is at your fingertips.
+              </Typography>
+              <Button
+                variant="contained"
+                sx={{
+                  bgcolor: "#f19828",
+                  borderRadius: 2,
+                  textTransform: "none",
+                  px: 4,
+                  py: 1.5,
+                  "&:hover": { bgcolor: "#F57C00" },
+                }}
+              >
+                Free Inquire
+              </Button>
+            </Box>
+
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                maxWidth: "40%",
+              }}
+            >
+              <WelcomeIcon />
+            </Box>
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Paper elevation={0} sx={{ p: 3, border: "1px solid #f0f0f0" }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Project Timeline
+            </Typography>
+            <Box
+              sx={{
+                height: 100,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Timeline visualization area
+              </Typography>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Project Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, md: 4 }} >
+          <Card
+            elevation={0}
+            sx={{
+              backgroundColor: "#484c7f",
+              position: "relative",
+              overflow: "visible",
+              border: "1px solid #f0f0f0",
+              color: "white",
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 3,
+              }}
+            >
               <Box
                 sx={{
-                  height: 100,
+                  width: 60,
+                  height: 10,
+                  borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  fontSize: 32,
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
-                  Timeline visualization area
+                <TotalProjectIcon />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  marginLeft: "1.5rem",
+                }}
+              >
+                <Typography variant="h6" fontWeight="500">
+                  Total Projects
+                </Typography>
+                <Typography sx={{ marginBottom: 0 }}>
+                  {totalProjects}
                 </Typography>
               </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Project Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          {projectCards.map((card, index) => (
-            <Grid size={{ xs: 12, md: 4 }} key={index}>
-              <Card
-                elevation={0}
+              <IconButton
+                onClick={() => navigate("/project")}
                 sx={{
-                  backgroundColor: "#484c7f",
-                  position: "relative",
-                  overflow: "visible",
-                  border: "1px solid #f0f0f0",
-                  color: "white",
+                  borderRadius: 1,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.04)",
+                    transform: "translateX(4px)",
+                    "& .MuiSvgIcon-root": {
+                      opacity: 0.8,
+                    }
+                  },
+                  "&:active": {
+                    transform: "scale(0.95)",
+                  }
                 }}
               >
-                <CardContent
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    py: 3,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 60,
-                      height: 10,
-                      borderRadius: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 32,
-                    }}
-                  >
-                    {card.icon}
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      flex: "1 1 auto",
-                      marginLeft: "1.5rem",
-                    }}
-                  >
-                    <Typography variant="h6" fontWeight="500">
-                      {card.title}
-                    </Typography>
-                    <Typography sx={{ marginBottom: 0 }}>
-                      {card.value}
-                    </Typography>
-                  </Box>
-                  <ChevronRight sx={{ fontSize: 40, opacity: 0.5 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
+              </IconButton>
+
+
+            </CardContent>
+          </Card>
         </Grid>
 
-        <DashboardProjectInformation />
-      </Box>
+        <Grid size={{ xs: 12, md: 4 }} >
+          <Card
+            elevation={0}
+            sx={{
+              backgroundColor: "#484c7f",
+              position: "relative",
+              overflow: "visible",
+              border: "1px solid #f0f0f0",
+              color: "white",
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 60,
+                  height: 10,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 32,
+                }}
+              >
+                <CompleteProjectIcon />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  marginLeft: "1.5rem",
+                }}
+              >
+                <Typography variant="h6" fontWeight="500">
+                  Total Completed Projects
+                </Typography>
+                <Typography sx={{ marginBottom: 0 }}>
+                  {totalCompletedProjects}
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={() => navigate("/project")}
+                sx={{
+                  borderRadius: 1,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.04)",
+                    transform: "translateX(4px)",
+                    "& .MuiSvgIcon-root": {
+                      opacity: 0.8,
+                    }
+                  },
+                  "&:active": {
+                    transform: "scale(0.95)",
+                  }
+                }}
+              >
+                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
+              </IconButton>
+
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }} >
+          <Card
+            elevation={0}
+            sx={{
+              backgroundColor: "#484c7f",
+              position: "relative",
+              overflow: "visible",
+              border: "1px solid #f0f0f0",
+              color: "white",
+            }}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 60,
+                  height: 10,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 32,
+                }}
+              >
+                <ProgressProjectIcon />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  marginLeft: "1.5rem",
+                }}
+              >
+                <Typography variant="h6" fontWeight="500">
+                  Total Progress Projects
+                </Typography>
+                <Typography sx={{ marginBottom: 0 }}>
+                  {totalProgressProjects}
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={() => navigate("/project")}
+                sx={{
+                  borderRadius: 1,
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.04)",
+                    transform: "translateX(4px)",
+                    "& .MuiSvgIcon-root": {
+                      opacity: 0.8,
+                    }
+                  },
+                  "&:active": {
+                    transform: "scale(0.95)",
+                  }
+                }}
+              >
+                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
+              </IconButton>
+
+            </CardContent>
+          </Card>
+        </Grid>
+
+      </Grid>
+
+      <DashboardProjectInformation />
+    </Box>
   )
 }
 
