@@ -225,7 +225,6 @@ function DashboardProjectInformation() {
                                 fontSize: "14px",
                                 bgcolor: "#E0E0E0",
                               }}
-                              title={getUserFullName(memberId)}
                             >
                               {getUserAvatar(memberId)}
                             </Avatar>

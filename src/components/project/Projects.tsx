@@ -26,6 +26,7 @@ function Projects() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectList, setProjectList] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -39,19 +40,36 @@ function Projects() {
     return diffDays;
   };
 
+  const calculateProjectCompletion = (projectId: number) => {
+    const projectTasks = tasks.filter((task) => task.projectId === projectId);
+
+    if (projectTasks.length === 0) return 0;
+
+    const completedTasks = projectTasks.filter(
+      (task: any) => task.status === "completed"
+    );
+
+    return Math.round((completedTasks.length / projectTasks.length) * 100);
+  };
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseProject, responseUser] = await Promise.all([
+      const [responseProject, responseUser, responseTask] = await Promise.all([
         axios.get(
           "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
         ),
         axios.get(
           "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
         ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
       ]);
+
       setProjectList(responseProject.data.data.data);
       setUsers(responseUser.data.data.data);
+      setTasks(responseTask.data.data.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -124,6 +142,10 @@ function Projects() {
     }
 
     return users.filter((user) => project.member.includes(user.id));
+  };
+
+  const getProjectLeader = (project: any) => {
+    return users.find((user) => user.id === project.leaderId);
   };
 
   return (
@@ -209,6 +231,8 @@ function Projects() {
           >
             {projectList.map((project: any) => {
               const projectMembers = getProjectMembers(project);
+              const projectLeader = getProjectLeader(project);
+              const completion = calculateProjectCompletion(project.id);
               return (
                 <Card
                   key={project.id}
@@ -234,7 +258,7 @@ function Projects() {
                       }}
                     >
                       <Box>
-                        <Typography variant="h6" fontWeight="bold">
+                        <Typography variant="h6" fontWeight="bold" sx={{ textTransform: "capitalize" }}>
                           {project.title}
                         </Typography>
                       </Box>
@@ -259,6 +283,26 @@ function Projects() {
                     {/* Members */}
                     <Box sx={{ mb: 2 }}>
                       <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+                        {projectLeader && (
+                          <Avatar
+                            key={`leader-${projectLeader.id}`}
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: "12px",
+                              bgcolor: "#FF9800",
+                              color: "white",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              border: "2px solid #FFA726",
+                            }}
+                            title={`Leader: ${projectLeader.firstName} ${projectLeader.lastName}`}
+                          >
+                            {projectLeader.firstName?.[0]}
+                            {projectLeader.lastName?.[0]}
+                          </Avatar>
+                        )}
+
                         {projectMembers.length > 0 ? (
                           projectMembers.map((member) => (
                             <Avatar
@@ -272,13 +316,14 @@ function Projects() {
                                 fontWeight: 600,
                                 textTransform: "uppercase",
                               }}
+
                               title={`${member.firstName} ${member.lastName}`}
                             >
                               {member.firstName?.[0]}
                               {member.lastName?.[0]}
                             </Avatar>
                           ))
-                        ) : (
+                        ) : !projectLeader ? (
                           <Typography
                             variant="caption"
                             sx={{
@@ -288,7 +333,7 @@ function Projects() {
                           >
                             No members yet
                           </Typography>
-                        )}
+                        ) : null}
                       </AvatarGroup>
                     </Box>
 
@@ -425,7 +470,7 @@ function Projects() {
                               flex: 1,
                               height: 8,
                               bgcolor:
-                                i <= Math.floor(project.completion / 25)
+                                i <= Math.floor(completion / 25)
                                   ? "#FF9800"
                                   : "#E0E0E0",
                               borderRadius: 1,
@@ -433,6 +478,12 @@ function Projects() {
                           />
                         ))}
                       </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
+                      >
+                        {completion}% Complete 
+                      </Typography>
                     </Box>
                   </CardContent>
                 </Card>

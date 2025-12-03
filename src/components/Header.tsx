@@ -91,18 +91,16 @@ function Header() {
           }}
         >
           {loading ? (
-            <>
-              {[1, 2, 3, 4, 5].map((index) => (
-                <Skeleton
-                  key={index}
-                  variant="circular"
-                  animation="wave"
-                  width={35}
-                  height={35}
-                  sx={{ border: "2px solid white", ml: index > 0 ? -1 : 0 }}
-                />
-              ))}
-            </>
+            [1, 2, 3, 4, 5].map((index) => (
+              <Skeleton
+                key={index}
+                variant="circular"
+                animation="wave"
+                width={35}
+                height={35}
+                sx={{ border: "2px solid white", ml: index > 0 ? -1 : 0 }}
+              />
+            ))
           ) : (
 
             users.map((user) => (

@@ -12,6 +12,7 @@ import {
     Typography,
 } from "@mui/material";
 import axios from "axios";
+import { useUser } from "../context/UserContext";
 
 function UpdateMemberProfileModal({
     open,
@@ -27,6 +28,7 @@ function UpdateMemberProfileModal({
     const [location, setLocation] = useState("");
     const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState(false);
+    const { setUser } = useUser();
 
     useEffect(() => {
         if (open && selectedUser) {
@@ -95,8 +97,10 @@ function UpdateMemberProfileModal({
                 `https://mindx-mockup-server.vercel.app/api/resources/users/${selectedUser._id}?apiKey=69205e8dbf3939eacf2e89f2`,
                 updatedUser
             );
-
+            
             onUpdate(response.data.data);
+            setUser(response.data.data);
+            localStorage.setItem("user", JSON.stringify(response.data.data));
             onClose();
         }
         catch (error) {

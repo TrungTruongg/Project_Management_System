@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { IoMdClose as CloseIcon } from "react-icons/io";
 
 import {
+  Avatar,
   Box,
   Button,
+  Checkbox,
+  Chip,
+  ListItemText,
   MenuItem,
   Modal,
   Select,
@@ -14,12 +18,6 @@ import {
 import axios from "axios";
 
 function CreateProjectModal({
-  titleModal = "",
-  desModal = "",
-  startDateModal = "",
-  endDateModal = "",
-  priorityModal = "",
-  assignedToModal = "",
   open,
   onClose,
   onSave,
@@ -27,12 +25,12 @@ function CreateProjectModal({
   projectList = [],
   selectedProject = null,
 }: any) {
-  const [title, setTitle] = useState(titleModal);
-  const [description, setDescription] = useState(desModal);
-  const [startDate, setStartDate] = useState(startDateModal);
-  const [endDate, setEndDate] = useState(endDateModal);
-  const [priority, setPriority] = useState(priorityModal);
-  const [assignedTo, setAssignedTo] = useState(assignedToModal);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [priority, setPriority] = useState("");
+  const [leaderId, setLeaderId] = useState<number | "">("");
   const [member, setMember] = useState<number[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [showError, setShowError] = useState(false);
@@ -58,7 +56,7 @@ function CreateProjectModal({
           description: description,
           startDate: startDate,
           endDate: endDate,
-          leaderId: assignedTo,
+          leaderId: leaderId,
           member: member,
           priority: priority.toLowerCase(),
           completion: selectedProject.completion || 0,
@@ -70,7 +68,6 @@ function CreateProjectModal({
         );
 
         onUpdate(response.data.data);
-        onClose();
       } else {
         const maxId =
           projectList.length > 0
@@ -83,7 +80,7 @@ function CreateProjectModal({
           description: description,
           startDate: startDate,
           endDate: endDate,
-          leaderId: assignedTo,
+          leaderId: leaderId,
           member: member,
           priority: priority.toLowerCase(),
           completion: 0,
@@ -95,8 +92,9 @@ function CreateProjectModal({
         );
 
         onSave(response.data.data);
-        onClose();
+
       }
+      onClose();
     } catch (error) {
       console.error(error);
     } finally {
@@ -124,13 +122,13 @@ function CreateProjectModal({
         setStartDate(selectedProject.startDate || "");
         setEndDate(selectedProject.endDate || "");
         setPriority(selectedProject.priority || "");
-        setAssignedTo(selectedProject.leaderId || "");
+        setLeaderId(selectedProject.leaderId || "");
         setMember(
           Array.isArray(selectedProject.member)
             ? selectedProject.member
             : selectedProject.member
-            ? [selectedProject.member]
-            : []
+              ? [selectedProject.member]
+              : []
         );
       } else {
         // Create
@@ -139,7 +137,7 @@ function CreateProjectModal({
         setStartDate("");
         setEndDate("");
         setPriority("");
-        setAssignedTo("");
+        setLeaderId("");
         setMember([]);
       }
       setShowError(false);
@@ -147,6 +145,9 @@ function CreateProjectModal({
     }
     fetchUsers();
   }, [open, selectedProject]);
+
+  const leaderUsers = users.filter((user: any) => user.role === "leader");
+  const staffUsers = users.filter((user: any) => user.role === "member");
 
   return (
     <Modal
@@ -325,38 +326,85 @@ function CreateProjectModal({
               renderValue={(selected) => {
                 if (selected.length === 0) {
                   return (
-                    <span style={{ color: "#9ca3af" }}>
-                      {!selectedProject
-                        ? "Please select a project first"
-                        : "Choose members"}
-                    </span>
+                    <span style={{ color: "#9ca3af" }}>Choose members</span>
                   );
                 }
-                const selectedNames = selected.map((userId: number) => {
-                  const member = users.find((m: any) => m.id === userId);
-                  return `${member?.firstName} ${member?.lastName}` || "Unknown";
-                });
-
-                return selectedNames.join(", ");
+                return (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {selected.map((userId: number) => {
+                      const user = users.find((u: any) => u.id === userId);
+                      return (
+                        <Chip
+                          key={userId}
+                          label={`${user?.firstName} ${user?.lastName}`}
+                          size="small"
+                        />
+                      );
+                    })}
+                  </Box>
+                );
               }}
               sx={{
                 fontSize: "14px",
+                textTransform: "capitalize",
                 color: member.length === 0 ? "#9ca3af" : "#111827",
               }}
             >
-              {users.map((user) => {
-                return (
-                  <MenuItem
-                    value={user?.id}
-                    key={user?.id}
-                    sx={{
-                      fontSize: "14px",
-                    }}
-                  >
-                    {user?.firstName} {user?.lastName}
-                  </MenuItem>
-                );
-              })}
+              {staffUsers.map((user: any) => (
+                <MenuItem value={user.id} key={user.id}>
+                 
+                  <ListItemText
+                    primary={`${user.firstName} ${user.lastName}`}
+                    secondary={user.role}
+                    sx={{  textTransform: "capitalize" }}
+                  />
+                </MenuItem>
+              ))}
+            </Select>
+             {/* <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
+            >
+              {member.length} member{member.length !== 1 ? "s" : ""} selected
+            </Typography> */}
+          </Box>
+
+          {/* Choose Leader */}
+          <Box>
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: 500,
+                mb: 0.5,
+                color: "#374151",
+              }}
+            >
+              Choose Leader <span className="text-red-500">*</span>
+            </Typography>
+            <Select
+              fullWidth
+              size="small"
+              displayEmpty
+              value={leaderId}
+              onChange={(e) => setLeaderId(e.target.value)}
+              sx={{
+                fontSize: "14px",
+                color: leaderId === "" ? "#9ca3af" : "#111827",
+              }}
+            >
+              <MenuItem value="" disabled>
+                <span style={{ color: "#9ca3af" }}>Choose leader</span>
+              </MenuItem>
+              {leaderUsers.map((user: any) => (
+                <MenuItem
+                  value={user.id}
+                  key={user.id}
+                  sx={{ fontSize: "14px" }}
+                >              
+                  <Typography>{user.firstName} {user.lastName}</Typography>  
+                </MenuItem>
+
+              ))}
             </Select>
           </Box>
 
