@@ -10,6 +10,7 @@ import {
   LinearProgress,
   Avatar,
   AvatarGroup,
+  CircularProgress,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -53,24 +54,11 @@ function DashboardProjectInformation() {
     fetchAllDatas();
   }, []);
 
-  // Helper function để lấy tên đầy đủ của user
-  const getUserFullName = (userId: number | string) => {
-    const user = users.find((u: any) => u.id === userId);
-    if (!user) return "N/A";
-    return `${user.firstName || ""} ${user.lastName || ""}`.trim();
-  };
-
-  // Helper function để lấy avatar của user
-  const getUserAvatar = (userId: number | string) => {
-    const user = users.find((u: any) => u.id === userId);
-    return user?.avatar || "👤";
-  };
-
   if (loading) {
     return (
       <Box sx={{ p: 4, bgcolor: "#f5f5f5" }}>
         <Box sx={{ bgcolor: "white", borderRadius: 2, p: 3, boxShadow: 1 }}>
-          <Typography>Đang tải dữ liệu...</Typography>
+          <CircularProgress />
         </Box>
       </Box>
     );
@@ -157,9 +145,9 @@ function DashboardProjectInformation() {
             </TableHead>
             <TableBody>
               {projects.map((project: any, index) => {
-                const leaderName = getUserFullName(project.leaderId);
+                const leader = users.find(user => user.id === project.leaderId);
                 const members = project.member || [];
-
+                console.log(project)
                 return (
                   <TableRow
                     key={index}
@@ -197,38 +185,52 @@ function DashboardProjectInformation() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            fontSize: "14px",
-                            bgcolor: "#E0E0E0",
-                          }}
+                      {leader ? (
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          {getUserAvatar(project.leaderId)}
-                        </Avatar>
-                        <Typography variant="body2">{leaderName}</Typography>
-                      </Box>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: "14px",
+                              bgcolor: "#E0E0E0",
+                            }}
+                          >
+                            {leader.firstName?.[0]}{leader.lastName?.[0]}
+                          </Avatar>
+                          <Typography variant="body2">
+                            {leader.firstName} {leader.lastName}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          No leader
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell>
                       {members.length > 0 ? (
                         <AvatarGroup max={4}>
-                          {members.map((memberId: number) => (
-                            <Avatar
-                              key={memberId}
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                fontSize: "14px",
-                                bgcolor: "#E0E0E0",
-                              }}
-                            >
-                              {getUserAvatar(memberId)}
-                            </Avatar>
-                          ))}
+                          {members.map((memberId: any) => {
+                            const memberInfo = users.find(user => user.id === memberId);
+
+                            return (
+                              <Avatar
+                                key={memberId}
+                                sx={{
+                                  width: 32,
+                                  height: 32,
+                                  fontSize: "14px",
+                                  bgcolor: "#E0E0E0",
+                                  textTransform: "uppercase"
+                                }}
+                                title={memberInfo ? `${memberInfo.firstName} ${memberInfo.lastName}` : "Unknown"}
+                              >
+                                {memberInfo?.firstName?.[0]}{memberInfo?.lastName?.[0]}
+                              </Avatar>
+                            );
+                          })}
                         </AvatarGroup>
                       ) : (
                         <Typography variant="body2" color="text.secondary">
@@ -258,10 +260,10 @@ function DashboardProjectInformation() {
                                   project.completion >= 75
                                     ? "#4CAF50"
                                     : project.completion >= 50
-                                    ? "#5C6BC0"
-                                    : project.completion >= 25
-                                    ? "#FF9800"
-                                    : "#EF5350",
+                                      ? "#5C6BC0"
+                                      : project.completion >= 25
+                                        ? "#FF9800"
+                                        : "#EF5350",
                                 borderRadius: 4,
                               },
                             }}
@@ -276,10 +278,10 @@ function DashboardProjectInformation() {
                               project.completion >= 75
                                 ? "#4CAF50"
                                 : project.completion >= 50
-                                ? "#5C6BC0"
-                                : project.completion >= 25
-                                ? "#FF9800"
-                                : "#EF5350",
+                                  ? "#5C6BC0"
+                                  : project.completion >= 25
+                                    ? "#FF9800"
+                                    : "#EF5350",
                           }}
                         >
                           {project.completion}%

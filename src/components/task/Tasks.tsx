@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import CreateTaskModal from "./CreateTaskModal";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
+import { useUser } from "../context/UserContext";
 
 function Tasks() {
   const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
@@ -27,6 +28,7 @@ function Tasks() {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const { user } = useUser();
 
   // const calculateDeadline = (dateStart: string, dateEnd: string) => {
   //   const startDate = new Date(dateStart);
@@ -53,9 +55,28 @@ function Tasks() {
         ),
       ]);
 
-      setTaskList(responseTask.data.data.data);
-      setProjects(responseProject.data.data.data);
+      const allTasks = responseTask.data.data.data;
+      const allProjects = responseProject.data.data.data;
+
+      setProjects(allProjects);
       setUsers(responseUser.data.data.data);
+
+      let filteredTasks = allTasks;
+
+      if (user) {
+        if (user.role === "member") {
+
+          const userProjectIds = allProjects
+            .filter((p: any) => p.member?.includes(user.id))
+            .map((p: any) => p.id);
+
+          filteredTasks = allTasks.filter((task: any) =>
+            userProjectIds.includes(task.projectId)
+          );
+        }
+      }
+
+      setTaskList(filteredTasks);
     } catch (error) {
       console.error(error);
     } finally {
@@ -97,29 +118,108 @@ function Tasks() {
     setOpenCreateTaskModal(true);
   };
 
-  const handleSaveTask = (newTask: any) => {
-    setTaskList([...taskList, newTask]);
+  const updateProjectCompletion = async (projectId: number) => {
+    try {
+      const [tasksRes, projectsRes] = await Promise.all([
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+      ]);
+
+      const allTasks = tasksRes.data.data.data;
+      const allProjects = projectsRes.data.data.data;
+
+      // Tìm project cần update
+      const projectToUpdate = allProjects.find((p: any) => p.id === projectId);
+      if (!projectToUpdate) return;
+
+      // Tính completion mới
+      const projectTasks = allTasks.filter((t: any) => t.projectId === projectId);
+      const completedTasks = projectTasks.filter(
+        (t: any) => t.status === "completed"
+      );
+
+      const newCompletion =
+        projectTasks.length > 0
+          ? Math.round((completedTasks.length / projectTasks.length) * 100)
+          : 0;
+
+      // Update project với completion mới
+      const updatedProject = {
+        ...projectToUpdate,
+        completion: newCompletion,
+      };
+
+      await axios.put(
+        `https://mindx-mockup-server.vercel.app/api/resources/projects/${projectToUpdate._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+        updatedProject
+      );
+
+      setProjects(prev =>
+        prev.map(p => p.id === projectId ? updatedProject : p)
+      );
+    } catch (error) {
+      console.error("Error updating project completion:", error);
+    }
   };
 
-  const handleUpdateTask = (updateTask: any) => {
+  // Khi tạo task mới
+  const handleSaveTask = async (newTask: any) => {
+    setTaskList([...taskList, newTask]);
+
+    // Update completion của project
+    if (newTask.projectId) {
+      await updateProjectCompletion(newTask.projectId);
+    }
+  };
+
+  // Khi update task (bao gồm thay đổi status)
+  const handleUpdateTask = async (updatedTask: any) => {
+    const oldTask = taskList.find(t => t.id === updatedTask.id);
+
     setTaskList(
       taskList.map((task: any) =>
-        task.id === updateTask.id ? updateTask : task
+        task.id === updatedTask.id ? updatedTask : task
       )
     );
+
+    // Update completion nếu status thay đổi HOẶC projectId thay đổi
+    if (updatedTask.projectId) {
+      await updateProjectCompletion(updatedTask.projectId);
+    }
+
+    // Nếu task được chuyển sang project khác, cập nhật cả project cũ
+    if (oldTask?.projectId && oldTask.projectId !== updatedTask.projectId) {
+      await updateProjectCompletion(oldTask.projectId);
+    }
   };
 
+  // Khi xóa task
   const handleDeleteTask = async () => {
+     setLoading(true);
+
+    if (!selectedTask) return;
+   
     try {
+      const projectId = selectedTask.projectId;
+
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=69205e8dbf3939eacf2e89f2`
       );
 
       setTaskList(taskList.filter((task: any) => task.id !== selectedTask.id));
 
+      // Update completion của project
+      if (projectId) {
+        await updateProjectCompletion(projectId);
+      }
+
       handleCloseDeleteDialog();
     } catch (error) {
-      console.error("Error deleting project:", error);
+      console.error("Error deleting task:", error);
     } finally {
       setLoading(false);
     }
@@ -142,8 +242,8 @@ function Tasks() {
     const assignedUserIds = Array.isArray(task.assignedTo)
       ? task.assignedTo
       : task.assignedTo
-      ? [task.assignedTo]
-      : [];
+        ? [task.assignedTo]
+        : [];
 
     const assignedUsers = assignedUserIds
       .map((userId: number) => users.find((u) => u.id === userId))
@@ -177,8 +277,7 @@ function Tasks() {
                 fontSize: "0.75rem",
               }}
             />
-
-            <Box sx={{ display: "flex", gap: 1 }}>
+            {user?.role === "leader" && <Box sx={{ display: "flex", gap: 1 }}>
               <IconButton
                 size="small"
                 sx={{ color: "#4CAF50" }}
@@ -194,6 +293,7 @@ function Tasks() {
                 <Delete fontSize="small" />
               </IconButton>
             </Box>
+            }
           </Box>
 
           <Chip

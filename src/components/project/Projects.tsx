@@ -18,6 +18,14 @@ import { useEffect, useState } from "react";
 import CreateProjectModal from "./CreateProjectModal";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
+import {
+  canCreateProject,
+  canEditProject,
+  canDeleteProject,
+  canViewProject,
+  getVisibleProjects,
+} from "../utils/permission";
+import { useUser } from "../context/UserContext";
 
 function Projects() {
   const filterTabs = ["All", "Started", "Approval", "Completed"];
@@ -29,6 +37,8 @@ function Projects() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+
+  const { user } = useUser();
 
   const calculateDeadline = (dateStart: string, dateEnd: string) => {
     const startDate = new Date(dateStart);
@@ -67,7 +77,20 @@ function Projects() {
         ),
       ]);
 
-      setProjectList(responseProject.data.data.data);
+      const allProjects = responseProject.data.data.data;
+
+      let filteredProjects = allProjects;
+
+      if (user) {
+        if (user.role === "member") {
+
+          filteredProjects = allProjects.filter((project: any) => 
+            project.member?.includes(user.id) || project.leaderId === user.id
+          );
+        }
+      }
+
+      setProjectList(filteredProjects);
       setUsers(responseUser.data.data.data);
       setTasks(responseTask.data.data.data);
     } catch (error) {
@@ -78,8 +101,10 @@ function Projects() {
   };
 
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    if (user) {
+      fetchAllData();
+    }
+  }, [user]);
 
   const handleOpenModal = () => {
     setSelectedProject(null);
@@ -168,46 +193,47 @@ function Projects() {
           <Typography variant="h4" fontWeight="700">
             Projects
           </Typography>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<AddProjectIcon />}
-              onClick={handleOpenModal}
-              sx={{
-                backgroundColor: "#484c7f",
-                color: "white",
-                textTransform: "none",
-                px: 3,
-              }}
-            >
-              Create Project
-            </Button>
+          {user?.role === "leader" &&
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<AddProjectIcon />}
+                onClick={handleOpenModal}
+                sx={{
+                  backgroundColor: "#484c7f",
+                  color: "white",
+                  textTransform: "none",
+                  px: 3,
+                }}
+              >
+                Create Project
+              </Button>
 
-            <Box sx={{ display: "flex" }}>
-              {filterTabs.map((tab, index) => (
-                <Button
-                  key={index}
-                  variant={index === 0 ? "contained" : "outlined"}
-                  size="large"
-                  sx={{
-                    textTransform: "none",
-                    px: 3,
-                    borderRadius: 0,
-                    backgroundColor: index === 0 ? "#484c7f" : "white",
-                    color: index === 0 ? "white" : "#484c7f",
-                    borderColor: "#484c7f",
-                  }}
-                >
-                  {tab}
-                </Button>
-              ))}
+              <Box sx={{ display: "flex" }}>
+                {filterTabs.map((tab, index) => (
+                  <Button
+                    key={index}
+                    variant={index === 0 ? "contained" : "outlined"}
+                    size="large"
+                    sx={{
+                      textTransform: "none",
+                      px: 3,
+                      borderRadius: 0,
+                      backgroundColor: index === 0 ? "#484c7f" : "white",
+                      color: index === 0 ? "white" : "#484c7f",
+                      borderColor: "#484c7f",
+                    }}
+                  >
+                    {tab}
+                  </Button>
+                ))}
+              </Box>
             </Box>
-          </Box>
+          }
         </Box>
 
         {/* Projects Grid */}
-
         {loading ? (
           <Box
             sx={{
@@ -233,6 +259,7 @@ function Projects() {
               const projectMembers = getProjectMembers(project);
               const projectLeader = getProjectLeader(project);
               const completion = calculateProjectCompletion(project.id);
+         
               return (
                 <Card
                   key={project.id}
@@ -482,7 +509,7 @@ function Projects() {
                         variant="caption"
                         sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
                       >
-                        {completion}% Complete 
+                        {completion}% Complete
                       </Typography>
                     </Box>
                   </CardContent>

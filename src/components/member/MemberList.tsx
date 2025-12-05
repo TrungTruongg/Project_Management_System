@@ -40,8 +40,20 @@ function MemberList() {
         "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
       );
 
-      setUsers(responseUser.data.data.data);
-      setMembers(responseMember.data.data.data);
+      const userData = responseUser.data.data.data;
+      const memberData = responseMember.data.data.data;
+
+      const sortedMembers = memberData.sort((a: any, b: any) => {
+        const userA = userData.find((u: any) => u.id === a.userId);
+        const userB = userData.find((u: any) => u.id === b.userId);
+
+        if (userA?.role === "leader") return -1;
+        if (userB?.role === "leader") return 1;
+        return 0;
+      });
+
+      setUsers(userData);
+      setMembers(sortedMembers);
       setTasks(responseTask.data.data.data);
     } catch (error) {
       console.error(error);
