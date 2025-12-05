@@ -18,8 +18,10 @@ import { useUser } from "./context/UserContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import NotificationModal from "./NotificationModal";
 
 function Header() {
+  const [open, setOpen] = useState(false);
   const { setUser, user } = useUser();
   const [users, setUsers] = useState<any[]>([]);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
@@ -63,6 +65,14 @@ function Header() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
+  const handleOpenNotification = () => {
+    setOpen(true);
+  }
+
+  const handleClose = () => {
+    setOpen(false);
+  }
 
   return (
     <Box
@@ -115,7 +125,7 @@ function Header() {
             ))
           )}
         </AvatarGroup>
-        <IconButton sx={{ bgcolor: "white" }}>
+        <IconButton sx={{ bgcolor: "white" }} onClick={handleOpenNotification}>
           <Notifications />
         </IconButton>
         <Box sx={{ textAlign: "right" }}>
@@ -219,6 +229,7 @@ function Header() {
           )}
         </Box>
       </Box>
+      <NotificationModal open={open} onClose={handleClose} currentUser={user}/>
     </Box>
   );
 }

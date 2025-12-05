@@ -18,13 +18,7 @@ import { useEffect, useState } from "react";
 import CreateProjectModal from "./CreateProjectModal";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
-import {
-  canCreateProject,
-  canEditProject,
-  canDeleteProject,
-  canViewProject,
-  getVisibleProjects,
-} from "../utils/permission";
+
 import { useUser } from "../context/UserContext";
 
 function Projects() {
