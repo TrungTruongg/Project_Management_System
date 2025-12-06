@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
-import Header from "../Header";
 import { CalendarToday, Delete, Edit } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateTaskModal from "./CreateTaskModal";
@@ -277,7 +276,7 @@ function Tasks() {
                 fontSize: "0.75rem",
               }}
             />
-            {user?.role === "leader" && <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 1 }}>
               <IconButton
                 size="small"
                 sx={{ color: "#4CAF50" }}
@@ -293,7 +292,6 @@ function Tasks() {
                 <Delete fontSize="small" />
               </IconButton>
             </Box>
-            }
           </Box>
 
           <Chip
@@ -395,22 +393,6 @@ function Tasks() {
 
   return (
     <>
-      <Box
-        sx={{
-          p: 4,
-          order: 3,
-          flex: "1 1",
-          overflowY: "auto",
-          height: "100vh",
-          "&::-webkit-scrollbar": {
-            display: "none",
-          },
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
-      >
-        <Header />
-
         {/* Top Grid */}
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Box
@@ -477,7 +459,6 @@ function Tasks() {
             </Grid>
           )}
         </Grid>
-      </Box>
       <CreateTaskModal
         open={openCreateTaskModal}
         onClose={handleCloseModal}

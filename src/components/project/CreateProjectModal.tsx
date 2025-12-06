@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { IoMdClose as CloseIcon } from "react-icons/io";
 
 import {
-  Avatar,
   Box,
   Button,
-  Checkbox,
   Chip,
   ListItemText,
   MenuItem,

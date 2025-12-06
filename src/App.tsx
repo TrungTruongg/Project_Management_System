@@ -16,6 +16,8 @@ import DashboardContent from "./components/dashboard/DashboardContent";
 import Register from "./components/Register";
 import MemberProfile from "./components/member/MemberProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TicketsView from "./components/ticket/TicketsView";
+import TicketsDetail from "./components/ticket/TicketsDetail";
 
 function App() {
   const theme = createTheme({
@@ -37,6 +39,8 @@ function App() {
                   <Route path="/task" element={<Tasks />} />
                   <Route path="/member" element={<MemberList />} />
                   <Route path="/member-profile" element={<MemberProfile />} />
+                  <Route path="/tickets-view" element={<TicketsView />} />
+                  <Route path="/tickets-detail" element={<TicketsDetail />} />
                 </Route>
               </Route>
               <Route path="/login" element={<Login />} />

@@ -70,9 +70,7 @@ function DashboardContent() {
   }
 
   return (
-    <Box sx={{ p: 4, order: 3, flex: "1 1", overflowY: "auto", height: "100vh" }}>
-      <Header />
-      {/* Task Cards */}
+    <>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Total Task Cards */}
         <Grid size={{ xs: 12, md: 4 }} >
@@ -603,7 +601,7 @@ function DashboardContent() {
       </Grid>
 
       <DashboardProjectInformation />
-    </Box>
+    </>
   )
 }
 

@@ -108,22 +108,41 @@ function NotificationModal({ open, onClose, currentUser }: any) {
     }
   }, [open, currentUser]);
 
-//   const getTimeAgo = (timestamp: string) => {
-//     const now = new Date();
-//     const time = new Date(timestamp);
-//     const diffInMs = now.getTime() - time.getTime();
-//     const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-//     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-//     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  const getTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const time = new Date(timestamp);
 
-//     if (diffInMinutes < 60) {
-//       return `${diffInMinutes}MIN`;
-//     } else if (diffInHours < 24) {
-//       return `${diffInHours}HR`;
-//     } else {
-//       return `${diffInDays}D`;
-//     }
-//   };
+    // ✅ Fix: Đảm bảo time là valid date
+    if (isNaN(time.getTime())) {
+      return "Just now";
+    }
+
+    const diffInMs = now.getTime() - time.getTime();
+
+    if (diffInMs < 0) {
+      return "Just now";
+    }
+
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 1) {
+      return "Just now";
+    } else if (diffInMinutes < 60) {
+      return `${diffInMinutes} min ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hr ago`;
+    } else if (diffInDays < 7) {
+      return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    } else if (diffInDays < 30) {
+      const weeks = Math.floor(diffInDays / 7);
+      return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+    } else {
+      const months = Math.floor(diffInDays / 30);
+      return `${months} month${months > 1 ? 's' : ''} ago`;
+    }
+  }
 
   const getStatusChip = (status: string) => {
     const config: any = {
@@ -329,7 +348,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                             color="text.secondary"
                             sx={{ whiteSpace: "nowrap" }}
                           >
-                            {/* {getTimeAgo(notification.timestamp)} */}
+                            {getTimeAgo(notification.timestamp)}
                           </Typography>
                         </Box>
                       }

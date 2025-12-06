@@ -13,7 +13,6 @@ import {
 import { GoPlusCircle as AddIcon } from "react-icons/go";
 import { BiTask as TotalTaskIcon } from "react-icons/bi";
 import { GrStatusGoodSmall as StatusIcon } from "react-icons/gr";
-import Header from "../Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -95,56 +94,46 @@ function MemberList() {
     navigate("/member-profile", { state: { member } });
   }
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          p: 4,
-          order: 3,
-          flex: "1 1",
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <>
       <Box
-        sx={{ p: 4, order: 3, flex: "1 1", overflowY: "auto", height: "100vh" }}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
       >
-        <Header />
+        <Typography variant="h4" fontWeight="bold">
+          Members
+        </Typography>
+
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{
+            backgroundColor: "#484c7f",
+            color: "white",
+            textTransform: "none",
+          }}
+          onClick={handleOpenAddMemberModal}
+        >
+          Add Member
+        </Button>
+      </Box>
+
+      {loading ? (
         <Box
           sx={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "center",
             alignItems: "center",
-            mb: 4,
+            py: 10,
           }}
         >
-          <Typography variant="h4" fontWeight="bold">
-            Members
-          </Typography>
-
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            sx={{
-              backgroundColor: "#484c7f",
-              color: "white",
-              textTransform: "none",
-            }}
-            onClick={handleOpenAddMemberModal}
-          >
-            Add Member
-          </Button>
+          <CircularProgress />
         </Box>
-
+      ) : (
         <Grid container spacing={3}>
           {members.map((member: any) => {
             const memberProject = users.find(
@@ -276,7 +265,7 @@ function MemberList() {
             );
           })}
         </Grid>
-      </Box>
+      )}
       <AddMemberModal
         open={open}
         onClose={handleCloseModal}

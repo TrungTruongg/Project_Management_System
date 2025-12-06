@@ -10,49 +10,24 @@ import {
   Typography,
 } from "@mui/material";
 import TaskIcon from "./icons/TaskIcon";
-import { FaBriefcase as ProjectIcon } from "react-icons/fa";
-import { FaHome as DashboardIcon } from "react-icons/fa";
-import { FaUsers as EmployeesIcon } from "react-icons/fa";
-import { Fragment, useEffect, useState } from "react";
 import { ArrowBack, ExpandLess, ExpandMore } from "@mui/icons-material";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-
-const iconMapping: any = {
-  DashboardIcon: DashboardIcon,
-  ProjectIcon: ProjectIcon,
-  EmployeesIcon: EmployeesIcon,
-};
+import { menuItems } from "../constants/constants";
 
 const routeMapping: Record<string, string> = {
   Dashboard: "/",
   "Project Dashboard": "/",
   Projects: "/project",
-  "Create Project": "/project",
   Tasks: "/task",
   Members: "/member",
   "Members Profile": "/member-profile",
+  "Tickets View": "/tickets-view",
+  "Tickets Detail": "/tickets-detail"
 };
 
 function Sidebar({ openMenus, toggleMenu }: any) {
-  const [menuItems, setMenuItems] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const fetchSidebar = async () => {
-    try {
-      const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/menuItems?apiKey=69205e8dbf3939eacf2e89f2"
-      );
-      setMenuItems(response.data.data.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    fetchSidebar();
-  }, []);
 
   const isMenuActive = (item: any) => {
     if (!item.submenu) {
@@ -132,13 +107,12 @@ function Sidebar({ openMenus, toggleMenu }: any) {
           }}
         >
           <List sx={{ py: 5, flexGrow: 1 }}>
-            {menuItems?.map((item: any, index) => {
+            {menuItems?.map((item: any) => {
               const isActive = isMenuActive(item);
-              const IconComponent = iconMapping[item.icon];
 
               return (
-                <Fragment key={index}>
-                  <ListItem disablePadding sx={{ mb: 0.5 }}>
+                <>
+                  <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       onClick={() => {
                         if (item?.submenu) {
@@ -158,7 +132,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                           minWidth: 40,
                         }}
                       >
-                        {IconComponent && <IconComponent />}
+                        {item.icon}
                       </ListItemIcon>
                       <ListItemText
                         primary={item.text}
@@ -209,7 +183,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                       </List>
                     </Collapse>
                   )}
-                </Fragment>
+                </>
               );
             })}
           </List>

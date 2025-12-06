@@ -1,6 +1,7 @@
 import {
   Avatar,
   AvatarGroup,
+  Badge,
   Box,
   Button,
   IconButton,
@@ -27,6 +28,7 @@ function Header() {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [hasNotification, setHasNotification] = useState(false);
 
   const fetchUser = async () => {
     setLoading(true);
@@ -42,8 +44,38 @@ function Header() {
     }
   };
 
+  const checkHasNotification = async () => {
+    if (!user || user.role !== "member") {
+      setHasNotification(false);
+      return;
+    }
+
+    try {
+      const [projectsRes, tasksRes] = await Promise.all([
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+      ]);
+
+      const projects = projectsRes.data.data.data;
+      const tasks = tasksRes.data.data.data;
+
+      const hasProject = projects.some((p: any) => p.member?.includes(user.id));
+      const hasTask = tasks.some((task: any) => task.assignedTo?.includes(user.id));
+
+      setHasNotification(hasProject || hasTask);
+    } catch (error) {
+      console.error("Error checking notification:", error);
+    }
+  };
+
+
   useEffect(() => {
     fetchUser();
+    checkHasNotification();
   }, []);
 
   const handleLogout = async () => {
@@ -72,6 +104,7 @@ function Header() {
 
   const handleClose = () => {
     setOpen(false);
+    setHasNotification(false);
   }
 
   return (
@@ -112,7 +145,6 @@ function Header() {
               />
             ))
           ) : (
-
             users.map((user) => (
               <Avatar
                 key={user.id}
@@ -126,7 +158,13 @@ function Header() {
           )}
         </AvatarGroup>
         <IconButton sx={{ bgcolor: "white" }} onClick={handleOpenNotification}>
-          <Notifications />
+          <Badge
+            variant="dot"
+            color="error"
+            invisible={!hasNotification}
+          >
+            <Notifications />
+          </Badge>
         </IconButton>
         <Box sx={{ textAlign: "right" }}>
           <Typography variant="body2" fontWeight="bold" sx={{ textTransform: "capitalize" }}>
@@ -229,7 +267,7 @@ function Header() {
           )}
         </Box>
       </Box>
-      <NotificationModal open={open} onClose={handleClose} currentUser={user}/>
+      <NotificationModal open={open} onClose={handleClose} currentUser={user} />
     </Box>
   );
 }
