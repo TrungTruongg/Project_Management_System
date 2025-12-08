@@ -1,18 +1,31 @@
-import { Avatar, Box, Button, Card, CardContent, Divider, IconButton, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
-import { useUser } from '../context/UserContext';
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Divider,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
+import { useUser } from "../context/UserContext";
 import {
   Send as SendIcon,
   Delete as DeleteIcon,
+  Reply as ReplyIcon,
 } from "@mui/icons-material";
-import axios from 'axios';
+import axios from "axios";
+import CommentItem from "./CommentItem";
 
 function CommentSection({
   taskId,
   comments,
   onSubmit,
   onDelete,
-  assignedUsers = [], }: any) {
+  assignedUsers = [],
+}: any) {
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { user } = useUser();
@@ -23,7 +36,9 @@ function CommentSection({
     setSubmitting(true);
     try {
       const maxId =
-        comments.length > 0 ? Math.max(...comments.map((comment: any) => comment.id)) : 0;
+        comments.length > 0
+          ? Math.max(...comments.map((comment: any) => comment.id))
+          : 0;
 
       const comment = {
         id: maxId + 1,
@@ -47,7 +62,37 @@ function CommentSection({
     }
   };
 
-  const handleDeleteComment = async (commentId: number, commentDbId: string) => {
+  const handleReply = async (parentId: number, content: string) => {
+    if (!content.trim() || !user) return;
+
+    try {
+      const maxId =
+        comments.length > 0 ? Math.max(...comments.map((comment: any) => comment.id)) : 0;
+
+      const reply = {
+        id: maxId + 1,
+        taskId: taskId,
+        userId: user.id,
+        content: content,
+        createdAt: new Date().toISOString(),
+        parentId: parentId,
+      };
+
+      const response = await axios.post(
+        "https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=69205e8dbf3939eacf2e89f2",
+        reply
+      );
+
+      onSubmit(response.data.data);
+    } catch (error) {
+      console.error("Error posting reply:", error);
+    }
+  };
+
+  const handleDeleteComment = async (
+    commentId: number,
+    commentDbId: string
+  ) => {
     try {
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/comments/${commentDbId}?apiKey=69205e8dbf3939eacf2e89f2`
@@ -80,6 +125,11 @@ function CommentSection({
 
   const getUserById = (userId: number) => {
     return assignedUsers.find((u: any) => u.id === userId) || user;
+  };
+
+  const parentComments = comments.filter((comment: any) => !comment.parentId);
+  const getReplies = (commentId: number) => {
+    return comments.filter((comment: any) => comment.parentId === commentId);
   };
 
   return (
@@ -125,7 +175,9 @@ function CommentSection({
                     },
                   }}
                 />
-                <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
+                <Box
+                  sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}
+                >
                   <Button
                     variant="contained"
                     endIcon={<SendIcon />}
@@ -150,7 +202,7 @@ function CommentSection({
         <Divider sx={{ mb: 3 }} />
 
         {/* Comments List */}
-        {comments.length === 0 ? (
+        {parentComments.length === 0 ? (
           <Box sx={{ py: 4, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
               No comments yet. Be the first to comment!
@@ -158,94 +210,23 @@ function CommentSection({
           </Box>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {comments.map((comment: any) => {
-              const commentUser = getUserById(comment.userId);
-              console.log(comment)
-              return (
-                <Box
-                  key={comment.id}
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <Avatar
-                    src={commentUser?.avatar}
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: "#E0E0E0",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {commentUser?.firstName?.[0]}
-                    {commentUser?.lastName?.[0]}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Box
-                      sx={{
-                        bgcolor: "#f5f5f5",
-                        p: 2,
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          mb: 1,
-                        }}
-                      >
-                        <Box>
-                          <Typography
-                            variant="body2"
-                            fontWeight="600"
-                            sx={{ textTransform: "capitalize" }}
-                          >
-                            {commentUser
-                              ? `${commentUser.firstName} ${commentUser.lastName}`
-                              : "Unknown User"}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                          >
-                            {getTimeAgo(comment.createdAt)}
-                          </Typography>
-                        </Box>
-                        {user && comment.userId === user.id && (
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              handleDeleteComment(comment.id, comment._id)
-                            }
-                            sx={{ color: "#EF5350" }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {comment.content}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              );
-            })}
+            {parentComments.map((comment: any) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                onDelete={handleDeleteComment}
+                onReply={handleReply}
+                getUserById={getUserById}
+                getTimeAgo={getTimeAgo}
+                replies={getReplies(comment.id)}
+                isReply={false}
+              />
+            ))}
           </Box>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
-export default CommentSection
+export default CommentSection;

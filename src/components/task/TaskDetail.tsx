@@ -15,8 +15,6 @@ import {
     Person as PersonIcon,
     Label as PriorityIcon,
     Loop as StatusIcon,
-    Send as SendIcon,
-    Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { useUser } from "../context/UserContext";
 import CommentSection from "../comment/CommentSection";
@@ -200,10 +198,6 @@ function TaskDetail() {
                         boxShadow: 2,
                         borderRadius: 2,
                         transition: "all 0.3s",
-                        "&:hover": {
-                            boxShadow: 4,
-                            transform: "translateY(-4px)",
-                        },
                     }}
                 >
                     <CardContent>
@@ -241,10 +235,7 @@ function TaskDetail() {
                         boxShadow: 2,
                         borderRadius: 2,
                         transition: "all 0.3s",
-                        "&:hover": {
-                            boxShadow: 4,
-                            transform: "translateY(-4px)",
-                        },
+                        
                     }}
                 >
                     <CardContent>
@@ -310,10 +301,7 @@ function TaskDetail() {
                         boxShadow: 2,
                         borderRadius: 2,
                         transition: "all 0.3s",
-                        "&:hover": {
-                            boxShadow: 4,
-                            transform: "translateY(-4px)",
-                        },
+                        
                     }}
                 >
                     <CardContent>
