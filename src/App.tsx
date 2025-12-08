@@ -18,6 +18,7 @@ import MemberProfile from "./components/member/MemberProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TicketsView from "./components/ticket/TicketsView";
 import TicketsDetail from "./components/ticket/TicketsDetail";
+import TaskDetail from "./components/task/TaskDetail";
 
 function App() {
   const theme = createTheme({
@@ -37,6 +38,7 @@ function App() {
                   <Route path="/" element={<DashboardContent />} />
                   <Route path="/project" element={<Projects />} />
                   <Route path="/task" element={<Tasks />} />
+                  <Route path="/task-detail" element={<TaskDetail />} />
                   <Route path="/member" element={<MemberList />} />
                   <Route path="/member-profile" element={<MemberProfile />} />
                   <Route path="/tickets-view" element={<TicketsView />} />

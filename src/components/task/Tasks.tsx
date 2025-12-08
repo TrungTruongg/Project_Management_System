@@ -18,6 +18,7 @@ import CreateTaskModal from "./CreateTaskModal";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
+import { useNavigate } from "react-router-dom";
 
 function Tasks() {
   const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
@@ -27,6 +28,7 @@ function Tasks() {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const { user } = useUser();
 
   // const calculateDeadline = (dateStart: string, dateEnd: string) => {
@@ -165,7 +167,7 @@ function Tasks() {
     }
   };
 
-  // Khi tạo task mới
+  // New task
   const handleSaveTask = async (newTask: any) => {
     setTaskList([...taskList, newTask]);
 
@@ -234,6 +236,10 @@ function Tasks() {
     setSelectedTask(null);
   };
 
+  const handleViewTask = (taskId: any) => {
+    navigate(`/task-detail?id=${taskId}`)
+  }
+
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
     const project = projects.find((p) => p.id === task.projectId);
@@ -254,9 +260,10 @@ function Tasks() {
         sx={{
           mb: 2,
           boxShadow: 1,
-          "&:hover": { boxShadow: 3 },
+          "&:hover": { boxShadow: 3, cursor: "pointer" },
           transition: "all 0.3s",
         }}
+        onClick={() => handleViewTask(task.id)}
       >
         <CardContent>
           <Box
@@ -276,7 +283,7 @@ function Tasks() {
                 fontSize: "0.75rem",
               }}
             />
-            <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={{ display: "flex", gap: 1 }} onClick={(e) => e.stopPropagation()}>
               <IconButton
                 size="small"
                 sx={{ color: "#4CAF50" }}

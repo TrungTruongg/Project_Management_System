@@ -44,7 +44,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
 
       const notificationList: any[] = [];
 
-      // Nếu là staff, lấy projects được giao
+      // Nếu là member, lấy projects được giao
       if (currentUser.role === "member") {
         // Projects mà user là member
         const assignedProjects = projects.filter((p: any) =>
@@ -87,6 +87,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
             project: project?.title,
           });
         });
+
       }
 
       notificationList.sort(
@@ -112,7 +113,6 @@ function NotificationModal({ open, onClose, currentUser }: any) {
     const now = new Date();
     const time = new Date(timestamp);
 
-    // ✅ Fix: Đảm bảo time là valid date
     if (isNaN(time.getTime())) {
       return "Just now";
     }

@@ -111,8 +111,8 @@ function Sidebar({ openMenus, toggleMenu }: any) {
               const isActive = isMenuActive(item);
 
               return (
-                <>
-                  <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+                <Box key={item.id}>
+                  <ListItem disablePadding sx={{ mb: 0.5 }}>
                     <ListItemButton
                       onClick={() => {
                         if (item?.submenu) {
@@ -183,7 +183,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                       </List>
                     </Collapse>
                   )}
-                </>
+                </Box>
               );
             })}
           </List>

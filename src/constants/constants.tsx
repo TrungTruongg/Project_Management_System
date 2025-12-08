@@ -7,7 +7,8 @@ import { FaUsers as EmployeesIcon } from "react-icons/fa";
 import { AiOutlineFundProjectionScreen as TotalProjectIcon } from "react-icons/ai";
 import { BiTask as CompleteProjectIcon } from "react-icons/bi";
 import { TbSubtask as ProgressProjectIcon } from "react-icons/tb";
-import { IoTicketOutline as TicketIcon } from "react-icons/io5";
+import { IoTicket as TicketIcon } from "react-icons/io5";
+
 
 export const menuItems = [
   { id: "dashboard", text: "Dashboard", icon: <DashboardIcon /> },

@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddProjectIcon } from "react-icons/go";
-import Header from "../Header";
 import { AccessTime, Delete, Edit } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateProjectModal from "./CreateProjectModal";
@@ -38,7 +37,7 @@ function Projects() {
     const endDate = new Date(dateEnd);
 
     const diffTime = endDate.getTime() - startDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil(Math.abs(diffTime) / (1000 * 60 * 60 * 24));
 
     return diffDays;
   };
@@ -181,44 +180,42 @@ function Projects() {
         <Typography variant="h4" fontWeight="700">
           Projects
         </Typography>
-        {user?.role === "leader" &&
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<AddProjectIcon />}
-              onClick={handleOpenModal}
-              sx={{
-                backgroundColor: "#484c7f",
-                color: "white",
-                textTransform: "none",
-                px: 3,
-              }}
-            >
-              Create Project
-            </Button>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<AddProjectIcon />}
+            onClick={handleOpenModal}
+            sx={{
+              backgroundColor: "#484c7f",
+              color: "white",
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            Create Project
+          </Button>
 
-            <Box sx={{ display: "flex" }}>
-              {filterTabs.map((tab, index) => (
-                <Button
-                  key={index}
-                  variant={index === 0 ? "contained" : "outlined"}
-                  size="large"
-                  sx={{
-                    textTransform: "none",
-                    px: 3,
-                    borderRadius: 0,
-                    backgroundColor: index === 0 ? "#484c7f" : "white",
-                    color: index === 0 ? "white" : "#484c7f",
-                    borderColor: "#484c7f",
-                  }}
-                >
-                  {tab}
-                </Button>
-              ))}
-            </Box>
+          <Box sx={{ display: "flex" }}>
+            {filterTabs.map((tab, index) => (
+              <Button
+                key={index}
+                variant={index === 0 ? "contained" : "outlined"}
+                size="large"
+                sx={{
+                  textTransform: "none",
+                  px: 3,
+                  borderRadius: 0,
+                  backgroundColor: index === 0 ? "#484c7f" : "white",
+                  color: index === 0 ? "white" : "#484c7f",
+                  borderColor: "#484c7f",
+                }}
+              >
+                {tab}
+              </Button>
+            ))}
           </Box>
-        }
+        </Box>
       </Box>
 
       {/* Projects Grid */}
