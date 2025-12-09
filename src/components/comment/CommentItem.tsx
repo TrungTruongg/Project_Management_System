@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { Delete as DeleteIcon, Reply as ReplyIcon, Send as SendIcon } from "@mui/icons-material";
+import { Delete as DeleteIcon, Reply as ReplyIcon } from "@mui/icons-material";
 import { useUser } from "../context/UserContext";
 
 function CommentItem({
@@ -52,6 +52,7 @@ function CommentItem({
           height: isReply ? 32 : 40,
           bgcolor: "#E0E0E0",
           textTransform: "uppercase",
+          fontSize: replyingTo ? "20px" : "13px"
         }}
       >
         {commentUser?.firstName?.[0]}
@@ -110,7 +111,7 @@ function CommentItem({
           </Typography>
         </Box>
 
-        {/* Reply Button - Only for parent comments */}
+        {/* Reply Button */}
         {!isReply && (
           <Box sx={{ mt: 1, display: "flex", gap: 2, alignItems: "center" }}>
             <Button
@@ -119,7 +120,6 @@ function CommentItem({
               onClick={() => setReplyingTo(true)}
               sx={{
                 textTransform: "none",
-                color: "#2E7D32",
                 fontSize: "0.85rem",
                 "&:hover": {
                   bgcolor: "transparent",
@@ -147,6 +147,7 @@ function CommentItem({
                 height: 32,
                 bgcolor: "#E0E0E0",
                 textTransform: "uppercase",
+                fontSize: "13px"
               }}
             >
               {user?.firstName?.[0]}
@@ -157,7 +158,7 @@ function CommentItem({
                 fullWidth
                 multiline
                 rows={2}
-                placeholder={`Reply to ${commentUser?.firstName}...`}
+                placeholder={`Reply to ${commentUser?.firstName}${commentUser?.lastName}...`}
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 variant="outlined"
@@ -187,19 +188,18 @@ function CommentItem({
                 <Button
                   variant="contained"
                   size="small"
-                  endIcon={<SendIcon />}
                   onClick={handleSubmitReply}
                   disabled={!replyContent.trim() || submitting}
                   sx={{
                     textTransform: "none",
-                    bgcolor: "#2E7D32",
                     fontSize: "0.85rem",
+                    bgcolor: "#9333ea",
                     "&:hover": {
-                      bgcolor: "#1B5E20",
+                      bgcolor: "#7e22ce",
                     },
                   }}
                 >
-                  {submitting ? "Posting..." : "Reply"}
+                  {submitting ? "Replying..." : "Reply"}
                 </Button>
               </Box>
             </Box>
@@ -208,7 +208,7 @@ function CommentItem({
 
         {/* Render Replies */}
         {replies.length > 0 && (
-          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2, fontSize: "13px" }}>
             {replies.map((reply: any) => (
               <CommentItem
                 key={reply.id}

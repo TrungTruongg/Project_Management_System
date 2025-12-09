@@ -147,7 +147,7 @@ function DashboardProjectInformation() {
               {projects.map((project: any, index) => {
                 const leader = users.find(user => user.id === project.leaderId);
                 const members = project.member || [];
-                console.log(project)
+                
                 return (
                   <TableRow
                     key={index}

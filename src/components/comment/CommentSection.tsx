@@ -5,17 +5,11 @@ import {
   Card,
   CardContent,
   Divider,
-  IconButton,
   TextField,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { useUser } from "../context/UserContext";
-import {
-  Send as SendIcon,
-  Delete as DeleteIcon,
-  Reply as ReplyIcon,
-} from "@mui/icons-material";
 import axios from "axios";
 import CommentItem from "./CommentItem";
 
@@ -180,7 +174,6 @@ function CommentSection({
                 >
                   <Button
                     variant="contained"
-                    endIcon={<SendIcon />}
                     onClick={handleSubmitComment}
                     disabled={!newComment.trim() || submitting}
                     sx={{
@@ -191,7 +184,7 @@ function CommentSection({
                       },
                     }}
                   >
-                    {submitting ? "Posting..." : "Post Comment"}
+                    {submitting ? "Posting..." : "Post"}
                   </Button>
                 </Box>
               </Box>

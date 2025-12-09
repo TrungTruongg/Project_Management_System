@@ -1,11 +1,16 @@
-// ===== TaskDetail.tsx - Fixed & Added Comment Section =====
 import {
     Avatar,
     Box,
+    Button,
     Card,
     CardContent,
     Chip,
     CircularProgress,
+    IconButton,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
     Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -15,8 +20,9 @@ import {
     Person as PersonIcon,
     Label as PriorityIcon,
     Loop as StatusIcon,
+    AttachFile as FileIcon,
+    Download as DownloadIcon
 } from "@mui/icons-material";
-import { useUser } from "../context/UserContext";
 import CommentSection from "../comment/CommentSection";
 
 function TaskDetail() {
@@ -29,8 +35,6 @@ function TaskDetail() {
     const [comments, setComments] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [allUsers, setAllUsers] = useState<any[]>([]);
-    const [submitting, setSubmitting] = useState(false);
-    const { user } = useUser();
 
     const fetchTaskDetail = async () => {
         if (!taskId) return;
@@ -101,6 +105,17 @@ function TaskDetail() {
     const handleDeleteComment = (commentId: number) => {
         setComments(comments.filter((c) => c.id !== commentId));
     };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+    };
+
+    console.log(task);
+
 
     const getStatusChip = (status: string) => {
         const config: any = {
@@ -235,7 +250,7 @@ function TaskDetail() {
                         boxShadow: 2,
                         borderRadius: 2,
                         transition: "all 0.3s",
-                        
+
                     }}
                 >
                     <CardContent>
@@ -301,7 +316,7 @@ function TaskDetail() {
                         boxShadow: 2,
                         borderRadius: 2,
                         transition: "all 0.3s",
-                        
+
                     }}
                 >
                     <CardContent>
@@ -481,6 +496,69 @@ function TaskDetail() {
                             {getPriorityChip(task.priority)}
                         </Box>
                     </Box>
+
+
+                    {task.attachments && task.attachments.length > 0 && (
+                        <Box sx={{
+                            mt: 4,
+                            pt: 3,
+                            borderTop: "1px solid #e0e0e0",
+                            gap: 4,
+                        }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
+                                <FileIcon sx={{ width: 15, height: 15}} />
+                                <Typography variant="h6" fontSize="small" fontWeight="700" >
+                                    Attachments ({task.attachments.length})
+                                </Typography>
+                            </Box>
+
+                            <List sx={{ p: 0 }}>
+                                {task.attachments.map((attachment: any) => (
+                                    <ListItem
+                                        key={attachment.id}
+                                        sx={{
+                                            border: "1px solid #e0e0e0",
+                                            borderRadius: 1,
+                                            mb: 1,
+                                            "&:hover": {
+                                                bgcolor: "#f5f5f5",
+                                            },
+                                        }}
+                                        secondaryAction={
+                                            <IconButton
+
+                                                size="small"
+                                                href={attachment.url}
+                                                download={attachment.name}
+                                                sx={{ textTransform: "none" }}
+                                            >
+                                                <DownloadIcon />
+                                            </IconButton>
+                                        }
+                                    >
+                                        <ListItemIcon>
+                                            <FileIcon sx={{ color: "#2196F3", fontSize: 32 }} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={
+                                                <Typography variant="body1" fontWeight="600">
+                                                    {attachment.name}
+                                                </Typography>
+                                            }
+                                            secondary={
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {formatFileSize(attachment.size)} • Added{" "}
+                                                        {new Date(attachment.uploadedAt).toLocaleDateString("en-GB")}
+                                                    </Typography>
+                                                </Box>
+                                            }
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
+                    )}
                 </CardContent>
             </Card>
 

@@ -1,9 +1,19 @@
 import { useEffect, useState } from "react";
 import { IoMdClose as CloseIcon } from "react-icons/io";
+import { 
+  AttachFile as AttachmentIcon,
+  Delete as DeleteIcon,
+  InsertDriveFile as FileIcon 
+} from "@mui/icons-material";
 
 import {
   Box,
   Button,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   MenuItem,
   Modal,
   Select,
@@ -14,13 +24,6 @@ import {
 import axios from "axios";
 
 function CreateTaskModal({
-  titleModal = "",
-  projectModal = "",
-  desModal = "",
-  startDateModal = "",
-  endDateModal = "",
-  priorityModal = "",
-  statusModal = "in-progress",
   open,
   onClose,
   onSave,
@@ -28,14 +31,15 @@ function CreateTaskModal({
   taskList = [],
   selectedTask = null,
 }: any) {
-  const [title, setTitle] = useState(titleModal);
-  const [projectId, setProjectId] = useState(projectModal);
-  const [description, setDescription] = useState(desModal);
-  const [startDate, setStartDate] = useState(startDateModal);
-  const [endDate, setEndDate] = useState(endDateModal);
-  const [priority, setPriority] = useState(priorityModal);
+  const [title, setTitle] = useState("");
+  const [projectId, setProjectId] = useState<number | "">("");
+  const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [priority, setPriority] = useState("");
   const [assignedTo, setAssignedTo] = useState<number[]>([]);
-  const [status, setStatus] = useState(statusModal);
+  const [status, setStatus] = useState("in-process");
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -44,27 +48,57 @@ function CreateTaskModal({
 
   const isUpdate = selectedTask !== null;
 
-  const fetchProjects = async () => {
+  const fetchAllData = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
-      );
+      const [responseProject, responseUser] = await Promise.all([
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        )
+      ]);
 
-      setProjects(response.data.data.data);
+      setProjects(responseProject.data.data.data);
+      setUsers(responseUser.data.data.data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
-      );
-      setUsers(response.data.data.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
+  // Handle file upload
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const newAttachments = Array.from(files).map((file) => ({
+      id: Date.now() + Math.random(), 
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      url: URL.createObjectURL(file), 
+      file: file, 
+      uploadedAt: new Date().toISOString(),
+    }));
+
+    setAttachments([...attachments, ...newAttachments]);
+  };
+
+  // Remove attachment
+  const handleRemoveAttachment = (attachmentId: number) => {
+    setAttachments(attachments.filter((att) => att.id !== attachmentId));
+  };
+
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
   };
 
   const getProjectMembers = () => {
@@ -99,12 +133,15 @@ function CreateTaskModal({
     setLoading(true);
 
     try {
+      const attachmentsData = attachments.map(({ file, ...rest }) => rest);
+
       if (isUpdate) {
         const updatedTask = {
           id: selectedTask.id,
           projectId: selectedTask.projectId,
           title: title,
           description: description,
+          attachments: attachmentsData,
           startDate: startDate,
           endDate: endDate,
           assignedTo: assignedTo,
@@ -129,6 +166,7 @@ function CreateTaskModal({
           projectId: projectId,
           title: title,
           description: description,
+          attachments: attachmentsData,
           startDate: startDate,
           endDate: endDate,
           assignedTo: assignedTo,
@@ -159,6 +197,7 @@ function CreateTaskModal({
         setTitle(selectedTask.title || "");
         setProjectId(selectedTask.projectId || "");
         setDescription(selectedTask.description || "");
+        setAttachments(selectedTask.attachments || []);
         setStartDate(selectedTask.startDate || "");
         setEndDate(selectedTask.endDate || "");
         setPriority(selectedTask.priority || "");
@@ -166,8 +205,8 @@ function CreateTaskModal({
           Array.isArray(selectedTask.assignedTo)
             ? selectedTask.assignedTo
             : selectedTask.assignedTo
-            ? [selectedTask.assignedTo]
-            : []
+              ? [selectedTask.assignedTo]
+              : []
         );
         setStatus(selectedTask.status || "");
       } else {
@@ -175,6 +214,7 @@ function CreateTaskModal({
         setTitle("");
         setProjectId("");
         setDescription("");
+        setAttachments([]);
         setStartDate("");
         setEndDate("");
         setPriority("");
@@ -184,23 +224,20 @@ function CreateTaskModal({
       setShowError(false);
       setLoading(false);
     }
-    fetchProjects();
-    fetchUsers();
+    fetchAllData();
   }, [open, selectedTask]);
 
   const projectMembers = getProjectMembers();
 
   return (
     <Modal
-      aria-labelledby="spring-modal-title"
-      aria-describedby="spring-modal-description"
       open={open}
       onClose={onClose}
       closeAfterTransition
       className="flex items-center justify-center"
     >
-      <Box className="relative bg-white rounded-xl w-[500px] overflow-y-auto shadow-xl mx-auto p-6">
-        <Box className="flex items-center justify-between mb-8">
+      <Box className="relative bg-white rounded-xl w-[500px] max-h-screen overflow-scroll overflow-y-auto shadow-xl mx-auto p-6">
+        <Box className="flex items-center justify-between mb-6">
           <Typography
             sx={{
               fontSize: "18px",
@@ -327,6 +364,75 @@ function CreateTaskModal({
             />
           </Box>
 
+          {/* ✅ Attachments Section */}
+          <Box>
+            <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
+              Attachments
+            </Typography>
+
+            {/* Upload Button */}
+            <Button
+              component="label"
+              variant="outlined"
+              startIcon={<AttachmentIcon />}
+              sx={{ textTransform: "none", mb: 2 }}
+            >
+              Upload files
+              <input
+                type="file"
+                hidden
+                multiple
+                onChange={handleFileChange}
+              />
+            </Button>
+
+            {/* Attachments List */}
+            {attachments.length > 0 && (
+              <List sx={{ bgcolor: "#f9fafb", borderRadius: 1, p: 1 }}>
+                {attachments.map((attachment) => (
+                  <ListItem
+                    key={attachment.id}
+                    sx={{
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      mb: 1,
+                      bgcolor: "white",
+                    }}
+                    secondaryAction={
+                      <IconButton
+                        edge="end"
+                        size="small"
+                        onClick={() => handleRemoveAttachment(attachment.id)}
+                        sx={{ color: "#EF5350" }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemIcon>
+                      <FileIcon sx={{ color: "#2196F3" }} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 500, fontSize: "0.9rem" }}
+                        >
+                          {attachment.name}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography variant="caption" color="text.secondary">
+                          {formatFileSize(attachment.size)}
+                        </Typography>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
+          </Box>
+
           <Box className="flex gap-4">
             <Box className="w-full">
               <Typography
@@ -409,8 +515,8 @@ function CreateTaskModal({
                       {!projectId
                         ? "Please select a project first"
                         : projectMembers.length === 0
-                        ? "No members in this project"
-                        : "Choose members"}
+                          ? "No members in this project"
+                          : "Choose members"}
                     </span>
                   );
                 }
@@ -427,6 +533,7 @@ function CreateTaskModal({
               sx={{
                 fontSize: "14px",
                 color: assignedTo.length === 0 ? "#9ca3af" : "#111827",
+                textTransform: "capitalize"
               }}
             >
               {projectMembers.length === 0 ? (
@@ -448,6 +555,7 @@ function CreateTaskModal({
                     key={member.id}
                     sx={{
                       fontSize: "14px",
+                      textTransform: "capitalize"
                     }}
                   >
                     {member.firstName} {member.lastName}
