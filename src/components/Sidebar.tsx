@@ -22,7 +22,8 @@ const routeMapping: Record<string, string> = {
   Members: "/member",
   "Members Profile": "/member-profile",
   "Tickets View": "/tickets-view",
-  "Tickets Detail": "/tickets-detail"
+  "Tickets Detail": "/tickets-detail",
+  Resources: "/resources"
 };
 
 function Sidebar({ openMenus, toggleMenu }: any) {

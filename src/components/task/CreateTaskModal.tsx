@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { IoMdClose as CloseIcon } from "react-icons/io";
-import { 
+import {
   AttachFile as AttachmentIcon,
   Delete as DeleteIcon,
-  InsertDriveFile as FileIcon 
+  InsertDriveFile as FileIcon
 } from "@mui/icons-material";
 
 import {
@@ -70,20 +70,34 @@ function CreateTaskModal({
   };
 
   // Handle file upload
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
 
-    const newAttachments = Array.from(files).map((file) => ({
-      id: Date.now() + Math.random(), 
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      url: URL.createObjectURL(file), 
-      file: file, 
-      uploadedAt: new Date().toISOString(),
-    }));
+    const convertFileToBase64 = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+      });
+    };
 
+    // Convert files to base64
+    const filePromises = Array.from(files).map(async (file) => {
+      const base64 = await convertFileToBase64(file);
+
+      return {
+        id: Date.now() + Math.random(),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: base64, // ✅ Lưu base64 thay vì blob URL
+        uploadedAt: new Date().toISOString(),
+      };
+    });
+
+    const newAttachments = await Promise.all(filePromises);
     setAttachments([...attachments, ...newAttachments]);
   };
 

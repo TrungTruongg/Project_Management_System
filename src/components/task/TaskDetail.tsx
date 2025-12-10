@@ -114,9 +114,6 @@ function TaskDetail() {
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
     };
 
-    console.log(task);
-
-
     const getStatusChip = (status: string) => {
         const config: any = {
             completed: { label: "Completed", bgcolor: "#4CAF50" },

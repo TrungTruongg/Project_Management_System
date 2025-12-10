@@ -8,7 +8,7 @@ import { AiOutlineFundProjectionScreen as TotalProjectIcon } from "react-icons/a
 import { BiTask as CompleteProjectIcon } from "react-icons/bi";
 import { TbSubtask as ProgressProjectIcon } from "react-icons/tb";
 import { IoTicket as TicketIcon } from "react-icons/io5";
-
+import { TiAttachment as ResourceIcon } from "react-icons/ti";
 
 export const menuItems = [
   { id: "dashboard", text: "Dashboard", icon: <DashboardIcon /> },
@@ -30,6 +30,7 @@ export const menuItems = [
     icon: <EmployeesIcon />,
     submenu: ["Members", "Attendace Employees"],
   },
+  { id: "resources", text: "Resources", icon: <ResourceIcon /> },
 ];
 
 export const users = [

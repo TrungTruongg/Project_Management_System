@@ -19,6 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TicketsView from "./components/ticket/TicketsView";
 import TicketsDetail from "./components/ticket/TicketsDetail";
 import TaskDetail from "./components/task/TaskDetail";
+import ResourceManagement from "./components/resources/ResourceManagement";
 
 function App() {
   const theme = createTheme({
@@ -43,6 +44,7 @@ function App() {
                   <Route path="/member-profile" element={<MemberProfile />} />
                   <Route path="/tickets-view" element={<TicketsView />} />
                   <Route path="/tickets-detail" element={<TicketsDetail />} />
+                  <Route path="/resources" element={<ResourceManagement />} />
                 </Route>
               </Route>
               <Route path="/login" element={<Login />} />
