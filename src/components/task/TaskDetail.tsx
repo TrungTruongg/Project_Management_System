@@ -33,6 +33,7 @@ function TaskDetail() {
     const [assignedUsers, setAssignedUsers] = useState<any[]>([]);
     const [project, setProject] = useState<any>(null);
     const [comments, setComments] = useState<any[]>([]);
+    const [attachments, setAttachments] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [allUsers, setAllUsers] = useState<any[]>([]);
 
@@ -41,7 +42,7 @@ function TaskDetail() {
 
         setLoading(true);
         try {
-            const [tasksRes, usersRes, projectsRes, commentsRes] = await Promise.all([
+            const [tasksRes, usersRes, projectsRes, commentsRes, attachmentsRes] = await Promise.all([
                 axios.get(
                     "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
                 ),
@@ -54,15 +55,19 @@ function TaskDetail() {
                 axios.get(
                     "https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=69205e8dbf3939eacf2e89f2"
                 ),
+                axios.get(
+                    "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+                ),
             ]);
 
             const tasks = tasksRes.data.data.data;
             const users = usersRes.data.data.data;
             const projects = projectsRes.data.data.data;
             const allComments = commentsRes.data.data.data || [];
-
+            const attachments = attachmentsRes.data.data.data;
+            
             setAllUsers(users);
-
+            
             const foundTask = tasks.find((task: any) => task.id === parseInt(taskId));
 
             if (foundTask) {
@@ -86,6 +91,8 @@ function TaskDetail() {
                     (c: any) => c.taskId === foundTask.id
                 );
                 setComments(taskComments);
+
+                setAttachments(attachments.filter((att: any) => att.taskId === foundTask.id));
             }
         } catch (error) {
             console.error("Error fetching task detail:", error);
@@ -494,68 +501,64 @@ function TaskDetail() {
                         </Box>
                     </Box>
 
-
-                    {task.attachments && task.attachments.length > 0 && (
-                        <Box sx={{
-                            mt: 4,
-                            pt: 3,
-                            borderTop: "1px solid #e0e0e0",
-                            gap: 4,
-                        }}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
-                                <FileIcon sx={{ width: 15, height: 15}} />
-                                <Typography variant="h6" fontSize="small" fontWeight="700" >
-                                    Attachments ({task.attachments.length})
-                                </Typography>
-                            </Box>
-
-                            <List sx={{ p: 0 }}>
-                                {task.attachments.map((attachment: any) => (
-                                    <ListItem
-                                        key={attachment.id}
-                                        sx={{
-                                            border: "1px solid #e0e0e0",
-                                            borderRadius: 1,
-                                            mb: 1,
-                                            "&:hover": {
-                                                bgcolor: "#f5f5f5",
-                                            },
-                                        }}
-                                        secondaryAction={
-                                            <IconButton
-
-                                                size="small"
-                                                href={attachment.url}
-                                                download={attachment.name}
-                                                sx={{ textTransform: "none" }}
-                                            >
-                                                <DownloadIcon />
-                                            </IconButton>
-                                        }
-                                    >
-                                        <ListItemIcon>
-                                            <FileIcon sx={{ color: "#2196F3", fontSize: 32 }} />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={
-                                                <Typography variant="body1" fontWeight="600">
-                                                    {attachment.name}
-                                                </Typography>
-                                            }
-                                            secondary={
-                                                <Box>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {formatFileSize(attachment.size)} • Added{" "}
-                                                        {new Date(attachment.uploadedAt).toLocaleDateString("en-GB")}
-                                                    </Typography>
-                                                </Box>
-                                            }
-                                        />
-                                    </ListItem>
-                                ))}
-                            </List>
+                    <Box sx={{
+                        mt: 4,
+                        pt: 3,
+                        borderTop: "1px solid #e0e0e0",
+                        gap: 4,
+                    }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
+                            <FileIcon sx={{ width: 15, height: 15 }} />
+                            <Typography variant="h6" fontSize="small" fontWeight="700" >
+                                Attachments ({attachments.length})
+                            </Typography>
                         </Box>
-                    )}
+
+                        <List sx={{ p: 0 }}>
+                            {attachments.map((attachment: any) => (
+                                <ListItem
+                                    key={attachment.id}
+                                    sx={{
+                                        border: "1px solid #e0e0e0",
+                                        borderRadius: 1,
+                                        mb: 1,
+                                        "&:hover": {
+                                            bgcolor: "#f5f5f5",
+                                        },
+                                    }}
+                                    secondaryAction={
+                                        <IconButton
+                                            size="small"
+                                            href={attachment.url}
+                                            download={attachment.name}
+                                            sx={{ textTransform: "none" }}
+                                        >
+                                            <DownloadIcon />
+                                        </IconButton>
+                                    }
+                                >
+                                    <ListItemIcon>
+                                        <FileIcon sx={{ color: "#2196F3", fontSize: 32 }} />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={
+                                            <Typography variant="body1" fontWeight="600">
+                                                {attachment.name}
+                                            </Typography>
+                                        }
+                                        secondary={
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {formatFileSize(attachment.size)} • Added{" "}
+                                                    {new Date(attachment.uploadedAt).toLocaleDateString("en-GB")}
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
                 </CardContent>
             </Card>
 

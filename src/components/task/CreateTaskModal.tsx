@@ -17,6 +17,7 @@ import {
   MenuItem,
   Modal,
   Select,
+  Skeleton,
   TextareaAutosize,
   TextField,
   Typography,
@@ -45,23 +46,28 @@ function CreateTaskModal({
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [allAttachments, setAllAttachments] = useState<any[]>([]);
 
   const isUpdate = selectedTask !== null;
 
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseProject, responseUser] = await Promise.all([
+      const [responseProject, responseUser, responseAttachment] = await Promise.all([
         axios.get(
           "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
         ),
         axios.get(
           "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        ),
+        axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
         )
       ]);
 
       setProjects(responseProject.data.data.data);
       setUsers(responseUser.data.data.data);
+      setAllAttachments(responseAttachment.data.data.data)
     } catch (error) {
       console.error(error);
     } finally {
@@ -92,7 +98,7 @@ function CreateTaskModal({
         name: file.name,
         size: file.size,
         type: file.type,
-        url: base64, // ✅ Lưu base64 thay vì blob URL
+        url: base64,
         uploadedAt: new Date().toISOString(),
       };
     });
@@ -147,15 +153,12 @@ function CreateTaskModal({
     setLoading(true);
 
     try {
-      const attachmentsData = attachments.map(({ file, ...rest }) => rest);
-
       if (isUpdate) {
         const updatedTask = {
           id: selectedTask.id,
           projectId: selectedTask.projectId,
           title: title,
           description: description,
-          attachments: attachmentsData,
           startDate: startDate,
           endDate: endDate,
           assignedTo: assignedTo,
@@ -164,12 +167,42 @@ function CreateTaskModal({
           completion: selectedTask.completion || 0,
         };
 
-        const response = await axios.put(
+        await axios.put(
           `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=69205e8dbf3939eacf2e89f2`,
           updatedTask
         );
 
-        onUpdate(response.data.data);
+        const existingAttachmentsRes = await axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+        );
+        const existingAttachments = existingAttachmentsRes.data.data.data;
+        let maxAttachmentId =
+          existingAttachments.length > 0
+            ? Math.max(...existingAttachments.map((a: any) => a.id))
+            : 0;
+
+        for (const attachment of attachments) {
+          if (!attachment._id) {
+            maxAttachmentId++;
+
+            const attachmentData = {
+              id: maxAttachmentId,
+              taskId: selectedTask.id,
+              name: attachment.name,
+              size: attachment.size,
+              type: attachment.type,
+              url: attachment.url,
+              uploadedAt: attachment.uploadedAt,
+            };
+
+            await axios.post(
+              "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2",
+              attachmentData
+            );
+          }
+        }
+
+        onUpdate(updatedTask);
         onClose();
       } else {
         const maxId =
@@ -180,7 +213,6 @@ function CreateTaskModal({
           projectId: projectId,
           title: title,
           description: description,
-          attachments: attachmentsData,
           startDate: startDate,
           endDate: endDate,
           assignedTo: assignedTo,
@@ -194,7 +226,37 @@ function CreateTaskModal({
           newTask
         );
 
-        onSave(response.data.data);
+        const createdTask = response.data.data;
+
+        const existingAttachmentsRes = await axios.get(
+          "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+        );
+        const existingAttachments = existingAttachmentsRes.data.data.data;
+        let maxAttachmentId =
+          existingAttachments.length > 0
+            ? Math.max(...existingAttachments.map((a: any) => a.id))
+            : 0;
+
+        for (const attachment of attachments) {
+          maxAttachmentId++;
+
+          const attachmentData = {
+            id: maxAttachmentId,
+            taskId: createdTask.id,
+            name: attachment.name,
+            size: attachment.size,
+            type: attachment.type,
+            url: attachment.url,
+            uploadedAt: attachment.uploadedAt,
+          };
+
+          await axios.post(
+            "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2",
+            attachmentData
+          );
+        }
+
+        onSave(createdTask);
         onClose();
       }
     } catch (error) {
@@ -208,10 +270,14 @@ function CreateTaskModal({
     if (open) {
       if (selectedTask) {
         // Edit
+        const taskAttachments = allAttachments.filter(
+          (att: any) => att.taskId === selectedTask.id
+        );
+
         setTitle(selectedTask.title || "");
         setProjectId(selectedTask.projectId || "");
         setDescription(selectedTask.description || "");
-        setAttachments(selectedTask.attachments || []);
+        setAttachments(taskAttachments);
         setStartDate(selectedTask.startDate || "");
         setEndDate(selectedTask.endDate || "");
         setPriority(selectedTask.priority || "");
@@ -238,8 +304,14 @@ function CreateTaskModal({
       setShowError(false);
       setLoading(false);
     }
-    fetchAllData();
-  }, [open, selectedTask]);
+    
+  }, [open, selectedTask, allAttachments]);
+
+  useEffect(() => {
+    if (open) {
+      fetchAllData();
+    }
+  }, [open]);
 
   const projectMembers = getProjectMembers();
 
@@ -378,7 +450,7 @@ function CreateTaskModal({
             />
           </Box>
 
-          {/* ✅ Attachments Section */}
+          {/* Attachments Section */}
           <Box>
             <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
               Attachments
@@ -401,49 +473,71 @@ function CreateTaskModal({
             </Button>
 
             {/* Attachments List */}
-            {attachments.length > 0 && (
+
+            {loading ? (
+              <Skeleton
+                variant="rectangular"
+                animation="wave"
+                sx={{ border: "2px solid white" }}
+              />
+            ) : attachments.length > 0 ? (
               <List sx={{ bgcolor: "#f9fafb", borderRadius: 1, p: 1 }}>
-                {attachments.map((attachment) => (
-                  <ListItem
-                    key={attachment.id}
-                    sx={{
-                      border: "1px solid #e0e0e0",
-                      borderRadius: 1,
-                      mb: 1,
-                      bgcolor: "white",
-                    }}
-                    secondaryAction={
-                      <IconButton
-                        edge="end"
-                        size="small"
-                        onClick={() => handleRemoveAttachment(attachment.id)}
-                        sx={{ color: "#EF5350" }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    }
-                  >
-                    <ListItemIcon>
-                      <FileIcon sx={{ color: "#2196F3" }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 500, fontSize: "0.9rem" }}
+                {attachments.map((attachment: any) => {
+
+                  return (
+                    <ListItem
+                      key={attachment.id}
+                      sx={{
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 1,
+                        mb: 1,
+                        bgcolor: "white",
+                      }}
+                      secondaryAction={
+                        <IconButton
+                          edge="end"
+                          size="small"
+                          onClick={() => handleRemoveAttachment(attachment.id)}
+                          sx={{ color: "#EF5350" }}
                         >
-                          {attachment.name}
-                        </Typography>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
                       }
-                      secondary={
-                        <Typography variant="caption" color="text.secondary">
-                          {formatFileSize(attachment.size)}
-                        </Typography>
-                      }
-                    />
-                  </ListItem>
-                ))}
+                    >
+                      <ListItemIcon>
+                        <FileIcon sx={{ color: "#2196F3" }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 500, fontSize: "0.9rem" }}
+                          >
+                            {attachment.name}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            {formatFileSize(attachment?.size)}
+                          </Typography>
+                        }
+                      />
+                    </ListItem>
+                  )
+                })}
               </List>
+            ) : (
+              <Typography
+                sx={{
+                  fontSize: "14px",
+                  color: "#9ca3af",
+                  fontStyle: "italic",
+                  textAlign: "center",
+                  py: 2,
+                }}
+              >
+                No attachments yet
+              </Typography>
             )}
           </Box>
 

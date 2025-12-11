@@ -2,46 +2,68 @@ import { Box, Card, CardContent, CircularProgress, Typography } from "@mui/mater
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BiDownload as DownloadIcon } from "react-icons/bi";
-import { IoTrashOutline as DeleteIcon } from "react-icons/io5";
+import PreviewActionButtons from "./PreviewActionButtons";
 
 function ResourceManagement() {
     const [loading, setLoading] = useState(false);
+    const [attachments, setAttachments] = useState<any[]>([]);
     const [tasks, setTasks] = useState<any[]>([]);
     const navigate = useNavigate();
 
-    const fetchTask = async () => {
+    const fetchAllData = async () => {
         setLoading(true);
         try {
-            const response = await axios.get("https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2");
-            setTasks(response.data.data.data);
+            const [attachmentsRes, tasksRes] = await Promise.all([
+                axios.get(
+                    "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+                ),
+                axios.get(
+                    "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+                ),
+            ]);
 
-            const tasksWithImages = response.data.data.data.filter((task: any) => {
-                return task.attachments &&
-                    task.attachments.length > 0 &&
-                    task.attachments.some((att: any) =>
-                        att.type?.startsWith("image/") ||
-                        att.type?.startsWith("text/") ||
-                        att.type?.startsWith("video/") ||
-                        att.type?.startsWith("application/")
-                    );
-            });
+            const allAttachments = attachmentsRes.data.data.data;
 
-            setTasks(tasksWithImages);
+            const allTasks = tasksRes.data.data.data;
+
+            const attachmentsWithTask = allAttachments.map((att: any) => ({
+                ...att,
+                task: allTasks.find((t: any) => t.id === att.taskId),
+            }));
+
+            setAttachments(attachmentsWithTask);
+            setTasks(allTasks);
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     useEffect(() => {
-        fetchTask();
+        fetchAllData();
     }, []);
 
     const handleViewTask = (taskId: number, e: React.MouseEvent) => {
         e.stopPropagation();
         navigate(`/task-detail?id=${taskId}`);
+    };
+
+    const handleDeleteAttachment = async (attachment: any) => {
+        if (!window.confirm(`Delete ${attachment.name}?`)) {
+            return;
+        }
+
+        try {
+            await axios.delete(
+                `https://mindx-mockup-server.vercel.app/api/resources/attachments/${attachment._id}?apiKey=69205e8dbf3939eacf2e89f2`
+            );
+
+            setAttachments(attachments.filter((att: any) => att.id !== attachment.id));
+
+        } catch (err) {
+            console.error("Error deleting attachment:", err);
+        }
     };
 
     const getFilePreview = (attachment: any) => {
@@ -58,7 +80,9 @@ function ResourceManagement() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        bgcolor: "white",
+                        overflow: "hidden",
+                        p: 2,
+                        position: "relative",
                     }}
                 >
                     <img
@@ -71,58 +95,7 @@ function ResourceManagement() {
                         }}
                         onError={(e: any) => { e.target.src = "/images/no-content.png"; }}
                     />
-
-                    {/* <Box
-                        sx={{
-                            // position: "absolute",
-                            // top: 8,
-                            // right: 8,
-                            display: "flex",
-                            gap: 1,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: "rgba(255,255,255,0.9)",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                                transition: "0.2s",
-                                "&:hover": { bgcolor: "white" },
-                            }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(attachment.url, "_blank");
-                            }}
-                        >
-                            <DownloadIcon />
-                        </Box>
-
-                        <Box
-                            sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: "rgba(255,255,255,0.9)",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                                transition: "0.2s",
-                                "&:hover": { bgcolor: "white" },
-                            }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                alert("Delete clicked!");
-                            }}
-                        >
-                            <DeleteIcon />
-                        </Box>
-                    </Box> */}
+                    <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
                 </Box>
             );
         }
@@ -133,9 +106,11 @@ function ResourceManagement() {
                 <Box
                     sx={{
                         height: 200,
-                        bgcolor: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
                         p: 2,
-                        overflow: "none",
                         position: "relative",
                     }}
                 >
@@ -162,6 +137,8 @@ function ResourceManagement() {
                             pointerEvents: "none",
                         }}
                     />
+
+                    <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
                 </Box>
             );
         }
@@ -175,7 +152,9 @@ function ResourceManagement() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        bgcolor: "white",
+                        overflow: "hidden",
+                        p: 2,
+                        position: "relative",
                     }}
                 >
                     <video
@@ -188,7 +167,7 @@ function ResourceManagement() {
                         }}
                         controls
                     />
-
+                    <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
                 </Box>
             );
         }
@@ -201,11 +180,13 @@ function ResourceManagement() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    bgcolor: "#f5f5f5",
-                    fontSize: 48,
+                    overflow: "hidden",
+                    p: 2,
+                    position: "relative",
                 }}
             >
                 📎
+                <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
             </Box>
         );
     };
@@ -250,72 +231,73 @@ function ResourceManagement() {
                         gap: 3,
                     }}
                 >
-                    {tasks.map((task) => (
-                        task.attachments && task.attachments.map((attachment: any) => (
-                            <Card
-                                key={attachment.id}
-                                elevation={0}
-                                // onClick={() => handleToggleSelect(index)}
-                                sx={{
-                                    border: "1px solid #e0e0e0",
-                                    borderRadius: 2,
-                                    transition: "all 0.3s",
+                    {attachments.map((attachment) => (
+                        <Card
+                            key={attachment.id}
+                            elevation={0}
+                            // onClick={() => handleToggleSelect(index)}
+                            sx={{
+                                border: "1px solid #e0e0e0",
+                                borderRadius: 2,
+                                transition: "all 0.3s",
+                                "&:hover .preview-actions": {
+                                    opacity: 1,
+                                    pointerEvents: "auto",
+                                }
+                            }}
+                        >
+                            {getFilePreview(attachment)}
 
-                                }}
-                            >
-                                {getFilePreview(attachment)}
+                            {/* Content */}
+                            <CardContent sx={{ p: 2 }}>
+                                {/* File Name */}
+                                <Typography
+                                    variant="body2"
+                                    fontWeight="600"
+                                    sx={{
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        mb: 0.5,
+                                    }}
+                                >
+                                    {attachment.name}
+                                </Typography>
 
-                                {/* Content */}
-                                <CardContent sx={{ p: 2 }}>
-                                    {/* File Name */}
-                                    <Typography
-                                        variant="body2"
-                                        fontWeight="600"
+                                {/* Task Name */}
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    onClick={(e) => handleViewTask(attachment.task.id, e)}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.5,
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    <Box
+                                        component="span"
                                         sx={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            mb: 0.5,
-                                        }}
-                                    >
-                                        {attachment.name}
-                                    </Typography>
-
-                                    {/* Task Name */}
-                                    <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        onClick={(e) => handleViewTask(task.id, e)}
-                                        sx={{
-                                            display: "flex",
+                                            display: "inline-flex",
                                             alignItems: "center",
-                                            gap: 0.5,
-                                            cursor: "pointer"
+                                            bgcolor: "#E3F2FD",
+                                            color: "#2196F3",
+                                            px: 1,
+                                            py: 0.25,
+                                            borderRadius: 1,
+                                            fontSize: "0.7rem",
+
                                         }}
                                     >
-                                        <Box
-                                            component="span"
+                                        {attachment.task.title}
+                                    </Box>
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    )
 
-                                            sx={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                bgcolor: "#E3F2FD",
-                                                color: "#2196F3",
-                                                px: 1,
-                                                py: 0.25,
-                                                borderRadius: 1,
-                                                fontSize: "0.7rem",
-
-                                            }}
-                                        >
-                                            {task.title}
-                                        </Box>
-                                    </Typography>
-                                </CardContent>
-                            </Card>
-                        ))
-
-                    ))}
+                    )}
                 </Box>
             )}
         </>
