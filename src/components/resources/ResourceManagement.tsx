@@ -7,7 +7,7 @@ import PreviewActionButtons from "./PreviewActionButtons";
 function ResourceManagement() {
     const [loading, setLoading] = useState(false);
     const [attachments, setAttachments] = useState<any[]>([]);
-    const [tasks, setTasks] = useState<any[]>([]);
+    // const [tasks, setTasks] = useState<any[]>([]);
     const navigate = useNavigate();
 
     const fetchAllData = async () => {
@@ -32,7 +32,7 @@ function ResourceManagement() {
             }));
 
             setAttachments(attachmentsWithTask);
-            setTasks(allTasks);
+
         } catch (err) {
             console.error(err);
         } finally {

@@ -82,10 +82,10 @@ function TicketsView() {
 
     const handleDeleteTicket = async () => {
         if (!selectedTicket) return;
-
+        setLoading(true);
         try {
             await axios.delete(
-                `https://mindx-mockup-server.vercel.app/api/resources/tickets/${selectedTicket._id}?apiKey=69205e8dbf3939eacf2e89f2`
+                `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${selectedTicket._id}?apiKey=69205e8dbf3939eacf2e89f2`
             );
 
             setSupTickets(
@@ -94,6 +94,8 @@ function TicketsView() {
             handleCloseDeleteDialog();
         } catch (error) {
             console.error("Error deleting ticket:", error);
+        } finally {
+            setLoading(false);
         }
     };
 

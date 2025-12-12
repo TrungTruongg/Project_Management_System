@@ -20,6 +20,7 @@ import TicketsView from "./components/ticket/TicketsView";
 import TicketsDetail from "./components/ticket/TicketsDetail";
 import TaskDetail from "./components/task/TaskDetail";
 import ResourceManagement from "./components/resources/ResourceManagement";
+import SecurityConfigPage from "./components/security/SecurityConfigPage";
 
 function App() {
   const theme = createTheme({
@@ -45,6 +46,12 @@ function App() {
                   <Route path="/tickets-view" element={<TicketsView />} />
                   <Route path="/tickets-detail" element={<TicketsDetail />} />
                   <Route path="/resources" element={<ResourceManagement />} />
+                  <Route
+                    path="/security-config"
+                    element={<ProtectedRoute allowedRoles={["leader"]} />}
+                  >
+                    <Route index element={<SecurityConfigPage />} />
+                  </Route>
                 </Route>
               </Route>
               <Route path="/login" element={<Login />} />

@@ -25,6 +25,14 @@ function Login() {
   const navigate = useNavigate();
   const { setUser } = useUser();
 
+  // Generate CAPTCHA
+  // const generateCaptcha = () => {
+  //   const num1 = Math.floor(Math.random() * 10) + 1;
+  //   const num2 = Math.floor(Math.random() * 10) + 1;
+  //   setCaptchaQuestion({ num1, num2, answer: num1 + num2 });
+  //   setCaptchaAnswer("");
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

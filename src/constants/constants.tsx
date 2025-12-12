@@ -9,6 +9,7 @@ import { BiTask as CompleteProjectIcon } from "react-icons/bi";
 import { TbSubtask as ProgressProjectIcon } from "react-icons/tb";
 import { IoTicket as TicketIcon } from "react-icons/io5";
 import { TiAttachment as ResourceIcon } from "react-icons/ti";
+import { MdSecurity as SecurityIcon } from "react-icons/md";
 
 export const menuItems = [
   { id: "dashboard", text: "Dashboard", icon: <DashboardIcon /> },
@@ -31,6 +32,7 @@ export const menuItems = [
     submenu: ["Members", "Attendace Employees"],
   },
   { id: "resources", text: "Resources", icon: <ResourceIcon /> },
+  { id: "security-config", text: "Security Config", icon: <SecurityIcon /> },
 ];
 
 export const users = [

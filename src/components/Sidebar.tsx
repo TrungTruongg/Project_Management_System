@@ -1,5 +1,6 @@
 import {
   Box,
+  Chip,
   Collapse,
   List,
   ListItem,
@@ -13,6 +14,7 @@ import TaskIcon from "./icons/TaskIcon";
 import { ArrowBack, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { menuItems } from "../constants/constants";
+import { useUser } from "./context/UserContext";
 
 const routeMapping: Record<string, string> = {
   Dashboard: "/",
@@ -23,12 +25,54 @@ const routeMapping: Record<string, string> = {
   "Members Profile": "/member-profile",
   "Tickets View": "/tickets-view",
   "Tickets Detail": "/tickets-detail",
-  Resources: "/resources"
+  Resources: "/resources",
+  "Security Config": "/security-config",
 };
 
 function Sidebar({ openMenus, toggleMenu }: any) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useUser();
+
+  const isLeader = user?.role === "leader";
+  const leaderOnlyMenus = ["Security Config"];
+
+  const hasAccess = (menuText: string): boolean => {
+    if (leaderOnlyMenus.includes(menuText)) {
+      return isLeader;
+    }
+    return true;
+  };
+
+  // Lọc submenu dựa trên quyền
+  const filterMenuItems = (items: any[]): any[] => {
+    return items
+      .map((item) => {
+        if (item.submenu) {
+          const filteredSubmenu = item.submenu.filter((subitem: string) =>
+            hasAccess(subitem)
+          );
+
+          if (filteredSubmenu.length === 0) {
+            return null;
+          }
+
+          return {
+            ...item,
+            submenu: filteredSubmenu,
+          };
+        }
+
+        if (!hasAccess(item.text)) {
+          return null;
+        }
+
+        return item;
+      })
+      .filter((item) => item !== null);
+  };
+
+  const filteredMenuItems = filterMenuItems(menuItems);
 
   const isMenuActive = (item: any) => {
     if (!item.submenu) {
@@ -60,7 +104,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
         height: "calc(100vh - 50px)",
         margin: "25px",
         order: 1,
-        zIndex: 99999,
+        zIndex: 1,
       }}
     >
       <Box
@@ -107,8 +151,8 @@ function Sidebar({ openMenus, toggleMenu }: any) {
             msOverflowStyle: "none",
           }}
         >
-          <List sx={{ py: 5, flexGrow: 1 }}>
-            {menuItems?.map((item: any) => {
+          <List sx={{ py: 2, flexGrow: 1 }}>
+            {filteredMenuItems.map((item: any) => {
               const isActive = isMenuActive(item);
 
               return (
@@ -136,7 +180,29 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                         {item.icon}
                       </ListItemIcon>
                       <ListItemText
-                        primary={item.text}
+                        primary={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <span>{item.text}</span>
+                            {/* {leaderOnlyMenus.includes(item.text) && isLeader && (
+                              <Chip
+                                label="👑"
+                                size="small"
+                                sx={{
+                                  height: "18px",
+                                  fontSize: "10px",
+                                  backgroundColor: "rgba(255,183,77,0.2)",
+                                  color: "#FFB74D",
+                                }}
+                              />
+                            )} */}
+                          </Box>
+                        }
                         slotProps={{
                           primary: {
                             color: isActive ? "#FFA726" : "white",
@@ -155,6 +221,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                         {item.submenu.map((subitem: any, subindex: any) => {
                           const subRoute = routeMapping[subitem];
                           const isSubActive = location.pathname === subRoute;
+                          // const isLeaderOnlyItem = leaderOnlyMenus.includes(subitem);
 
                           return (
                             <ListItem disablePadding key={subindex}>
@@ -169,7 +236,30 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                                 }}
                               >
                                 <ListItemText
-                                  primary={subitem}
+                                  primary={
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                      }}
+                                    >
+                                      <span>{subitem}</span>
+                                      {/* {isLeaderOnlyItem && isLeader && (
+                                        <Chip
+                                          label="👑"
+                                          size="small"
+                                          sx={{
+                                            height: "18px",
+                                            fontSize: "10px",
+                                            backgroundColor:
+                                              "rgba(255,183,77,0.2)",
+                                            color: "#FFB74D",
+                                          }}
+                                        />
+                                      )} */}
+                                    </Box>
+                                  }
                                   slotProps={{
                                     primary: {
                                       textAlign: "left",
