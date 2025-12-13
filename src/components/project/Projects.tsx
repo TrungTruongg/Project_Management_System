@@ -20,8 +20,6 @@ import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
 
 function Projects() {
-  const filterTabs = ["All", "Started", "Approval", "Completed"];
-
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectList, setProjectList] = useState<any[]>([]);
@@ -75,9 +73,9 @@ function Projects() {
 
       if (user) {
         if (user.role === "member") {
-
-          filteredProjects = allProjects.filter((project: any) =>
-            project.member?.includes(user.id) || project.leaderId === user.id
+          filteredProjects = allProjects.filter(
+            (project: any) =>
+              project.member?.includes(user.id) || project.leaderId === user.id
           );
         }
       }
@@ -180,42 +178,21 @@ function Projects() {
         <Typography variant="h4" fontWeight="700">
           Projects
         </Typography>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<AddProjectIcon />}
-            onClick={handleOpenModal}
-            sx={{
-              backgroundColor: "#484c7f",
-              color: "white",
-              textTransform: "none",
-              px: 3,
-            }}
-          >
-            Create Project
-          </Button>
 
-          <Box sx={{ display: "flex" }}>
-            {filterTabs.map((tab, index) => (
-              <Button
-                key={index}
-                variant={index === 0 ? "contained" : "outlined"}
-                size="large"
-                sx={{
-                  textTransform: "none",
-                  px: 3,
-                  borderRadius: 0,
-                  backgroundColor: index === 0 ? "#484c7f" : "white",
-                  color: index === 0 ? "white" : "#484c7f",
-                  borderColor: "#484c7f",
-                }}
-              >
-                {tab}
-              </Button>
-            ))}
-          </Box>
-        </Box>
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<AddProjectIcon />}
+          onClick={handleOpenModal}
+          sx={{
+            backgroundColor: "#484c7f",
+            color: "white",
+            textTransform: "none",
+            px: 3,
+          }}
+        >
+          Create Project
+        </Button>
       </Box>
 
       {/* Projects Grid */}
@@ -270,7 +247,11 @@ function Projects() {
                     }}
                   >
                     <Box>
-                      <Typography variant="h6" fontWeight="bold" sx={{ textTransform: "capitalize" }}>
+                      <Typography
+                        variant="h6"
+                        fontWeight="bold"
+                        sx={{ textTransform: "capitalize" }}
+                      >
                         {project.title}
                       </Typography>
                     </Box>
@@ -328,7 +309,6 @@ function Projects() {
                               fontWeight: 600,
                               textTransform: "uppercase",
                             }}
-
                             title={`${member.firstName} ${member.lastName}`}
                           >
                             {member.firstName?.[0]}
@@ -492,7 +472,11 @@ function Projects() {
                     </Box>
                     <Typography
                       variant="caption"
-                      sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
+                      sx={{
+                        color: "text.secondary",
+                        mt: 0.5,
+                        display: "block",
+                      }}
                     >
                       {completion}% Complete
                     </Typography>

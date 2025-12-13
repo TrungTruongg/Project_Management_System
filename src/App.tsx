@@ -21,6 +21,7 @@ import TicketsDetail from "./components/ticket/TicketsDetail";
 import TaskDetail from "./components/task/TaskDetail";
 import ResourceManagement from "./components/resources/ResourceManagement";
 import SecurityConfigPage from "./components/security/SecurityConfigPage";
+import ProfileSettings from "./components/ProfileSettings";
 
 function App() {
   const theme = createTheme({
@@ -46,6 +47,7 @@ function App() {
                   <Route path="/tickets-view" element={<TicketsView />} />
                   <Route path="/tickets-detail" element={<TicketsDetail />} />
                   <Route path="/resources" element={<ResourceManagement />} />
+                  <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route
                     path="/security-config"
                     element={<ProtectedRoute allowedRoles={["leader"]} />}

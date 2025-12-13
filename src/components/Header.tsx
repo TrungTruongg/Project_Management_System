@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import SearchInput from "./SearchInput";
-import { Info, Notifications } from "@mui/icons-material";
+import { Info, Notifications, Settings as SettingsIcon } from "@mui/icons-material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import { useUser } from "./context/UserContext";
@@ -72,7 +72,6 @@ function Header() {
     }
   };
 
-
   useEffect(() => {
     fetchUser();
     checkHasNotification();
@@ -105,6 +104,10 @@ function Header() {
   const handleClose = () => {
     setOpen(false);
     setHasNotification(false);
+  }
+
+  const handleProfileSetting = () => {
+    navigate("/profile-settings");
   }
 
   return (
@@ -246,15 +249,15 @@ function Header() {
                 </Box>
               </MenuItem>
 
-              {/* <MenuItem
+              <MenuItem
                 key="settings"
                 sx={{ gap: 2, alignItems: "center", color: "#001e2b" }}
-                onClick={handleSetting}
+                onClick={handleProfileSetting}
                 divider
               >
                 <SettingsIcon />
-                <Typography>Settings</Typography>
-              </MenuItem> */}
+                <Typography>Profile Settings</Typography>
+              </MenuItem>
               <MenuItem
                 key="logout"
                 sx={{ gap: 2, alignItems: "center", color: "#d32f2f" }}

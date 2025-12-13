@@ -8,7 +8,6 @@ import { BiTask as CompleteProjectIcon } from "react-icons/bi";
 import { TbSubtask as ProgressProjectIcon } from "react-icons/tb";
 import WelcomeIcon from "../icons/WelcomeIcon"
 import DashboardProjectInformation from "./DashboardProjectInformation"
-import Header from "../Header"
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom";
@@ -58,7 +57,7 @@ function DashboardContent() {
           p: 4,
           order: 3,
           flex: "1 1",
-          height: "100vh",
+          height: "60vh",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
