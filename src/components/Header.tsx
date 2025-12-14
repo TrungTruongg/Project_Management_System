@@ -107,7 +107,8 @@ function Header() {
   }
 
   const handleProfileSetting = () => {
-    navigate("/profile-settings");
+    setAnchorElUser(null)
+    navigate("/profile-settings");   
   }
 
   return (

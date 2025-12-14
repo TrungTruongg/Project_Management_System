@@ -7,6 +7,7 @@ import React, {
 } from "react";
 
 type User = {
+  _id: string;      
   id: number;
   firstName: string;
   lastName: string;

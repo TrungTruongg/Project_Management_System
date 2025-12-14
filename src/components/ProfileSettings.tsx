@@ -65,19 +65,26 @@ const ProfileSettings = () => {
     if (!user) return;
 
     try {
-      const response = await axios.post(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2",
-        {
-          id: user.id,
-          firstName: form.firstName,
-          lastName: form.lastName,
-          currentPassword: form.currentPassword,
-          newPassword: form.newPassword,
-          avatar: newAvatar || `${user.firstName?.[0]} ${user.lastName?.[0]}`,
-        }
+      const updatedData = {
+        ...user,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        avatar: newAvatar || user.avatar || "",
+        ...(form.newPassword && { password: form.newPassword }),
+      };
+
+      if (form.newPassword) {
+        updatedData.password = form.newPassword;
+      }
+
+      const response = await axios.put(
+        `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+        updatedData
       );
 
-      setUser(response.data.data.data);
+      console.log(response.data.data);
+      setUser(response.data.data);
+      localStorage.setItem("user", JSON.stringify(response.data.data));
 
       if (form.currentPassword && form.newPassword) {
         setForm({
@@ -100,8 +107,6 @@ const ProfileSettings = () => {
     }
   };
 
-  console.log(user?.firstName?.[0])
-
   return (
     <>
       <Grid
@@ -110,6 +115,7 @@ const ProfileSettings = () => {
           display: "flex",
           flexDirection: "column",
           justifySelf: "center",
+          gap: 3,
         }}
       >
         <Card
@@ -224,34 +230,41 @@ const ProfileSettings = () => {
           }}
         >
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              First name
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              value={form.firstName}
-              onChange={(e) => handleChange("firstName", e.target.value)}
-            />
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                First name
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                value={form.firstName}
+                onChange={(e) => handleChange("firstName", e.target.value)}
+              />
+            </Box>
 
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Last name
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              value={form.lastName}
-              onChange={(e) => handleChange("lastName", e.target.value)}
-            />
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                Last name
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                value={form.lastName}
+                onChange={(e) => handleChange("lastName", e.target.value)}
+              />
+            </Box>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
               Profile picture
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Avatar
-                src={newAvatar || `${user?.firstName?.[0]} ${user?.lastName?.[0]}`}
+                src={newAvatar || user?.avatar}
                 sx={{ width: 56, height: 56 }}
-              />
+              >
+                {user?.firstName?.[0]}
+                {user?.lastName?.[0]}
+              </Avatar>
               <Button variant="outlined" component="label">
                 Upload
                 <input type="file" hidden onChange={handleAvatarChange} />

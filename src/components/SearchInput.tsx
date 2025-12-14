@@ -5,6 +5,8 @@ function SearchInput() {
   return (
     <TextField
       placeholder="Search"
+      autoComplete="off"
+      name="search"
       variant="outlined"
       size="small"
       sx={{
