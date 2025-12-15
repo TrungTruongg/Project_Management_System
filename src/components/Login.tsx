@@ -16,34 +16,97 @@ import imageLogin from "../assets/image_login.svg";
 import axios from "axios";
 import { useUser } from "./context/UserContext";
 
+const MAX_ATTEMPTS = 5;
+const LOCK_MINUTES = 10;
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useUser();
 
-  // Generate CAPTCHA
-  // const generateCaptcha = () => {
-  //   const num1 = Math.floor(Math.random() * 10) + 1;
-  //   const num2 = Math.floor(Math.random() * 10) + 1;
-  //   setCaptchaQuestion({ num1, num2, answer: num1 + num2 });
-  //   setCaptchaAnswer("");
-  // };
+  const checkEmailLocked = async (email: string) => {
+    const res = await axios.get(
+      "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
+    );
+
+    const lock = res.data.data.data.find((l: any) => l.email === email);
+
+    if (!lock || !lock.lockUntil) return null;
+
+    if (Date.now() < new Date(lock.lockUntil).getTime()) {
+      return lock;
+    }
+  }
+
+  const increaseAttempts = async (email: string) => {
+    const res = await axios.get(
+      "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
+    );
+
+    const locks = res.data.data.data;
+    const lock = locks.find((l: any) => l.email === email);
+
+    if (!lock) {
+      await axios.post("https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2", {
+        email,
+        attempts: 1,
+        lockUntil: null,
+      });
+      return;
+    }
+
+    const attempts = lock.attempts + 1;
+
+    await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`, {
+      ...lock,
+      attempts,
+      lockUntil:
+        attempts >= MAX_ATTEMPTS
+          ? new Date(Date.now() + LOCK_MINUTES * 60 * 1000).toISOString()
+          : null,
+    });
+  };
+
+
+  const resetLock = async (email: string) => {
+    const res = await axios.get("https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2");
+    const lock = res.data.data.data.find((l: any) => l.email === email);
+
+    if (!lock) return;
+
+    await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`, {
+      ...lock,
+      attempts: 0,
+      lockUntil: null,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError("");
+
     if (!email || !password) {
       setError("Please enter email and password");
       return;
     }
 
     setLoading(true);
+    setIsLocked(false);
     try {
+      const lock = await checkEmailLocked(email);
+      if (lock) {
+        setIsLocked(true);
+        setError(
+          `Account locked. Try again after ${LOCK_MINUTES} minutes.`
+        );
+        return;
+      }
+
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
       );
@@ -55,14 +118,16 @@ function Login() {
 
 
       if (matchedUser) {
-        setUser(matchedUser);
+        await resetLock(email);
 
+        setUser(matchedUser);
         localStorage.setItem("auth", "true");
         localStorage.setItem("user", JSON.stringify(matchedUser));
         navigate("/");
-      } else {
-        setError("Invalid email or password");
       }
+
+      await increaseAttempts(email);
+      setError("Invalid email or password");
     } catch (error: any) {
       console.error("Login failed", error);
     } finally {
@@ -71,6 +136,7 @@ function Login() {
   };
 
   const handleGoogleSignIn = () => { };
+
   return (
     <Box
       sx={{
@@ -80,7 +146,6 @@ function Login() {
         width: "100%",
       }}
     >
-      {/* Left Side - Illustration */}
       <Box
         sx={{
           flex: 1,
@@ -194,7 +259,7 @@ function Login() {
           </Typography>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity={isLocked ? "error" : "warning"} sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
@@ -398,7 +463,8 @@ function Login() {
                 },
               }}
             >
-              {loading ? "Signing in..." : "SIGN IN"}
+              {loading
+                ? "Signing in..." : "SIGN IN"}
             </Button>
 
             {/* Sign Up Link */}
@@ -432,5 +498,6 @@ function Login() {
     </Box>
   );
 }
+
 
 export default Login;

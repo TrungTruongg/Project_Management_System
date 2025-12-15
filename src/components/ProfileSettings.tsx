@@ -39,6 +39,7 @@ const ProfileSettings = () => {
     message: "",
     type: "success" as "success" | "error",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleAvatarChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -61,16 +62,83 @@ const ProfileSettings = () => {
     setShow((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+  const validate = () => {
+    // Validation
+    if (!form.firstName.trim()) {
+      setSnackbar({
+        open: true,
+        message: "First name is required",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!form.lastName.trim()) {
+      setSnackbar({
+        open: true,
+        message: "Last name is required",
+        type: "error",
+      });
+      return;
+    }
+
+    // Nếu muốn đổi password, kiểm tra các trường
+    if (form.currentPassword || form.newPassword || form.confirmPassword) {
+      if (!form.currentPassword) {
+        setSnackbar({
+          open: true,
+          message: "Please enter current password",
+          type: "error",
+        });
+        return;
+      }
+
+      if (!form.newPassword) {
+        setSnackbar({
+          open: true,
+          message: "Please enter new password",
+          type: "error",
+        });
+        return;
+      }
+
+      if (form.newPassword !== form.confirmPassword) {
+        setSnackbar({
+          open: true,
+          message: "New passwords do not match",
+          type: "error",
+        });
+        return;
+      }
+
+      // Kiểm tra current password có đúng không
+      if (form.currentPassword !== user?.password) {
+        setSnackbar({
+          open: true,
+          message: "Current password is incorrect",
+          type: "error",
+        });
+        return;
+      }
+    }
+
+    return true;
+  }
+
   const handleUpdate = async () => {
     if (!user) return;
 
+    const isValid = validate();
+    if (!isValid) return;
+
+    setLoading(true);
     try {
       const updatedData = {
         ...user,
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         avatar: newAvatar || user.avatar || "",
-        ...(form.newPassword && { password: form.newPassword }),
+        // ...(form.newPassword && { password: form.newPassword }),
       };
 
       if (form.newPassword) {
@@ -82,14 +150,13 @@ const ProfileSettings = () => {
         updatedData
       );
 
-      console.log(response.data.data);
       setUser(response.data.data);
       localStorage.setItem("user", JSON.stringify(response.data.data));
 
       if (form.currentPassword && form.newPassword) {
         setForm({
-          firstName: response.data.data.data.firstName,
-          lastName: response.data.data.data.lastName,
+          firstName: response.data.data.firstName,
+          lastName: response.data.data.lastName,
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
@@ -104,6 +171,8 @@ const ProfileSettings = () => {
       return;
     } catch (error) {
       console.error("Error updating avatar:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -200,36 +269,7 @@ const ProfileSettings = () => {
                 );
               }
             )}
-
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                mt: 2,
-                justifyContent: "flex-end",
-              }}
-            >
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleUpdate}
-                sx={{ textTransform: "none" }}
-              >
-                Save Changes
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        <Card
-          elevation={0}
-          sx={{
-            border: "1px solid #e0e0e0",
-            borderRadius: 2,
-            transition: "all 0.3s",
-          }}
-        >
-          <CardContent sx={{ p: 3 }}>
+        
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
                 First name
@@ -282,10 +322,11 @@ const ProfileSettings = () => {
               <Button
                 variant="contained"
                 color="primary"
+                loading={loading}
                 onClick={handleUpdate}
                 sx={{ textTransform: "none" }}
               >
-                Save Changes
+                {loading ? "Saving..." : "Save Changes"}
               </Button>
             </Box>
           </CardContent>

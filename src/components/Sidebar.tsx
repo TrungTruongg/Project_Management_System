@@ -26,7 +26,7 @@ const routeMapping: Record<string, string> = {
   "Tickets View": "/tickets-view",
   "Tickets Detail": "/tickets-detail",
   Resources: "/resources",
-  "Security Config": "/security-config",
+  "Locked Users": "/view-locked-users",
 };
 
 function Sidebar({ openMenus, toggleMenu }: any) {
@@ -35,7 +35,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
   const { user } = useUser();
 
   const isLeader = user?.role === "leader";
-  const leaderOnlyMenus = ["Security Config"];
+  const leaderOnlyMenus = ["Locked Users"];
 
   const hasAccess = (menuText: string): boolean => {
     if (leaderOnlyMenus.includes(menuText)) {

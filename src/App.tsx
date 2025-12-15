@@ -20,8 +20,8 @@ import TicketsView from "./components/ticket/TicketsView";
 import TicketsDetail from "./components/ticket/TicketsDetail";
 import TaskDetail from "./components/task/TaskDetail";
 import ResourceManagement from "./components/resources/ResourceManagement";
-import SecurityConfigPage from "./components/security/SecurityConfigPage";
 import ProfileSettings from "./components/ProfileSettings";
+import ViewLockedUsers from "./components/security/ViewLockedUsers";
 
 function App() {
   const theme = createTheme({
@@ -49,10 +49,10 @@ function App() {
                   <Route path="/resources" element={<ResourceManagement />} />
                   <Route path="/profile-settings" element={<ProfileSettings />} />
                   <Route
-                    path="/security-config"
+                    path="/view-locked-users"
                     element={<ProtectedRoute allowedRoles={["leader"]} />}
                   >
-                    <Route index element={<SecurityConfigPage />} />
+                    <Route index element={<ViewLockedUsers />} />
                   </Route>
                 </Route>
               </Route>

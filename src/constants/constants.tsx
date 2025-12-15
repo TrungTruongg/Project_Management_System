@@ -32,7 +32,7 @@ export const menuItems = [
     submenu: ["Members", "Attendace Employees"],
   },
   { id: "resources", text: "Resources", icon: <ResourceIcon /> },
-  { id: "security-config", text: "Security Config", icon: <SecurityIcon /> },
+  { id: "locked-users", text: "Locked Users", icon: <SecurityIcon /> },
 ];
 
 export const users = [

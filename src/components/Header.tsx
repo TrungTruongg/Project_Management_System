@@ -77,6 +77,18 @@ function Header() {
     checkHasNotification();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.id === user.id
+          ? { ...u, avatar: user.avatar }
+          : u
+      )
+    );
+  }, [user]);
+
   const handleLogout = async () => {
     localStorage.removeItem("auth");
     localStorage.removeItem("user");
@@ -108,7 +120,7 @@ function Header() {
 
   const handleProfileSetting = () => {
     setAnchorElUser(null)
-    navigate("/profile-settings");   
+    navigate("/profile-settings");
   }
 
   return (
@@ -227,7 +239,12 @@ function Header() {
               anchorEl={anchorElUser}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
-              sx={{ mt: 2 }}
+              sx={{
+                mt: 2,
+                "& .MuiList-root": {
+                  pb: 0
+                },
+              }}
               disableScrollLock={true}
             >
               <MenuItem key="profile" sx={{ display: "block", gap: 2 }} divider>
@@ -243,7 +260,7 @@ function Header() {
                 </Typography>
 
                 <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                  <PersonIcon sx={{ marginRight: "8px" }} />
+                  <PersonIcon sx={{ mr: "8px" }} />
                   <Typography sx={{ textTransform: "capitalize" }}>
                     {user?.firstName} {user?.lastName}
                   </Typography>
@@ -256,16 +273,20 @@ function Header() {
                 onClick={handleProfileSetting}
                 divider
               >
-                <SettingsIcon />
-                <Typography>Profile Settings</Typography>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <SettingsIcon sx={{ mr: "8px" }} />
+                  <Typography>Profile Settings</Typography>
+                </Box>
               </MenuItem>
               <MenuItem
                 key="logout"
                 sx={{ gap: 2, alignItems: "center", color: "#d32f2f" }}
                 onClick={handleLogout}
               >
-                <LogoutIcon />
-                <Typography>Logout</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", }}>
+                  <LogoutIcon sx={{ mr: "8px" }} />
+                  <Typography>Logout</Typography>
+                </Box>
               </MenuItem>
             </Menu>
           )}
