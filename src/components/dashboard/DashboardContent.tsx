@@ -303,7 +303,7 @@ function DashboardContent() {
       {/* Main Content Grid */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Welcome Section */}
-        <Grid size={{ xs: 13 }}>
+        <Grid size={{ xs: 12 }}>
           <Paper
             elevation={0}
             sx={{
@@ -405,7 +405,7 @@ function DashboardContent() {
               <Box
                 sx={{
                   width: 60,
-                  height: 10,
+                  height: 60,
                   borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
@@ -423,7 +423,7 @@ function DashboardContent() {
                   marginLeft: "1.5rem",
                 }}
               >
-                <Typography variant="h6" fontWeight="500">
+                <Typography variant="h6" fontWeight="500" fontSize="16px">
                   Total Projects
                 </Typography>
                 <Typography sx={{ marginBottom: 0 }}>
@@ -477,7 +477,7 @@ function DashboardContent() {
               <Box
                 sx={{
                   width: 60,
-                  height: 10,
+                  height: 60,
                   borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
@@ -495,7 +495,7 @@ function DashboardContent() {
                   marginLeft: "1.5rem",
                 }}
               >
-                <Typography variant="h6" fontWeight="500">
+                <Typography variant="h6" fontWeight="500" fontSize="16px">
                   Total Completed Projects
                 </Typography>
                 <Typography sx={{ marginBottom: 0 }}>
@@ -548,7 +548,7 @@ function DashboardContent() {
               <Box
                 sx={{
                   width: 60,
-                  height: 10,
+                  height: 60,
                   borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
@@ -566,7 +566,7 @@ function DashboardContent() {
                   marginLeft: "1.5rem",
                 }}
               >
-                <Typography variant="h6" fontWeight="500">
+                <Typography variant="h6" fontWeight="500" fontSize="16px">
                   Total Progress Projects
                 </Typography>
                 <Typography sx={{ marginBottom: 0 }}>

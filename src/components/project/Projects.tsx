@@ -18,6 +18,7 @@ import CreateProjectModal from "./CreateProjectModal";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
+import { useSearch } from "../context/SearchContext";
 
 function Projects() {
   const [open, setOpen] = useState(false);
@@ -27,6 +28,7 @@ function Projects() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const { searchTerm } = useSearch();
 
   const { user } = useUser();
 
@@ -89,6 +91,15 @@ function Projects() {
       setLoading(false);
     }
   };
+
+  const filteredProjects = projectList.filter((project: any) => {
+    if (!searchTerm.trim()) return true;
+
+    return (
+      project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   useEffect(() => {
     if (user) {
@@ -217,7 +228,7 @@ function Projects() {
             gap: 3,
           }}
         >
-          {projectList.map((project: any) => {
+          {filteredProjects.map((project: any) => {
             const projectMembers = getProjectMembers(project);
             const projectLeader = getProjectLeader(project);
             const completion = calculateProjectCompletion(project.id);

@@ -19,6 +19,7 @@ import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import { useSearch } from "../context/SearchContext";
 
 function Tasks() {
   const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
@@ -30,6 +31,7 @@ function Tasks() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useUser();
+  const { searchTerm } = useSearch();
 
   // const calculateDeadline = (dateStart: string, dateEnd: string) => {
   //   const startDate = new Date(dateStart);
@@ -85,14 +87,23 @@ function Tasks() {
     }
   };
 
+  const filteredTasks = taskList.filter((task: any) => {
+    if (!searchTerm.trim()) return true;
+
+    return (
+      task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
   useEffect(() => {
     fetchAllData();
   }, []);
 
   const tasksByStatus = () => {
     return {
-      inProgress: taskList.filter((t) => t.status === "in-progress"),
-      completed: taskList.filter((t) => t.status === "completed"),
+      inProgress: filteredTasks.filter((t) => t.status === "in-progress"),
+      completed: filteredTasks.filter((t) => t.status === "completed"),
     };
   };
 
@@ -400,7 +411,6 @@ function Tasks() {
 
   return (
     <>
-        {/* Top Grid */}
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Box
             sx={{

@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AddMemberModal from "./AddMemberModal";
+import { useSearch } from "../context/SearchContext";
 
 function MemberList() {
   const [users, setUsers] = useState<any[]>([]);
@@ -25,6 +26,7 @@ function MemberList() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { searchTerm } = useSearch();
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -60,6 +62,17 @@ function MemberList() {
       setLoading(false);
     }
   }
+
+ const filteredMembers = members.filter((member: any) => {
+  if (!searchTerm.trim()) return true;
+
+  const user = users.find((u: any) => u.id === member.userId);
+  if (!user) return false;
+
+  const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+
+  return fullName.includes(searchTerm.toLowerCase());
+});
 
   useEffect(() => {
     fetchAllData();
@@ -135,7 +148,7 @@ function MemberList() {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {members.map((member: any) => {
+          {filteredMembers.map((member: any) => {
             const memberProject = users.find(
               (user: any) => user.id === member.userId
             );

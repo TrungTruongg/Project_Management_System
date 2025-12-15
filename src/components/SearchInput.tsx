@@ -1,7 +1,10 @@
-import { Search } from "@mui/icons-material";
-import { InputAdornment, TextField } from "@mui/material";
+import { Close, Search } from "@mui/icons-material";
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import { useSearch } from "./context/SearchContext";
 
 function SearchInput() {
+  const { searchTerm, setSearchTerm } = useSearch();
+  
   return (
     <TextField
       placeholder="Search"
@@ -9,6 +12,8 @@ function SearchInput() {
       name="search"
       variant="outlined"
       size="small"
+      onChange={(e) => setSearchTerm(e.target.value)}
+      value={searchTerm}
       sx={{
         width: 400,
         bgcolor: "white",
@@ -21,6 +26,13 @@ function SearchInput() {
           startAdornment: (
             <InputAdornment position="start">
               <Search />
+            </InputAdornment>
+          ),
+          endAdornment: searchTerm && (
+            <InputAdornment position="end">
+              <IconButton size="small" onClick={() => setSearchTerm("")}>
+                <Close fontSize="small" />
+              </IconButton>
             </InputAdornment>
           ),
         },

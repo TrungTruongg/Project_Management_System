@@ -1,4 +1,22 @@
-import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import {
   Lock as LockIcon,
   LockOpen as UnlockIcon,
@@ -12,17 +30,29 @@ function ViewLockedUsers() {
   const [locks, setLocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const lockedCount = locks.filter(
+    (l) => l.lockUntil && new Date(l.lockUntil).getTime() > Date.now()
+  ).length;
+
+  const warningCount = locks.filter(
+    (l) =>
+      (!l.lockUntil || new Date(l.lockUntil).getTime() <= Date.now()) &&
+      l.attempts > 0
+  ).length;
+
   const fetchLocks = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2");
+      const response = await axios.get(
+        "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
+      );
       setLocks(response.data.data.data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -47,15 +77,28 @@ function ViewLockedUsers() {
   return (
     <>
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 3,
+          }}
+        >
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <LockIcon sx={{ fontSize: 40, color: "#EF5350", mr: 2 }} />
             <Box>
-              <Typography variant="h4" sx={{ fontWeight: 600, color: "#2c3e50" }}>
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 600, color: "#2c3e50" }}
+              >
                 Locked Accounts
               </Typography>
               <Typography variant="body2" sx={{ color: "#6c757d", mt: 0.5 }}>
-                View and manage accounts that have been locked due to failed login attempts
+                View and manage accounts that have been locked due to failed
+                login attempts
               </Typography>
             </Box>
           </Box>
@@ -79,13 +122,29 @@ function ViewLockedUsers() {
       </Box>
 
       {/* Summary Cards */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 3, mb: 4 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: 3,
+          mb: 4,
+        }}
+      >
         <Card>
           <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: "#EF5350" }}>
-                  {locks.filter((l) => l.isLocked).length}
+                <Typography
+                  variant="h4"
+                  sx={{ fontWeight: 700, color: "#EF5350" }}
+                >
+                  {lockedCount}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "#6c757d", mt: 1 }}>
                   Currently Locked
@@ -98,10 +157,19 @@ function ViewLockedUsers() {
 
         <Card>
           <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: "#FF9800" }}>
-                  {locks.filter((l) => !l.isLocked && l.attempts > 0).length}
+                <Typography
+                  variant="h4"
+                  sx={{ fontWeight: 700, color: "#FF9800" }}
+                >
+                  {warningCount}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "#6c757d", mt: 1 }}>
                   Warning Status
@@ -162,7 +230,9 @@ function ViewLockedUsers() {
             </TableHead>
             <TableBody>
               {locks.map((lock) => {
-                const isActive = lock.isLocked;
+                const isActive =
+                  lock.lockUntil &&
+                  new Date(lock.lockUntil).getTime() > Date.now();
 
                 return (
                   <TableRow
@@ -202,7 +272,7 @@ function ViewLockedUsers() {
                         />
                       ) : (
                         <Chip
-                          label="Expired"
+                          label="Normal"
                           size="small"
                           sx={{
                             backgroundColor: "#E0E0E0",
@@ -215,10 +285,7 @@ function ViewLockedUsers() {
                     <TableCell>
                       <Typography
                         sx={{
-                          color:
-                            lock.attempts
-                              ? "#EF5350"
-                              : "#FF9800",
+                          color: lock.attempts ? "#EF5350" : "#FF9800",
                           fontWeight: 600,
                         }}
                       >
@@ -228,7 +295,7 @@ function ViewLockedUsers() {
 
                     <TableCell>
                       <Typography variant="body2">
-                        {formatDateTime(lock.lockUntil)}
+                        {lock.lockUntil ? formatDateTime(lock.lockUntil) : "-"}
                       </Typography>
                     </TableCell>
 
@@ -257,7 +324,13 @@ function ViewLockedUsers() {
                     </TableCell>
 
                     <TableCell align="center">
-                      <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          justifyContent: "center",
+                        }}
+                      >
                         <Tooltip title="Unlock Account">
                           <IconButton
                             size="small"
@@ -286,7 +359,7 @@ function ViewLockedUsers() {
         </TableContainer>
       )}
     </>
-  )
+  );
 }
 
-export default ViewLockedUsers
+export default ViewLockedUsers;
