@@ -63,7 +63,6 @@ const ProfileSettings = () => {
   };
 
   const validate = () => {
-    // Validation
     if (!form.firstName.trim()) {
       setSnackbar({
         open: true,

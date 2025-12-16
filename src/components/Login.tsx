@@ -29,19 +29,19 @@ function Login() {
   const navigate = useNavigate();
   const { setUser } = useUser();
 
-  const checkEmailLocked = async (email: string) => {
-    const res = await axios.get(
-      "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
-    );
+  // const checkEmailLocked = async (email: string) => {
+  //   const res = await axios.get(
+  //     "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
+  //   );
 
-    const lock = res.data.data.data.find((l: any) => l.email === email);
+  //   const lock = res.data.data.data.find((l: any) => l.email === email);
 
-    if (!lock || !lock.lockUntil) return null;
+  //   if (!lock || !lock.lockUntil) return null;
 
-    if (Date.now() < new Date(lock.lockUntil).getTime()) {
-      return lock;
-    }
-  }
+  //   if (Date.now() < new Date(lock.lockUntil).getTime()) {
+  //     return lock;
+  //   }
+  // }
 
   const increaseAttempts = async (email: string) => {
     const res = await axios.get(
@@ -52,26 +52,37 @@ function Login() {
     const lock = locks.find((l: any) => l.email === email);
 
     if (!lock) {
-      await axios.post("https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2", {
-        email,
-        attempts: 1,
-        lockUntil: null,
-      });
-      return;
+      await axios.post(
+        "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2",
+        {
+          email,
+          attempts: 1,
+          lockUntil: null,
+        }
+      );
+
+      return MAX_ATTEMPTS - 1;
     }
 
     const attempts = lock.attempts + 1;
+    const isLocked = attempts >= MAX_ATTEMPTS;
 
-    await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`, {
-      ...lock,
-      attempts,
-      lockUntil:
-        attempts >= MAX_ATTEMPTS
-          ? new Date(Date.now() + LOCK_MINUTES * 60 * 1000).toISOString()
+    await axios.put(
+      `https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+      {
+        ...lock,
+        attempts,
+        lockUntil: isLocked
+          ? new Date(
+            Date.now() + LOCK_MINUTES * 60 * 1000
+          ).toISOString()
           : null,
-    });
-  };
+      }
+    );
 
+    const remaining = Math.max(0, MAX_ATTEMPTS - attempts);
+    return remaining;
+  };
 
   const resetLock = async (email: string) => {
     const res = await axios.get("https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2");
@@ -96,16 +107,17 @@ function Login() {
     }
 
     setLoading(true);
-    setIsLocked(false);
+
     try {
-      const lock = await checkEmailLocked(email);
-      if (lock) {
-        setIsLocked(true);
-        setError(
-          `Account locked. Try again after ${LOCK_MINUTES} minutes.`
-        );
-        return;
-      }
+      // const lock = await checkEmailLocked(email);
+
+      // if (lock) {
+      //   setIsLocked(true);
+      //   setError(
+      //     `Account locked. Try again after ${LOCK_MINUTES} minutes.`
+      //   );
+      //   return;
+      // }
 
       const response = await axios.get(
         "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
@@ -120,14 +132,29 @@ function Login() {
       if (matchedUser) {
         await resetLock(email);
 
-        setUser(matchedUser);
+        const { password, ...securedUsers } = matchedUser;
+
+        setUser(securedUsers);
         localStorage.setItem("auth", "true");
-        localStorage.setItem("user", JSON.stringify(matchedUser));
+        localStorage.setItem("user", JSON.stringify(securedUsers));
         navigate("/");
+
+        return;
+      }
+      else {
+        const remainingAttempts = await increaseAttempts(email);
+
+        if (remainingAttempts === 0) {
+          setIsLocked(true);
+          setError(`Account locked. Try again after ${LOCK_MINUTES} minutes.`);
+        } else {
+          setIsLocked(false)
+          setError(
+            `Invalid email or password, you have ${remainingAttempts} attempts left`
+          );
+        }
       }
 
-      await increaseAttempts(email);
-      setError("Invalid email or password");
     } catch (error: any) {
       console.error("Login failed", error);
     } finally {
@@ -448,7 +475,7 @@ function Login() {
               fullWidth
               type="submit"
               variant="contained"
-              disabled={loading}
+              disabled={loading || isLocked}
               sx={{
                 py: 1.5,
                 backgroundColor: "white",

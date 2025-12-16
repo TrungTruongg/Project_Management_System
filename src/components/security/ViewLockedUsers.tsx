@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -8,6 +9,7 @@ import {
   Divider,
   IconButton,
   Paper,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
@@ -24,11 +26,16 @@ import {
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function ViewLockedUsers() {
   const [locks, setLocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    type: "success" as "success" | "error",
+  });
 
   const lockedCount = locks.filter(
     (l) => l.lockUntil && new Date(l.lockUntil).getTime() > Date.now()
@@ -39,6 +46,10 @@ function ViewLockedUsers() {
       (!l.lockUntil || new Date(l.lockUntil).getTime() <= Date.now()) &&
       l.attempts > 0
   ).length;
+
+  useEffect(() => {
+    fetchLocks();
+  }, [])
 
   const fetchLocks = async () => {
     setLoading(true);
@@ -74,6 +85,42 @@ function ViewLockedUsers() {
     return `${minutes}m ${seconds}s`;
   };
 
+  const handleUnlock = async (lock: any) => {
+    try {
+      await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`, {
+        ...lock,
+        attempts: 0,
+        lockUntil: null
+      })
+      await fetchLocks();
+
+      setSnackbar({
+        open: true,
+        message: "Unlock account successfully!",
+        type: "success",
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  const handleDelete = async (lock: any) => {
+    setLoading(true);
+    try {
+      await axios.delete(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`)
+      setLocks((prev) => prev.filter((l) => l._id !== lock._id));
+      
+      setSnackbar({
+        open: true,
+        message: "Delete lock successfully!",
+        type: "success",
+      });     
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <>
       <Box sx={{ mb: 4 }}>
@@ -221,7 +268,6 @@ function ViewLockedUsers() {
                 <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Attempts</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Locked Until</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Last Attempt</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Remaining Time</TableCell>
                 <TableCell sx={{ fontWeight: 600 }} align="center">
                   Actions
@@ -238,7 +284,6 @@ function ViewLockedUsers() {
                   <TableRow
                     key={lock._id}
                     sx={{
-                      "&:hover": { backgroundColor: "#f9f9f9" },
                       backgroundColor: isActive ? "#ffebee" : "inherit",
                     }}
                   >
@@ -300,12 +345,6 @@ function ViewLockedUsers() {
                     </TableCell>
 
                     <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDateTime(lock.lastAttempt)}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
                       {isActive ? (
                         <Chip
                           label={getRemainingTime(lock.lockUntil)}
@@ -331,19 +370,34 @@ function ViewLockedUsers() {
                           justifyContent: "center",
                         }}
                       >
-                        <Tooltip title="Unlock Account">
+                        {isActive ? (
+                          <Tooltip title="Unlock Account">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleUnlock(lock)}
+                              sx={{ color: "#4CAF50" }}
+                            >
+                              <LockIcon fontSize="small" />
+
+                            </IconButton>
+                          </Tooltip>
+                        ) : (
+
                           <IconButton
                             size="small"
-                            //onClick={() => handleUnlock(lock)}
+                            disabled
                             sx={{ color: "#4CAF50" }}
                           >
                             <UnlockIcon fontSize="small" />
+
                           </IconButton>
-                        </Tooltip>
+
+                        )}
+
                         <Tooltip title="Delete Record">
                           <IconButton
                             size="small"
-                            //onClick={() => handleDelete(lock)}
+                            onClick={() => handleDelete(lock)}
                             sx={{ color: "#EF5350" }}
                           >
                             <DeleteIcon fontSize="small" />
@@ -358,6 +412,18 @@ function ViewLockedUsers() {
           </Table>
         </TableContainer>
       )}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.type}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
