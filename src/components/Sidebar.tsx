@@ -1,6 +1,5 @@
 import {
   Box,
-  Chip,
   Collapse,
   List,
   ListItem,
