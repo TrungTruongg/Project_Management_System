@@ -23,6 +23,8 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
+import { createNotification } from "../utils/createNotification";
+import { useUser } from "../context/UserContext";
 
 function CreateTaskModal({
   open,
@@ -47,6 +49,8 @@ function CreateTaskModal({
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [allAttachments, setAllAttachments] = useState<any[]>([]);
+
+  const { user } = useUser();
 
   const isUpdate = selectedTask !== null;
 
@@ -202,6 +206,14 @@ function CreateTaskModal({
           }
         }
 
+        await createNotification({
+          userId: assignedTo,
+          type: "task",
+          title: `Updated Task ${title}`,
+          description: `Updated task: ${title}`,        
+          createdBy: user?.id,
+        });
+        
         onUpdate(updatedTask);
         onClose();
       } else {
@@ -256,6 +268,14 @@ function CreateTaskModal({
           );
         }
 
+        await createNotification({
+          userId: assignedTo,
+          type: "task",
+          title: `Created Task ${title}`,
+          description: `created task: ${title}`,        
+          createdBy: user?.id,
+        });
+
         onSave(createdTask);
         onClose();
       }
@@ -304,7 +324,7 @@ function CreateTaskModal({
       setShowError(false);
       setLoading(false);
     }
-    
+
   }, [open, selectedTask, allAttachments]);
 
   useEffect(() => {
@@ -729,8 +749,9 @@ function CreateTaskModal({
               <MenuItem value="" disabled>
                 Choose status
               </MenuItem>
+              <MenuItem value="to-do">To Do</MenuItem>
               <MenuItem value="in-progress">In progress</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>          
             </Select>
           </Box>
 

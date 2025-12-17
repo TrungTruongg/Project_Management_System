@@ -19,6 +19,7 @@ import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
 import { useSearch } from "../context/SearchContext";
+import { useNavigate } from "react-router-dom";
 
 function Projects() {
   const [open, setOpen] = useState(false);
@@ -29,6 +30,7 @@ function Projects() {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { searchTerm } = useSearch();
+  const navigate = useNavigate();
 
   const { user } = useUser();
 
@@ -174,6 +176,10 @@ function Projects() {
     return users.find((user) => user.id === project.leaderId);
   };
 
+  const handleViewTasksInProject = (projectId: any) => {
+    navigate(`/task?projectId=${projectId}`)
+  }
+
   return (
     <>
       <Box
@@ -232,23 +238,20 @@ function Projects() {
             const projectMembers = getProjectMembers(project);
             const projectLeader = getProjectLeader(project);
             const completion = calculateProjectCompletion(project.id);
-
+ 
             return (
               <Card
                 key={project.id}
                 elevation={0}
+                onClick={() => handleViewTasksInProject(project.id)}
                 sx={{
                   border: "1px solid #e0e0e0",
                   borderRadius: 2,
                   transition: "all 0.3s",
-                  "&:hover": {
-                    boxShadow: 3,
-                    transform: "translateY(-4px)",
-                  },
+                  cursor: "pointer"
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  {/* Header with Icon and Actions */}
                   <Box
                     sx={{
                       display: "flex",

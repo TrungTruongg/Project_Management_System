@@ -2,7 +2,6 @@ import {
   Avatar,
   Badge,
   Box,
-  Chip,
   Divider,
   IconButton,
   List,
@@ -19,6 +18,7 @@ import axios from "axios";
 
 function NotificationModal({ open, onClose, currentUser }: any) {
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchNotifications = async () => {
@@ -26,76 +26,22 @@ function NotificationModal({ open, onClose, currentUser }: any) {
 
     setLoading(true);
     try {
-      const [projectsRes, tasksRes, usersRes] = await Promise.all([
+      const [responseNotification, responseUser] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+          "https://mindx-mockup-server.vercel.app/api/resources/notifications?apiKey=69205e8dbf3939eacf2e89f2"
         ),
         axios.get(
           "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
+        )
       ]);
 
-      const projects = projectsRes.data.data.data;
-      const tasks = tasksRes.data.data.data;
-      const users = usersRes.data.data.data;
-
-      const notificationList: any[] = [];
-
-      // Nếu là member, lấy projects được giao
-      if (currentUser.role === "member") {
-        // Projects mà user là member
-        const assignedProjects = projects.filter((p: any) =>
-          p.member?.includes(currentUser.id)
-        );
-
-        assignedProjects.forEach((project: any) => {
-          const leader = users.find(
-            (user: any) => user.id === project.leaderId
-          );
-          notificationList.push({
-            id: `project-${project.id}`,
-            type: "project",
-            title: `Added to project: ${project.title}`,
-            description: project.description || "No description",
-            assignedBy: leader,
-            timestamp: project.startDate,
-            status: "new",
-          });
-        });
-
-        // Tasks for user
-        const assignedTasks = tasks.filter((task: any) =>
-          task.assignedTo?.includes(currentUser.id)
-        );
-
-        assignedTasks.forEach((task: any) => {
-          const project = projects.find((p: any) => p.id === task.projectId);
-          const leader = users.find((u: any) => u.id === project?.leaderId);
-
-          notificationList.push({
-            id: `task-${task.id}`,
-            type: "task",
-            title: `Task assigned: ${task.title}`,
-            description: task.description || "No description",
-            assignedBy: leader,
-            timestamp: task.startDate,
-            status: task.status,
-            priority: task.priority,
-            project: project?.title,
-          });
-        });
-
-      }
-
-      notificationList.sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      responseNotification.data.data.data.sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
-      setNotifications(notificationList);
+      setNotifications(responseNotification.data.data.data);
+      setUsers(responseUser.data.data.data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -143,40 +89,6 @@ function NotificationModal({ open, onClose, currentUser }: any) {
       return `${months} month${months > 1 ? 's' : ''} ago`;
     }
   }
-
-  const getStatusChip = (status: string) => {
-    const config: any = {
-      new: { label: "New", color: "#4CAF50" },
-      "in-progress": { label: "In Progress", color: "#2196F3" },
-      completed: { label: "Completed", color: "#9E9E9E" },
-      todo: { label: "To Do", color: "#FF9800" },
-    };
-
-    const statusConfig = config[status] || config.new;
-
-    return (
-      <Chip
-        label={statusConfig.label}
-        size="small"
-        sx={{
-          bgcolor: statusConfig.color,
-          color: "white",
-          fontSize: "0.7rem",
-          height: 20,
-          fontWeight: 600,
-        }}
-      />
-    );
-  };
-
-  const getPriorityColor = (priority: string) => {
-    const colors: any = {
-      high: "#EF5350",
-      medium: "#FF9800",
-      low: "#4CAF50",
-    };
-    return colors[priority] || "#9E9E9E";
-  };
 
   return (
     <Modal
@@ -290,120 +202,87 @@ function NotificationModal({ open, onClose, currentUser }: any) {
             </Box>
           ) : (
             <List sx={{ p: 0 }}>
-              {notifications.map((notification, index) => (
-                <>
-                  <ListItem
-                    key={notification.id}
-                    sx={{
-                      alignItems: "flex-start",
-                      py: 2,
-                      px: 2,
-                      bgcolor:
-                        notification.status === "new" ? "#f3f4f6" : "transparent",
-                      "&:hover": {
-                        bgcolor: "#f9fafb",
-                      },
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <ListItemAvatar>
-                      <Avatar
-                        sx={{
-                          bgcolor:
-                            notification.type === "project"
-                              ? "#2196F3"
-                              : "#FF9800",
-                          width: 48,
-                          height: 48,
-                        }}
-                      >
-                        {notification.type === "project" ? (
-                          <Assignment />
-                        ) : (
-                          <CalendarToday />
-                        )}
-                      </Avatar>
-                    </ListItemAvatar>
-
-                    <ListItemText
-                      primary={
-                        <Box
+              {notifications.map((notification, index) => {
+                const assignedBy = users.find(u => u.id === notification.createdBy);
+                return (
+                  <>
+                    <ListItem
+                      key={notification.id}
+                      sx={{
+                        alignItems: "flex-start",
+                        py: 2,
+                        px: 2,
+                        bgcolor:
+                          notification.status === "new" ? "#f3f4f6" : "transparent",
+                        "&:hover": {
+                          bgcolor: "#f9fafb",
+                        },
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <ListItemAvatar>
+                        <Avatar
                           sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            mb: 0.5,
+                            bgcolor:
+                              notification.type === "project"
+                                ? "#2196F3"
+                                : "#FF9800",
+                            width: 48,
+                            height: 48,
                           }}
                         >
-                          <Typography
-                            variant="body1"
-                            fontWeight="600"
-                            sx={{ flex: 1, pr: 1 }}
-                          >
-                            {notification.assignedBy &&
-                              `${notification.assignedBy.firstName} ${notification.assignedBy.lastName}`}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ whiteSpace: "nowrap" }}
-                          >
-                            {getTimeAgo(notification.timestamp)}
-                          </Typography>
-                        </Box>
-                      }
-                      secondary={
-                        <Box sx={{ mt: 0.5 }}>
-                          <Typography
-                            variant="body2"
-                            color="text.primary"
-                            sx={{ mb: 1 }}
-                          >
-                            {notification.title}
-                          </Typography>
-
-                          {notification.project && (
-                            <Chip
-                              label={notification.project}
-                              size="small"
-                              sx={{
-                                bgcolor: "#F3E5F5",
-                                color: "#7B1FA2",
-                                fontSize: "0.7rem",
-                                height: 20,
-                                mr: 1,
-                                textTransform: "capitalize",
-                              }}
-                            />
+                          {notification.type === "project" ? (
+                            <Assignment />
+                          ) : (
+                            <CalendarToday />
                           )}
+                        </Avatar>
+                      </ListItemAvatar>
 
-                          {notification.status &&
-                            getStatusChip(notification.status)}
-
-                          {notification.priority && (
-                            <Box
-                              component="span"
-                              sx={{
-                                ml: 1,
-                                px: 1,
-                                py: 0.25,
-                                borderRadius: 1,
-                                bgcolor: getPriorityColor(notification.priority),
-                                color: "white",
-                                fontSize: "0.7rem",
-                                fontWeight: 600,
-                              }}
+                      <ListItemText
+                        primary={
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              mb: 0.5,
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              fontWeight="600"
+                              sx={{ flex: 1, pr: 1 }}
                             >
-                              {notification.priority.toUpperCase()}
-                            </Box>
-                          )}
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                  {index < notifications.length - 1 && <Divider />}
-                </>
-              ))}
+                              {notification.title}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ whiteSpace: "nowrap" }}
+                            >
+                              {getTimeAgo(notification.createdAt)}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          <Box sx={{ mt: 0.5 }}>
+                            <Typography
+                              variant="body2"
+                              color="text.primary"
+                              sx={{ mb: 1 }}
+                            >
+                             {assignedBy.firstName} {assignedBy.lastName} {notification.description}
+                            </Typography>
+
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                    {index < notifications.length - 1 && <Divider />}
+                  </>
+                )
+              })}
             </List>
           )}
         </Box>

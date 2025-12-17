@@ -64,9 +64,9 @@ function TaskDetail() {
             const projects = projectsRes.data.data.data;
             const allComments = commentsRes.data.data.data || [];
             const attachments = attachmentsRes.data.data.data;
-            
+
             setAllUsers(users);
-            
+
             const foundTask = tasks.find((task: any) => task.id === parseInt(taskId));
 
             if (foundTask) {

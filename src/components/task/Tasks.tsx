@@ -18,10 +18,13 @@ import CreateTaskModal from "./CreateTaskModal";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSearch } from "../context/SearchContext";
 
 function Tasks() {
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get('projectId');
+
   const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskList, setTaskList] = useState<any[]>([]);
@@ -88,6 +91,10 @@ function Tasks() {
   };
 
   const filteredTasks = taskList.filter((task: any) => {
+    if (projectId && task.projectId !== parseInt(projectId)) {
+      return false;
+    }
+
     if (!searchTerm.trim()) return true;
 
     return (
@@ -96,12 +103,18 @@ function Tasks() {
     );
   });
 
+  const currentProject = projectId
+    ? projects.find(p => p.id === parseInt(projectId))
+    : null;
+
+
   useEffect(() => {
     fetchAllData();
   }, []);
 
   const tasksByStatus = () => {
     return {
+      toDo: filteredTasks.filter((t) => t.status === "to-do"),
       inProgress: filteredTasks.filter((t) => t.status === "in-progress"),
       completed: filteredTasks.filter((t) => t.status === "completed"),
     };
@@ -211,10 +224,10 @@ function Tasks() {
 
   // Khi xóa task
   const handleDeleteTask = async () => {
-     setLoading(true);
+    setLoading(true);
 
     if (!selectedTask) return;
-   
+
     try {
       const projectId = selectedTask.projectId;
 
@@ -271,8 +284,7 @@ function Tasks() {
         sx={{
           mb: 2,
           boxShadow: 1,
-          "&:hover": { boxShadow: 3, cursor: "pointer" },
-          transition: "all 0.3s",
+          cursor: "pointer"
         }}
         onClick={() => handleViewTask(task.id)}
       >
@@ -411,71 +423,86 @@ function Tasks() {
 
   return (
     <>
-        <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Box
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 3,
+          }}
+        >
+          <Typography variant="h4" fontWeight="600">
+            {currentProject ? (
+              <>
+                Tasks in project{" "}
+                <Box component="span" sx={{ color: "#C62828", px: 1, borderRadius: 1, textTransform: "capitalize" }}>
+                  {currentProject.title}
+                </Box>
+              </>
+            ) : (
+              "Tasks Management"
+            )}
+          </Typography>
+
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<AddTaskIcon />}
+            onClick={handleOpenModal}
             sx={{
-              width: "100%",
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              justifyContent: "space-between",
-              mb: 3,
+              backgroundColor: "#484c7f",
+              color: "white",
+              textTransform: "none",
+              px: 3,
             }}
           >
-            <Typography variant="h4" fontWeight="700">
-              Tasks Management
-            </Typography>
-            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<AddTaskIcon />}
-                onClick={handleOpenModal}
-                sx={{
-                  backgroundColor: "#484c7f",
-                  color: "white",
-                  textTransform: "none",
-                  px: 3,
-                }}
-              >
-                Create Task
-              </Button>
-            </Box>
+            Create Task
+          </Button>
+
+        </Box>
+
+        {/* Tasks Grid */}
+        {loading ? (
+          <Box
+            sx={{
+              order: 3,
+              flex: "1 1",
+              height: "60vh",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <CircularProgress />
           </Box>
-
-          {/* Tasks Grid */}
-          {loading ? (
-            <Box
-              sx={{
-                order: 3,
-                flex: "1 1",
-                height: "60vh",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <CircularProgress />
-            </Box>
-          ) : (
-            <Grid container spacing={3} sx={{ width: "100%" }}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  In Progress ({tasksByStatus().inProgress.length})
-                </Typography>
-                {tasksByStatus().inProgress.map(renderTaskCard)}
-              </Grid>
-
-              {/* Completed */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Completed ({tasksByStatus().completed.length})
-                </Typography>
-                {tasksByStatus().completed.map(renderTaskCard)}
-              </Grid>
+        ) : (
+          <Grid container spacing={3} sx={{ width: "100%" }}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                To do ({tasksByStatus().toDo.length})
+              </Typography>
+              {tasksByStatus().toDo.map(renderTaskCard)}
             </Grid>
-          )}
-        </Grid>
+
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                In Progress ({tasksByStatus().inProgress.length})
+              </Typography>
+              {tasksByStatus().inProgress.map(renderTaskCard)}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Completed ({tasksByStatus().completed.length})
+              </Typography>
+              {tasksByStatus().completed.map(renderTaskCard)}
+            </Grid>
+          </Grid>
+        )}
+      </Grid>
       <CreateTaskModal
         open={openCreateTaskModal}
         onClose={handleCloseModal}

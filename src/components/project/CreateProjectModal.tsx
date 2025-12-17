@@ -14,6 +14,8 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
+import { createNotification } from "../utils/createNotification";
+import { useUser } from "../context/UserContext";
 
 function CreateProjectModal({
   open,
@@ -33,6 +35,8 @@ function CreateProjectModal({
   const [users, setUsers] = useState<any[]>([]);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const { user } = useUser();
 
   const isUpdate = selectedProject !== null;
 
@@ -65,6 +69,14 @@ function CreateProjectModal({
           updatedProject
         );
 
+        await createNotification({
+          userId: member,
+          type: "project",
+          title: `Updated Project`,
+          description: `updated project ${title}`,
+          createdBy: user?.id,
+        });
+
         onUpdate(response.data.data);
       } else {
         const maxId =
@@ -88,6 +100,14 @@ function CreateProjectModal({
           "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2",
           newProject
         );
+
+        await createNotification({
+          userId: member,
+          type: "project",
+          title: `New Project Assignment`,
+          description: `created project ${title}`,
+          createdBy: user?.id,
+        });
 
         onSave(response.data.data);
 
@@ -350,16 +370,16 @@ function CreateProjectModal({
             >
               {staffUsers.map((user: any) => (
                 <MenuItem value={user.id} key={user.id}>
-                 
+
                   <ListItemText
                     primary={`${user.firstName} ${user.lastName}`}
                     secondary={user.role}
-                    sx={{  textTransform: "capitalize" }}
+                    sx={{ textTransform: "capitalize" }}
                   />
                 </MenuItem>
               ))}
             </Select>
-             {/* <Typography
+            {/* <Typography
               variant="caption"
               sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
             >
@@ -398,8 +418,8 @@ function CreateProjectModal({
                   value={user.id}
                   key={user.id}
                   sx={{ fontSize: "14px" }}
-                >              
-                  <Typography>{user.firstName} {user.lastName}</Typography>  
+                >
+                  <Typography>{user.firstName} {user.lastName}</Typography>
                 </MenuItem>
 
               ))}
