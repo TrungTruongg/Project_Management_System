@@ -264,6 +264,22 @@ function Tasks() {
     navigate(`/task-detail?id=${taskId}`)
   }
 
+  if (loading) {
+  return (
+    <Box
+      sx={{
+        height: "60vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <CircularProgress />
+    </Box>
+  );
+}
+
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
     const project = projects.find((p) => p.id === task.projectId);
@@ -434,18 +450,21 @@ function Tasks() {
             mb: 3,
           }}
         >
-          <Typography variant="h4" fontWeight="600">
-            {currentProject ? (
+          {currentProject ? (
+            <Typography variant="h5" fontWeight="600">
               <>
-                Tasks in project{" "}
+                Tasks in
                 <Box component="span" sx={{ color: "#C62828", px: 1, borderRadius: 1, textTransform: "capitalize" }}>
                   {currentProject.title}
                 </Box>
               </>
-            ) : (
-              "Tasks Management"
-            )}
-          </Typography>
+
+            </Typography>
+          ) : (
+            <Typography variant="h4" fontWeight="600">
+              Tasks Management
+            </Typography>
+          )}
 
           <Button
             variant="contained"
@@ -511,6 +530,7 @@ function Tasks() {
         onDelete={handleDeleteTask}
         taskList={taskList}
         selectedTask={selectedTask}
+        currentProject={currentProject}
       />
 
       <DeleteConfirmDialog

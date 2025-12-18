@@ -33,6 +33,7 @@ function CreateTaskModal({
   onUpdate,
   taskList = [],
   selectedTask = null,
+  currentProject
 }: any) {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<number | "">("");
@@ -210,10 +211,10 @@ function CreateTaskModal({
           userId: assignedTo,
           type: "task",
           title: `Updated Task ${title}`,
-          description: `Updated task: ${title}`,        
+          description: `Updated task: ${title}`,
           createdBy: user?.id,
         });
-        
+
         onUpdate(updatedTask);
         onClose();
       } else {
@@ -272,7 +273,7 @@ function CreateTaskModal({
           userId: assignedTo,
           type: "task",
           title: `Created Task ${title}`,
-          description: `created task: ${title}`,        
+          description: `created task: ${title}`,
           createdBy: user?.id,
         });
 
@@ -339,10 +340,9 @@ function CreateTaskModal({
     <Modal
       open={open}
       onClose={onClose}
-      closeAfterTransition
       className="flex items-center justify-center"
     >
-      <Box className="relative bg-white rounded-xl w-[500px] max-h-screen overflow-scroll overflow-y-auto shadow-xl mx-auto p-6">
+      <Box className="relative bg-white rounded-xl w-[500px] max-h-[90vh] overflow-y-auto no-scrollbar shadow-xl mx-auto p-6">
         <Box className="flex items-center justify-between mb-6">
           <Typography
             sx={{
@@ -426,10 +426,17 @@ function CreateTaskModal({
                 fontSize: "14px",
                 color: projectId === "" ? "#9ca3af" : "#111827",
               }}
+              disabled={currentProject}
             >
-              <MenuItem value="" disabled>
-                Choose Project
-              </MenuItem>
+              {currentProject ? (
+                <MenuItem value="" >
+                  {currentProject.title}
+                </MenuItem>
+              ) : (
+                <MenuItem value="" disabled>
+                  Choose Project
+                </MenuItem>
+              )}
 
               {projects.map((project) => {
                 return (
@@ -751,7 +758,7 @@ function CreateTaskModal({
               </MenuItem>
               <MenuItem value="to-do">To Do</MenuItem>
               <MenuItem value="in-progress">In progress</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>          
+              <MenuItem value="completed">Completed</MenuItem>
             </Select>
           </Box>
 

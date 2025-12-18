@@ -269,7 +269,7 @@ function Projects() {
                         {project.title}
                       </Typography>
                     </Box>
-                    <Box sx={{ display: "flex", gap: 1 }}>
+                    <Box sx={{ display: "flex", gap: 1 }} onClick={(e) => e.stopPropagation()}>
                       <IconButton
                         size="small"
                         sx={{ color: "#4CAF50" }}

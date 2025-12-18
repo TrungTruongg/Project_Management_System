@@ -124,7 +124,7 @@ function TaskDetail() {
         const config: any = {
             completed: { label: "Completed", bgcolor: "#4CAF50" },
             "in-progress": { label: "In Progress", bgcolor: "#FF9800" },
-            pending: { label: "Pending", bgcolor: "#F44336" },
+            "to-do": { label: "To Do", bgcolor: "#F44336" },
         };
 
         const statusConfig = config[status] || config.pending;
@@ -201,7 +201,6 @@ function TaskDetail() {
                 Task Detail
             </Typography>
 
-            {/* Info Cards */}
             <Box
                 sx={{
                     display: "grid",
@@ -281,7 +280,7 @@ function TaskDetail() {
                                 </Typography>
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
                                     {assignedUsers.length > 0 ? (
-                                        assignedUsers.map((assignedUser, index) => (
+                                        assignedUsers.map((assignedUser) => (
                                             <Box
                                                 key={assignedUser.id}
                                                 sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
@@ -299,7 +298,7 @@ function TaskDetail() {
                                                     {assignedUser?.firstName?.[0]}
                                                     {assignedUser?.lastName?.[0]}
                                                 </Avatar>
-                                                {index < assignedUsers.length - 1 && ","}
+                                                <Typography fontSize="13px">{assignedUser.firstName} {assignedUser.lastName}</Typography>
                                             </Box>
                                         ))
                                     ) : (
@@ -319,7 +318,6 @@ function TaskDetail() {
                         boxShadow: 2,
                         borderRadius: 2,
                         transition: "all 0.3s",
-
                     }}
                 >
                     <CardContent>
@@ -361,7 +359,6 @@ function TaskDetail() {
                 }}
             >
                 <CardContent sx={{ p: 4 }}>
-                    {/* Task Info Header */}
                     <Box
                         sx={{
                             display: "flex",
