@@ -127,9 +127,11 @@ function CreateTaskModal({
   };
 
   const getProjectMembers = () => {
-    if (!projectId) return [];
+    const selectedProjectId = currentProject?.id || projectId;
 
-    const selectedProject = projects.find((p) => p.id === projectId);
+    if (!selectedProjectId) return [];
+
+    const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
     if (
       !selectedProject ||
@@ -223,7 +225,7 @@ function CreateTaskModal({
 
         const newTask = {
           id: maxId + 1,
-          projectId: projectId,
+          projectId: currentProject ? currentProject.id : projectId,
           title: title,
           description: description,
           startDate: startDate,
@@ -313,7 +315,7 @@ function CreateTaskModal({
       } else {
         // Create
         setTitle("");
-        setProjectId("");
+        setProjectId(currentProject ? currentProject.id : "");
         setDescription("");
         setAttachments([]);
         setStartDate("");
@@ -326,7 +328,7 @@ function CreateTaskModal({
       setLoading(false);
     }
 
-  }, [open, selectedTask, allAttachments]);
+  }, [open, selectedTask, currentProject]);
 
   useEffect(() => {
     if (open) {
@@ -340,6 +342,7 @@ function CreateTaskModal({
     <Modal
       open={open}
       onClose={onClose}
+      closeAfterTransition
       className="flex items-center justify-center"
     >
       <Box className="relative bg-white rounded-xl w-[500px] max-h-[90vh] overflow-y-auto no-scrollbar shadow-xl mx-auto p-6">
@@ -420,31 +423,31 @@ function CreateTaskModal({
               fullWidth
               displayEmpty
               size="small"
-              value={projectId}
+              value={currentProject ? currentProject.id : projectId}
               onChange={(e) => handleProjectChange(Number(e.target.value))}
               sx={{
                 fontSize: "14px",
                 color: projectId === "" ? "#9ca3af" : "#111827",
               }}
-              disabled={currentProject}
+              disabled={!!currentProject}
             >
               {currentProject ? (
-                <MenuItem value="" >
+                // Nếu có currentProject, chỉ hiển thị project đó
+                <MenuItem value={currentProject.id}>
                   {currentProject.title}
                 </MenuItem>
               ) : (
-                <MenuItem value="" disabled>
-                  Choose Project
-                </MenuItem>
-              )}
-
-              {projects.map((project) => {
-                return (
-                  <MenuItem key={project.id} value={project.id}>
-                    {project.title}
+                <>
+                  <MenuItem value="" disabled>
+                    Choose Project
                   </MenuItem>
-                );
-              })}
+                  {projects.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.title}
+                    </MenuItem>
+                  ))}
+                </>
+              )}
             </Select>
           </Box>
 
@@ -636,7 +639,7 @@ function CreateTaskModal({
               fullWidth
               size="small"
               displayEmpty
-              disabled={!projectId}
+              disabled={!projectId && !currentProject}
               multiple
               onChange={(e) => {
                 const value = e.target.value;
@@ -647,7 +650,7 @@ function CreateTaskModal({
                 if (selected.length === 0) {
                   return (
                     <span style={{ color: "#9ca3af" }}>
-                      {!projectId
+                      {!projectId && !currentProject
                         ? "Please select a project first"
                         : projectMembers.length === 0
                           ? "No members in this project"
