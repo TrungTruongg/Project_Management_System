@@ -167,6 +167,7 @@ function MemberList() {
                     <Box sx={{ display: "flex", gap: 3 }}>
                       <Box>
                         <Avatar
+                          src={memberProject.avatar}
                           sx={{
                             width: 100,
                             height: 100,

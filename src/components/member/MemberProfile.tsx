@@ -195,6 +195,7 @@ function MemberProfile() {
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", gap: 4 }}>
                   <Avatar
+                    src={user.avatar}
                     sx={{
                       width: 120,
                       height: 120,
@@ -400,6 +401,7 @@ function MemberProfile() {
                             {project.member?.length > 0 ? (
                               <Avatar
                                 key={project.id}
+                                src={user.avatar}
                                 sx={{
                                   width: 32,
                                   height: 32,
@@ -652,6 +654,7 @@ function MemberProfile() {
                               sx={{ justifyContent: "flex-end" }}
                             >
                               <Avatar
+                                src={user.avatar}
                                 sx={{
                                   width: 32,
                                   height: 32,
@@ -661,8 +664,8 @@ function MemberProfile() {
                                   fontWeight: 600,
                                 }}
                               >
-                                {user?.firstName?.[0]}
-                                {user?.lastName?.[0]}
+                                {user.firstName?.[0]}
+                                {user.lastName?.[0]}
                               </Avatar>
                             </AvatarGroup>
                           </Box>

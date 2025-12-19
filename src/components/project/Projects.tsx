@@ -314,6 +314,7 @@ function Projects() {
                         projectMembers.map((member) => (
                           <Avatar
                             key={member.id}
+                            src={member.avatar}
                             sx={{
                               width: 32,
                               height: 32,

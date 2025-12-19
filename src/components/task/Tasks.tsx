@@ -265,20 +265,20 @@ function Tasks() {
   }
 
   if (loading) {
-  return (
-    <Box
-      sx={{
-        height: "60vh",
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <CircularProgress />
-    </Box>
-  );
-}
+    return (
+      <Box
+        sx={{
+          height: "60vh",
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
@@ -357,6 +357,7 @@ function Tasks() {
                 assignedUsers.map((user: any) => (
                   <Avatar
                     key={user.id}
+                    src={user.avatar}
                     sx={{
                       width: 32,
                       height: 32,
@@ -398,27 +399,37 @@ function Tasks() {
               alignItems: "center",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
-                <Typography variant="caption">
-                  {new Date(task.startDate).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                  })}
-                </Typography>
+            {task.startDate ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
+                  <Typography variant="caption">
+                    {new Date(task.startDate).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
+                  </Typography>
+                </Box>
+                -
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
+                  <Typography variant="caption">
+                    {new Date(task.endDate).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
+                  </Typography>
+                </Box>
               </Box>
-              -
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
-                <Typography variant="caption">
-                  {new Date(task.endDate).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                  })}
-                </Typography>
-              </Box>
-            </Box>
+            ) : (
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", fontStyle: "italic" }}
+            >
+              No Dates provided
+            </Typography>
+            )}
+
 
             {project && (
               <Chip

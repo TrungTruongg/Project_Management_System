@@ -86,6 +86,7 @@ function ViewLockedUsers() {
   };
 
   const handleUnlock = async (lock: any) => {
+    setLoading(true);
     try {
       await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`, {
         ...lock,
@@ -101,6 +102,8 @@ function ViewLockedUsers() {
       });
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -121,6 +124,8 @@ function ViewLockedUsers() {
       setLoading(false);
     }
   }
+
+ 
   return (
     <>
       <Box sx={{ mb: 4 }}>
@@ -226,22 +231,6 @@ function ViewLockedUsers() {
             </Box>
           </CardContent>
         </Card>
-        {/* 
-        <Card>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: "#484c7f" }}>
-                  {config.maxLoginAttempts}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "#6c757d", mt: 1 }}>
-                  Max Attempts
-                </Typography>
-              </Box>
-              <LockIcon sx={{ fontSize: 48, color: "#484c7f", opacity: 0.3 }} />
-            </Box>
-          </CardContent>
-        </Card> */}
       </Box>
 
       {/* Table */}

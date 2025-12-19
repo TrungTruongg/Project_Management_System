@@ -432,12 +432,11 @@ function CreateTaskModal({
               disabled={!!currentProject}
             >
               {currentProject ? (
-                // Nếu có currentProject, chỉ hiển thị project đó
                 <MenuItem value={currentProject.id}>
                   {currentProject.title}
                 </MenuItem>
               ) : (
-                <>
+                <Box>
                   <MenuItem value="" disabled>
                     Choose Project
                   </MenuItem>
@@ -446,7 +445,7 @@ function CreateTaskModal({
                       {project.title}
                     </MenuItem>
                   ))}
-                </>
+                </Box>
               )}
             </Select>
           </Box>
