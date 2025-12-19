@@ -76,10 +76,10 @@ function DashboardContent() {
           <Card
             elevation={0}
             sx={{
-              backgroundColor: "white",
               position: "relative",
               overflow: "visible",
-              border: "1px solid #f0f0f0",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
             }}
           >
             <CardContent
@@ -152,10 +152,10 @@ function DashboardContent() {
           <Card
             elevation={0}
             sx={{
-              backgroundColor: "white",
               position: "relative",
               overflow: "visible",
-              border: "1px solid #f0f0f0",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
             }}
           >
             <CardContent
@@ -228,10 +228,10 @@ function DashboardContent() {
           <Card
             elevation={0}
             sx={{
-              backgroundColor: "white",
               position: "relative",
               overflow: "visible",
-              border: "1px solid #f0f0f0",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
             }}
           >
             <CardContent
@@ -312,7 +312,8 @@ function DashboardContent() {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              border: "1px solid #f0f0f0",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
               gap: 4,
             }}
           >
@@ -331,19 +332,6 @@ function DashboardContent() {
                 aspect of your projects. From task assignment to deadline
                 management, everything you need is at your fingertips.
               </Typography>
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#f19828",
-                  borderRadius: 2,
-                  textTransform: "none",
-                  px: 4,
-                  py: 1.5,
-                  "&:hover": { bgcolor: "#F57C00" },
-                }}
-              >
-                Free Inquire
-              </Button>
             </Box>
 
             <Box
@@ -361,7 +349,11 @@ function DashboardContent() {
         </Grid>
 
         <Grid size={{ xs: 12 }}>
-          <Paper elevation={0} sx={{ p: 3, border: "1px solid #f0f0f0" }}>
+          <Paper elevation={0} sx={{
+            p: 3, 
+            border: (theme) =>
+              `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+          }}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Project Timeline
             </Typography>
@@ -390,7 +382,8 @@ function DashboardContent() {
               backgroundColor: "#484c7f",
               position: "relative",
               overflow: "visible",
-              border: "1px solid #f0f0f0",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : 'inherit'}`,
               color: "white",
             }}
           >
@@ -449,8 +442,6 @@ function DashboardContent() {
               >
                 <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
               </IconButton>
-
-
             </CardContent>
           </Card>
         </Grid>
@@ -462,7 +453,8 @@ function DashboardContent() {
               backgroundColor: "#484c7f",
               position: "relative",
               overflow: "visible",
-              border: "1px solid #f0f0f0",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : 'inherit'}`,
               color: "white",
             }}
           >
@@ -533,7 +525,8 @@ function DashboardContent() {
               backgroundColor: "#484c7f",
               position: "relative",
               overflow: "visible",
-              border: "1px solid #f0f0f0",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : 'inherit'}`,
               color: "white",
             }}
           >

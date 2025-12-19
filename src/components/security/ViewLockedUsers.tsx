@@ -329,7 +329,7 @@ function ViewLockedUsers() {
 
                     <TableCell>
                       <Typography variant="body2">
-                        {lock.lockUntil ? formatDateTime(lock.lockUntil) : "-"}
+                        {isActive && lock.lockUntil ? formatDateTime(lock.lockUntil) : "-"}
                       </Typography>
                     </TableCell>
 

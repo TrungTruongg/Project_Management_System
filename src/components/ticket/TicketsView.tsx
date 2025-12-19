@@ -188,10 +188,16 @@ function TicketsView() {
                     <CircularProgress />
                 </Box>
             ) : (
-                <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #e0e0e0" }}>
+                <TableContainer
+                    component={Paper}
+                    elevation={0}
+                    sx={{
+                        border: (theme) =>
+                            `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+                    }}>
                     <Table>
                         <TableHead>
-                            <TableRow sx={{ bgcolor: "#f5f5f5" }}>
+                            <TableRow sx={{ bgcolor: (theme) => theme.palette.mode === 'light' ? "#f5f5f5" : "black" }}>
                                 <TableCell sx={{ fontWeight: 700 }}>TICKET ID</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>SUBJECT</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>ASSIGNED</TableCell>
@@ -213,7 +219,7 @@ function TicketsView() {
                                             key={ticket.id}
                                             sx={{
                                                 "&:hover": {
-                                                    bgcolor: "#f9fafb",
+                                                    bgcolor: "action.hover",
                                                     cursor: "pointer",
                                                 },
                                             }}

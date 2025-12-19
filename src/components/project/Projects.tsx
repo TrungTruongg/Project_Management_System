@@ -238,14 +238,15 @@ function Projects() {
             const projectMembers = getProjectMembers(project);
             const projectLeader = getProjectLeader(project);
             const completion = calculateProjectCompletion(project.id);
- 
+
             return (
               <Card
                 key={project.id}
                 elevation={0}
                 onClick={() => handleViewTasksInProject(project.id)}
                 sx={{
-                  border: "1px solid #e0e0e0",
+                  border: (theme) =>
+                    `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
                   borderRadius: 2,
                   transition: "all 0.3s",
                   cursor: "pointer"

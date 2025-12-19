@@ -83,6 +83,7 @@ function ResourceManagement() {
                         overflow: "hidden",
                         p: 2,
                         position: "relative",
+                        backgroundColor: "white"
                     }}
                 >
                     <img
@@ -112,6 +113,7 @@ function ResourceManagement() {
                         overflow: "hidden",
                         p: 2,
                         position: "relative",
+                        backgroundColor: "white"
                     }}
                 >
                     <iframe
@@ -237,7 +239,8 @@ function ResourceManagement() {
                             elevation={0}
                             // onClick={() => handleToggleSelect(index)}
                             sx={{
-                                border: "1px solid #e0e0e0",
+                                border: (theme) =>
+                                    `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
                                 borderRadius: 2,
                                 transition: "all 0.3s",
                                 "&:hover .preview-actions": {

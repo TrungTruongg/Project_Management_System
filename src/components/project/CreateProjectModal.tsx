@@ -183,6 +183,7 @@ function CreateProjectModal({
               fontSize: "18px",
               lineHeight: "28px",
               fontWeight: 600,
+              color: "black"
             }}
           >
             {isUpdate ? "Update Project" : "Create Project"}

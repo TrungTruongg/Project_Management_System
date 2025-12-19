@@ -15,8 +15,7 @@ function SearchInput() {
       onChange={(e) => setSearchTerm(e.target.value)}
       value={searchTerm}
       sx={{
-        width: 400,
-        bgcolor: "white",
+        width: 350,     
         "& .MuiOutlinedInput-root": {
           borderRadius: 2,
         },

@@ -6,8 +6,9 @@ import {
   createTheme,
   StyledEngineProvider,
   ThemeProvider,
+  Experimental_CssVarsProvider as CssVarsProvider,
 } from "@mui/material/styles";
-import { GlobalStyles } from "@mui/material";
+import { CssBaseline, GlobalStyles } from "@mui/material";
 import { UserProvider } from "./components/context/UserContext";
 import Projects from "./components/project/Projects";
 import Tasks from "./components/task/Tasks";
@@ -29,11 +30,30 @@ function App() {
     typography: {
       fontFamily: "Open Sans, sans-serif",
     },
+    colorSchemes: {
+      light: {
+        palette: {
+          background: {
+            default: '#ffffff',
+          },
+        },
+      },
+      dark: {
+        palette: {
+          background: {
+            default: '#121212',
+          },
+        },
+      },
+    },
   });
+
   return (
     <StyledEngineProvider enableCssLayer>
       <GlobalStyles styles="@layer theme, base, mui, components, utilities;" />
       <ThemeProvider theme={theme}>
+        <CssVarsProvider theme={theme} defaultMode="light">
+        <CssBaseline />
         <UserProvider>
           <SearchProvider>
             <Router>
@@ -68,6 +88,7 @@ function App() {
             </Router>
           </SearchProvider>
         </UserProvider>
+        </CssVarsProvider>
       </ThemeProvider>
     </StyledEngineProvider>
   );

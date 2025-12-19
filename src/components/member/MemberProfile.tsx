@@ -186,7 +186,8 @@ function MemberProfile() {
             <Card
               sx={{
                 mb: 3,
-                border: "1px solid #e0e0e0",
+                border: (theme) =>
+                  `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
                 borderRadius: 2,
                 transition: "all 0.3s",
               }}
@@ -195,7 +196,7 @@ function MemberProfile() {
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", gap: 4 }}>
                   <Avatar
-                    src={user.avatar}
+                    src={user?.avatar}
                     sx={{
                       width: 120,
                       height: 120,
@@ -609,7 +610,8 @@ function MemberProfile() {
                         key={task.id}
                         sx={{
                           mb: 2,
-                          border: "1px solid #e0e0e0",
+                          border: (theme) =>
+                            `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
                           borderRadius: 2,
                           transition: "all 0.3s",
                           "&:hover": {

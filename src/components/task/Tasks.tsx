@@ -297,10 +297,12 @@ function Tasks() {
     return (
       <Card
         key={task.id}
+        elevation={0}
         sx={{
           mb: 2,
-          boxShadow: 1,
-          cursor: "pointer"
+          cursor: "pointer",
+          border: (theme) =>
+            `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
         }}
         onClick={() => handleViewTask(task.id)}
       >
@@ -422,12 +424,12 @@ function Tasks() {
                 </Box>
               </Box>
             ) : (
-            <Typography
-              variant="caption"
-              sx={{ color: "text.secondary", fontStyle: "italic" }}
-            >
-              No Dates provided
-            </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "text.secondary", fontStyle: "italic" }}
+              >
+                No Dates provided
+              </Typography>
             )}
 
 

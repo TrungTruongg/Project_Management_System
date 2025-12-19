@@ -16,7 +16,7 @@ function Dashboard() {
   };
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "row" }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: "row", bgcolor: 'background.default' }}>
       <Sidebar openMenus={openMenus} toggleMenu={toggleMenu} />
       <GeminiChatBox/>
       <Box
@@ -25,7 +25,8 @@ function Dashboard() {
           flex: 1,
           overflowY: "auto",
           height: "100vh",
-          order: 1
+          order: 1,
+          bgcolor: 'background.default'
         }}
       >     
         <Header />

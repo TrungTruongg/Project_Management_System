@@ -8,6 +8,7 @@ import {
   ListItemText,
   Switch,
   Typography,
+  useColorScheme,
 } from "@mui/material";
 import TaskIcon from "./icons/TaskIcon";
 import { ArrowBack, ExpandLess, ExpandMore } from "@mui/icons-material";
@@ -35,6 +36,15 @@ function Sidebar({ openMenus, toggleMenu }: any) {
 
   const isLeader = user?.role === "leader";
   const leaderOnlyMenus = ["Locked Users"];
+
+  const { mode, setMode } = useColorScheme();
+  if (!mode) {
+    return null;
+  }
+
+  const handleModeToggle = () => {
+    setMode(mode === 'light' ? 'dark' : 'light');
+  }
 
   const hasAccess = (menuText: string): boolean => {
     if (leaderOnlyMenus.includes(menuText)) {
@@ -296,19 +306,15 @@ function Sidebar({ openMenus, toggleMenu }: any) {
               mb: 2,
             }}
           >
-            <Switch size="small" sx={{ mr: 1 }} />
-            <Typography variant="body2">Enable Dark Mode!</Typography>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              mb: 2,
-            }}
-          >
-            <Switch size="small" sx={{ mr: 1 }} />
-            <Typography variant="body2">Enable RTL Mode!</Typography>
+            <Switch
+              checked={mode === 'dark'}
+              onChange={handleModeToggle}
+              size="small"
+              sx={{ mr: 1 }}
+            />
+            <Typography variant="body2">
+              {mode === 'dark' ? 'Dark Mode' : 'Light Mode'}
+            </Typography>
           </Box>
           <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
             <ArrowBack sx={{ color: "white", opacity: 0.7 }} />
