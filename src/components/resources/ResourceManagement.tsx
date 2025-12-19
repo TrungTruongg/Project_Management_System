@@ -113,7 +113,7 @@ function ResourceManagement() {
                         overflow: "hidden",
                         p: 2,
                         position: "relative",
-                        backgroundColor: "white"
+                        // backgroundColor: "white"
                     }}
                 >
                     <iframe

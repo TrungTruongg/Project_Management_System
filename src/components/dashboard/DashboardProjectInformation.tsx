@@ -226,6 +226,7 @@ function DashboardProjectInformation() {
                           return (
                             <Avatar
                               key={memberId}
+                              src={memberInfo?.avatar}
                               sx={{
                                 width: 32,
                                 height: 32,

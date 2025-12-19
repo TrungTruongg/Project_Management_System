@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, CircularProgress, Grid, IconButton, Paper, Typography } from "@mui/material"
+import { Box, Card, CardContent, CircularProgress, Grid, IconButton, Paper, Typography } from "@mui/material"
 import { ChevronRight } from "@mui/icons-material"
 import { BsJournalCheck as TotalTaskIcon } from "react-icons/bs";
 import { BsListCheck as CompleteTaskIcon } from "react-icons/bs";
@@ -19,10 +19,12 @@ function DashboardContent() {
   const navigate = useNavigate();
 
   const totalTask = tasks.length;
+  const totalToDoTasks = tasks.filter((task: any) => task.status === "to-do").length;
   const totalCompletedTasks = tasks.filter((task: any) => task.status === "completed").length;
-  const totalProgressTasks = tasks.filter((task: any) => task.completion > 0).length;
+  const totalProgressTasks = tasks.filter((task: any) => task.status === "in-progress").length;
 
   const totalProjects = projects.length;
+  //const toDoProject = projects.filter((project: any) => project.completion > 0).length;
   const totalCompletedProjects = projects.filter((project: any) => project.completion === 100).length;
   const totalProgressProjects = projects.filter((project: any) => project.completion > 0).length;
 
@@ -68,19 +70,25 @@ function DashboardContent() {
     );
   }
 
+  const handleViewTasks = () => {
+    navigate("/task");
+  }
+
   return (
     <>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {/* Total Task Cards */}
-        <Grid size={{ xs: 12, md: 4 }} >
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} >
           <Card
             elevation={0}
             sx={{
               position: "relative",
               overflow: "visible",
+              cursor: "pointer",
               border: (theme) =>
                 `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
             }}
+            onClick={handleViewTasks}
           >
             <CardContent
               sx={{
@@ -92,14 +100,14 @@ function DashboardContent() {
             >
               <Box
                 sx={{
-                  width: 60,
-                  height: 60,
+                  width: 50,
+                  height: 50,
                   bgcolor: "#FFE28C",
                   borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 32,
+                  fontSize: 30,
                 }}
               >
                 <TotalTaskIcon />
@@ -123,40 +131,22 @@ function DashboardContent() {
                   {totalTask}
                 </Typography>
               </Box>
-              <IconButton
-                onClick={() => navigate("/task")}
-                sx={{
-                  borderRadius: 1,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: "rgba(0, 0, 0, 0.04)",
-                    transform: "translateX(4px)",
-                    "& .MuiSvgIcon-root": {
-                      opacity: 0.8,
-                    }
-                  },
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  }
-                }}
-              >
-                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
-              </IconButton>
-
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Total Completed Tasks */}
-        <Grid size={{ xs: 12, md: 4 }} >
+        {/* Total To Do Tasks */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} >
           <Card
             elevation={0}
             sx={{
               position: "relative",
               overflow: "visible",
+              cursor: "pointer",
               border: (theme) =>
                 `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
             }}
+            onClick={handleViewTasks}
           >
             <CardContent
               sx={{
@@ -168,14 +158,72 @@ function DashboardContent() {
             >
               <Box
                 sx={{
-                  width: 60,
-                  height: 60,
+                  width: 50,
+                  height: 50,
                   bgcolor: "#FFE28C",
                   borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 32,
+                  fontSize: 30,
+                }}
+              >
+                <CompleteTaskIcon />
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  flex: "1 1 auto",
+                  marginLeft: "1.5rem",
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
+                  fontWeight="500"
+                >
+                  Total To Do Tasks
+                </Typography>
+                <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                  {totalToDoTasks}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Total Completed Tasks */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} >
+          <Card
+            elevation={0}
+            sx={{
+              position: "relative",
+              overflow: "visible",
+              cursor: "pointer",
+              border: (theme) =>
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+            }}
+            onClick={handleViewTasks}
+          >
+            <CardContent
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                py: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 50,
+                  height: 50,
+                  bgcolor: "#FFE28C",
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 30,
                 }}
               >
                 <CompleteTaskIcon />
@@ -199,40 +247,22 @@ function DashboardContent() {
                   {totalCompletedTasks}
                 </Typography>
               </Box>
-              <IconButton
-                onClick={() => navigate("/task")}
-                sx={{
-                  borderRadius: 1,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: "rgba(0, 0, 0, 0.04)",
-                    transform: "translateX(4px)",
-                    "& .MuiSvgIcon-root": {
-                      opacity: 0.8,
-                    }
-                  },
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  }
-                }}
-              >
-                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
-              </IconButton>
-
             </CardContent>
           </Card>
         </Grid>
 
         {/* Total Progress Tasks */}
-        <Grid size={{ xs: 12, md: 4 }} >
+        <Grid size={{ xs: 12, sm: 6, md: 3 }} >
           <Card
             elevation={0}
             sx={{
               position: "relative",
               overflow: "visible",
+              cursor: "pointer",
               border: (theme) =>
                 `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
             }}
+            onClick={handleViewTasks}
           >
             <CardContent
               sx={{
@@ -269,32 +299,12 @@ function DashboardContent() {
                   color="text.secondary"
                   fontWeight="500"
                 >
-                  Total Process Tasks
+                  Total Progress Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
                   {totalProgressTasks}
                 </Typography>
               </Box>
-              <IconButton
-                onClick={() => navigate("/task")}
-                sx={{
-                  borderRadius: 1,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: "rgba(0, 0, 0, 0.04)",
-                    transform: "translateX(4px)",
-                    "& .MuiSvgIcon-root": {
-                      opacity: 0.8,
-                    }
-                  },
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  }
-                }}
-              >
-                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
-              </IconButton>
-
             </CardContent>
           </Card>
         </Grid>
@@ -348,7 +358,7 @@ function DashboardContent() {
           </Paper>
         </Grid>
 
-        <Grid size={{ xs: 12 }}>
+        {/* <Grid size={{ xs: 12 }}>
           <Paper elevation={0} sx={{
             p: 3, 
             border: (theme) =>
@@ -370,7 +380,7 @@ function DashboardContent() {
               </Typography>
             </Box>
           </Paper>
-        </Grid>
+        </Grid> */}
       </Grid>
 
       {/* Project Cards */}

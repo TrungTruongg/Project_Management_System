@@ -3,7 +3,7 @@ import { IoMdClose as CloseIcon } from "react-icons/io";
 import {
   AttachFile as AttachmentIcon,
   Delete as DeleteIcon,
-  InsertDriveFile as FileIcon
+  InsertDriveFile as FileIcon,
 } from "@mui/icons-material";
 
 import {
@@ -33,7 +33,7 @@ function CreateTaskModal({
   onUpdate,
   taskList = [],
   selectedTask = null,
-  currentProject
+  currentProject,
 }: any) {
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<number | "">("");
@@ -58,21 +58,22 @@ function CreateTaskModal({
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseProject, responseUser, responseAttachment] = await Promise.all([
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
-        ),
-        axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
-        )
-      ]);
+      const [responseProject, responseUser, responseAttachment] =
+        await Promise.all([
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+          axios.get(
+            "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+          ),
+        ]);
 
       setProjects(responseProject.data.data.data);
       setUsers(responseUser.data.data.data);
-      setAllAttachments(responseAttachment.data.data.data)
+      setAllAttachments(responseAttachment.data.data.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -81,7 +82,9 @@ function CreateTaskModal({
   };
 
   // Handle file upload
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (!files) return;
 
@@ -123,7 +126,7 @@ function CreateTaskModal({
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   const getProjectMembers = () => {
@@ -308,8 +311,8 @@ function CreateTaskModal({
           Array.isArray(selectedTask.assignedTo)
             ? selectedTask.assignedTo
             : selectedTask.assignedTo
-              ? [selectedTask.assignedTo]
-              : []
+            ? [selectedTask.assignedTo]
+            : []
         );
         setStatus(selectedTask.status || "");
       } else {
@@ -327,7 +330,6 @@ function CreateTaskModal({
       setShowError(false);
       setLoading(false);
     }
-
   }, [open, selectedTask, currentProject]);
 
   useEffect(() => {
@@ -423,30 +425,22 @@ function CreateTaskModal({
               fullWidth
               displayEmpty
               size="small"
-              value={currentProject ? currentProject.id : projectId}
+              value={projectId}
               onChange={(e) => handleProjectChange(Number(e.target.value))}
               sx={{
                 fontSize: "14px",
                 color: projectId === "" ? "#9ca3af" : "#111827",
               }}
-              disabled={!!currentProject}
+              // disabled={!!currentProject}
             >
-              {currentProject ? (
-                <MenuItem value={currentProject.id}>
-                  {currentProject.title}
+              <MenuItem value="" disabled>
+                Choose Project
+              </MenuItem>
+              {projects.map((project) => (
+                <MenuItem key={project.id} value={project.id}>
+                  {project.title}
                 </MenuItem>
-              ) : (
-                <Box>
-                  <MenuItem value="" disabled>
-                    Choose Project
-                  </MenuItem>
-                  {projects.map((project) => (
-                    <MenuItem key={project.id} value={project.id}>
-                      {project.title}
-                    </MenuItem>
-                  ))}
-                </Box>
-              )}
+              ))}
             </Select>
           </Box>
 
@@ -493,16 +487,10 @@ function CreateTaskModal({
               sx={{ textTransform: "none", mb: 2 }}
             >
               Upload files
-              <input
-                type="file"
-                hidden
-                multiple
-                onChange={handleFileChange}
-              />
+              <input type="file" hidden multiple onChange={handleFileChange} />
             </Button>
 
             {/* Attachments List */}
-
             {loading ? (
               <Skeleton
                 variant="rectangular"
@@ -512,7 +500,6 @@ function CreateTaskModal({
             ) : attachments.length > 0 ? (
               <List sx={{ bgcolor: "#f9fafb", borderRadius: 1, p: 1 }}>
                 {attachments.map((attachment: any) => {
-
                   return (
                     <ListItem
                       key={attachment.id}
@@ -552,7 +539,7 @@ function CreateTaskModal({
                         }
                       />
                     </ListItem>
-                  )
+                  );
                 })}
               </List>
             ) : (
@@ -652,8 +639,8 @@ function CreateTaskModal({
                       {!projectId && !currentProject
                         ? "Please select a project first"
                         : projectMembers.length === 0
-                          ? "No members in this project"
-                          : "Choose members"}
+                        ? "No members in this project"
+                        : "Choose members"}
                     </span>
                   );
                 }
@@ -670,7 +657,7 @@ function CreateTaskModal({
               sx={{
                 fontSize: "14px",
                 color: assignedTo.length === 0 ? "#9ca3af" : "#111827",
-                textTransform: "capitalize"
+                textTransform: "capitalize",
               }}
             >
               {projectMembers.length === 0 ? (
@@ -692,7 +679,7 @@ function CreateTaskModal({
                     key={member.id}
                     sx={{
                       fontSize: "14px",
-                      textTransform: "capitalize"
+                      textTransform: "capitalize",
                     }}
                   >
                     {member.firstName} {member.lastName}

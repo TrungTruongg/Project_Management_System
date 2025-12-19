@@ -17,7 +17,7 @@ export const menuItems = [
     id: "projects",
     text: "Projects",
     icon: <ProjectIcon />,
-    submenu: ["Projects", "Tasks", "Timesheet"],
+    submenu: ["Projects", "Tasks"],
   },
   {
     id: "tickets",

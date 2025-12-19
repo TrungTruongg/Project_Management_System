@@ -110,7 +110,6 @@ function CreateProjectModal({
         });
 
         onSave(response.data.data);
-
       }
       onClose();
     } catch (error) {
@@ -145,8 +144,8 @@ function CreateProjectModal({
           Array.isArray(selectedProject.member)
             ? selectedProject.member
             : selectedProject.member
-              ? [selectedProject.member]
-              : []
+            ? [selectedProject.member]
+            : []
         );
       } else {
         // Create
@@ -183,7 +182,7 @@ function CreateProjectModal({
               fontSize: "18px",
               lineHeight: "28px",
               fontWeight: 600,
-              color: "black"
+              color: "black",
             }}
           >
             {isUpdate ? "Update Project" : "Create Project"}
@@ -230,7 +229,10 @@ function CreateProjectModal({
               sx={{
                 "& .MuiOutlinedInput-root": {
                   fontSize: "14px",
+                  color: "black",
                 },
+                border: "1px solid #d1d5db",
+                borderRadius: "4px",
               }}
             />
             {showError && !title.trim() && (
@@ -265,6 +267,7 @@ function CreateProjectModal({
                 fontFamily: "inherit",
                 resize: "none",
                 outline: "none",
+                color: "black",
               }}
             />
           </Box>
@@ -290,7 +293,10 @@ function CreateProjectModal({
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     fontSize: "14px",
+                    color: "black"
                   },
+                  border: "1px solid #d1d5db",
+                  borderRadius: "4px",
                 }}
               />
             </Box>
@@ -315,7 +321,10 @@ function CreateProjectModal({
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     fontSize: "14px",
+                    color: "black"
                   },
+                  border: "1px solid #d1d5db",
+                  borderRadius: "4px",
                 }}
               />
             </Box>
@@ -357,6 +366,7 @@ function CreateProjectModal({
                           key={userId}
                           label={`${user?.firstName} ${user?.lastName}`}
                           size="small"
+                          sx={{ color: "black" }}
                         />
                       );
                     })}
@@ -367,11 +377,12 @@ function CreateProjectModal({
                 fontSize: "14px",
                 textTransform: "capitalize",
                 color: member.length === 0 ? "#9ca3af" : "#111827",
+                border: "1px solid #d1d5db",
+                borderRadius: "4px",
               }}
             >
               {staffUsers.map((user: any) => (
                 <MenuItem value={user.id} key={user.id}>
-
                   <ListItemText
                     primary={`${user.firstName} ${user.lastName}`}
                     secondary={user.role}
@@ -380,12 +391,6 @@ function CreateProjectModal({
                 </MenuItem>
               ))}
             </Select>
-            {/* <Typography
-              variant="caption"
-              sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
-            >
-              {member.length} member{member.length !== 1 ? "s" : ""} selected
-            </Typography> */}
           </Box>
 
           {/* Choose Leader */}
@@ -409,6 +414,8 @@ function CreateProjectModal({
               sx={{
                 fontSize: "14px",
                 color: leaderId === "" ? "#9ca3af" : "#111827",
+                border: "1px solid #d1d5db",
+                borderRadius: "4px",
               }}
             >
               <MenuItem value="" disabled>
@@ -420,9 +427,10 @@ function CreateProjectModal({
                   key={user.id}
                   sx={{ fontSize: "14px" }}
                 >
-                  <Typography>{user.firstName} {user.lastName}</Typography>
+                  <Typography>
+                    {user.firstName} {user.lastName}
+                  </Typography>
                 </MenuItem>
-
               ))}
             </Select>
           </Box>
@@ -447,6 +455,8 @@ function CreateProjectModal({
               sx={{
                 fontSize: "14px",
                 color: priority === "" ? "#9ca3af" : "#111827",
+                border: "1px solid #d1d5db",
+                borderRadius: "4px",
               }}
             >
               <MenuItem value="" disabled>
