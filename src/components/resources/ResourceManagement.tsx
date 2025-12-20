@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PreviewActionButtons from "./PreviewActionButtons";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function ResourceManagement() {
     const [loading, setLoading] = useState(false);
     const [attachments, setAttachments] = useState<any[]>([]);
@@ -15,10 +17,10 @@ function ResourceManagement() {
         try {
             const [attachmentsRes, tasksRes] = await Promise.all([
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
                 ),
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
                 ),
             ]);
 
@@ -56,7 +58,7 @@ function ResourceManagement() {
 
         try {
             await axios.delete(
-                `https://mindx-mockup-server.vercel.app/api/resources/attachments/${attachment._id}?apiKey=69205e8dbf3939eacf2e89f2`
+                `https://mindx-mockup-server.vercel.app/api/resources/attachments/${attachment._id}?apiKey=${API_KEY}`
             );
 
             setAttachments(attachments.filter((att: any) => att.id !== attachment.id));

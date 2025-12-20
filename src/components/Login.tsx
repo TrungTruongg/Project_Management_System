@@ -18,6 +18,7 @@ import { useUser } from "./context/UserContext";
 
 const MAX_ATTEMPTS = 5;
 const LOCK_MINUTES = 10;
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -29,23 +30,9 @@ function Login() {
   const navigate = useNavigate();
   const { setUser } = useUser();
 
-  // const checkEmailLocked = async (email: string) => {
-  //   const res = await axios.get(
-  //     "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
-  //   );
-
-  //   const lock = res.data.data.data.find((l: any) => l.email === email);
-
-  //   if (!lock || !lock.lockUntil) return null;
-
-  //   if (Date.now() < new Date(lock.lockUntil).getTime()) {
-  //     return lock;
-  //   }
-  // }
-
   const increaseAttempts = async (email: string) => {
     const res = await axios.get(
-      "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
+      `https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=${API_KEY}`
     );
 
     const locks = res.data.data.data;
@@ -53,7 +40,7 @@ function Login() {
 
     if (!lock) {
       await axios.post(
-        "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2",
+        `https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=${API_KEY}`,
         {
           email,
           attempts: 1,
@@ -68,7 +55,7 @@ function Login() {
     const isLocked = attempts >= MAX_ATTEMPTS;
 
     await axios.put(
-      `https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+      `https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=${API_KEY}`,
       {
         ...lock,
         attempts,
@@ -85,12 +72,12 @@ function Login() {
   };
 
   const resetLock = async (email: string) => {
-    const res = await axios.get("https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2");
+    const res = await axios.get(`https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=${API_KEY}`);
     const lock = res.data.data.data.find((l: any) => l.email === email);
 
     if (!lock) return;
 
-    await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`, {
+    await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=${API_KEY}`, {
       ...lock,
       attempts: 0,
       lockUntil: null,
@@ -109,18 +96,8 @@ function Login() {
     setLoading(true);
 
     try {
-      // const lock = await checkEmailLocked(email);
-
-      // if (lock) {
-      //   setIsLocked(true);
-      //   setError(
-      //     `Account locked. Try again after ${LOCK_MINUTES} minutes.`
-      //   );
-      //   return;
-      // }
-
       const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
       );
       const users = response.data.data.data;
 

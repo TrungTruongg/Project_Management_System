@@ -1,4 +1,5 @@
 import axios from "axios";
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 export const createNotification = async (data: {
   userId: number[];
@@ -7,7 +8,7 @@ export const createNotification = async (data: {
   description: string;
   createdBy?: number;
 }) => {
-  const response = await axios.get("https://mindx-mockup-server.vercel.app/api/resources/notifications?apiKey=69205e8dbf3939eacf2e89f2");
+  const response = await axios.get(`https://mindx-mockup-server.vercel.app/api/resources/notifications?apiKey=${API_KEY}`);
   const notifications = response.data.data.data;
 
   const maxId = notifications.length > 0 
@@ -20,6 +21,6 @@ export const createNotification = async (data: {
     createdAt: new Date().toISOString(),
   };
 
-  await axios.post("https://mindx-mockup-server.vercel.app/api/resources/notifications?apiKey=69205e8dbf3939eacf2e89f2", notification);
+  await axios.post(`https://mindx-mockup-server.vercel.app/api/resources/notifications?apiKey=${API_KEY}`, notification);
   return notification;
 };

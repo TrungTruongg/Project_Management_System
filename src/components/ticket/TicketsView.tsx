@@ -7,6 +7,8 @@ import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import CreateTicketModal from "./CreateTicketModal";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function TicketsView() {
     const [open, setOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -23,10 +25,10 @@ function TicketsView() {
         try {
             const [ticketsRes, usersRes] = await Promise.all([
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`
                 ),
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
                 ),
             ]);
 
@@ -85,7 +87,7 @@ function TicketsView() {
         setLoading(true);
         try {
             await axios.delete(
-                `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${selectedTicket._id}?apiKey=69205e8dbf3939eacf2e89f2`
+                `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${selectedTicket._id}?apiKey=${API_KEY}`
             );
 
             setSupTickets(

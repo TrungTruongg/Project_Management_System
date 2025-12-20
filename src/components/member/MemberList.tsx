@@ -19,6 +19,8 @@ import { useNavigate } from "react-router-dom";
 import AddMemberModal from "./AddMemberModal";
 import { useSearch } from "../context/SearchContext";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function MemberList() {
   const [users, setUsers] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
@@ -32,13 +34,13 @@ function MemberList() {
     setLoading(true);
     try {
       const responseUser = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
       );
       const responseMember = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=${API_KEY}`
       );
       const responseTask = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
       );
 
       const userData = responseUser.data.data.data;

@@ -14,6 +14,8 @@ import {
 import axios from "axios";
 import { useUser } from "../context/UserContext";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function UpdateMemberProfileModal({
     open,
     onClose,
@@ -66,7 +68,7 @@ function UpdateMemberProfileModal({
         setLoading(true);
         try {
             const usersResponse = await axios.get(
-                `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2`
+                `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
             );
 
             const existingUsers = usersResponse.data.data.data;
@@ -94,7 +96,7 @@ function UpdateMemberProfileModal({
             };
 
             const response = await axios.put(
-                `https://mindx-mockup-server.vercel.app/api/resources/users/${selectedUser._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+                `https://mindx-mockup-server.vercel.app/api/resources/users/${selectedUser._id}?apiKey=${API_KEY}`,
                 updatedUser
             );
             

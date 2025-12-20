@@ -16,6 +16,8 @@ import { CalendarToday, Assignment } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function NotificationModal({ open, onClose, currentUser }: any) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -28,10 +30,10 @@ function NotificationModal({ open, onClose, currentUser }: any) {
     try {
       const [responseNotification, responseUser] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/notifications?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/notifications?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
         )
       ]);
 

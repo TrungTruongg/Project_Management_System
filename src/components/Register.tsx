@@ -30,6 +30,8 @@ function Register() {
   const { setUser } = useUser();
   const navigate = useNavigate();
 
+  const API_KEY = import.meta.env.VITE_API_KEY;
+
   const validate = () => {
     const newErrors: any = {};
 
@@ -73,7 +75,7 @@ function Register() {
 
     try {
       const checkResponse = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
       );
 
       const existingUsers = checkResponse.data.data.data;
@@ -85,12 +87,11 @@ function Register() {
         return;
       }
 
-      // Get max ID
       const maxId = existingUsers.length > 0
         ? Math.max(...existingUsers.map((u: any) => u.id))
         : 0;
 
-      // Create new user với đầy đủ thông tin
+      // Create new user 
       const newUser = {
         id: maxId + 1,
         email: email,
@@ -105,7 +106,7 @@ function Register() {
       };
 
       const response = await axios.post(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2",
+        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`,
         newUser
       );
 
@@ -113,7 +114,6 @@ function Register() {
         setUser(response.data.data.data);
         setSuccessMessage("Registration successful! Redirecting to login...");
 
-        // Navigate to login after 2 seconds
         setTimeout(() => {
           navigate("/login");
         }, 2000);
@@ -138,7 +138,6 @@ function Register() {
         width: "100%",
       }}
     >
-      {/* Left Side - Illustration */}
       <Box
         sx={{
           flex: 1,
@@ -188,7 +187,6 @@ function Register() {
           Management Better
         </Typography>
 
-        {/* Illustration */}
         <Box
           sx={{
             width: "100%",
@@ -209,7 +207,7 @@ function Register() {
         </Box>
       </Box>
 
-      {/* Right Side - Register Form */}
+      {/* Register Form */}
       <Box
         sx={{
           flex: 1,
@@ -228,7 +226,6 @@ function Register() {
             maxWidth: "480px",
           }}
         >
-          {/* Header */}
           <Typography
             variant="h4"
             sx={{
@@ -257,16 +254,13 @@ function Register() {
             </Alert>
           )}
 
-          {/* Error Message */}
           {errors.submit && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {errors.submit}
             </Alert>
           )}
 
-          {/* Register Form */}
           <Box component="form" onSubmit={handleSubmit}>
-            {/* Full Name - 2 columns */}
             <Box sx={{ mb: 2.5 }}>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 6 }}>
@@ -579,7 +573,7 @@ function Register() {
               />
             </Box>
 
-            {/* Select City */}
+            {/* Location */}
             <Box sx={{ mb: 2 }}>
               <Typography
                 sx={{

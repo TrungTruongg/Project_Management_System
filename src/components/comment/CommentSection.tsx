@@ -13,6 +13,8 @@ import { useUser } from "../context/UserContext";
 import axios from "axios";
 import CommentItem from "./CommentItem";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function CommentSection({
   taskId,
   comments,
@@ -43,7 +45,7 @@ function CommentSection({
       };
 
       const response = await axios.post(
-        "https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=69205e8dbf3939eacf2e89f2",
+        `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=69205e8dbf3939eacf2e89f2`,
         comment
       );
 
@@ -73,7 +75,7 @@ function CommentSection({
       };
 
       const response = await axios.post(
-        "https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=69205e8dbf3939eacf2e89f2",
+        `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=${API_KEY}`,
         reply
       );
 

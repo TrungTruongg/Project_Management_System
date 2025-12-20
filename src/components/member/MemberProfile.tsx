@@ -26,6 +26,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import UpdateMemberProfileModal from "./UpdateMemberProfileModal";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function MemberProfile() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -52,16 +54,16 @@ function MemberProfile() {
       const [usersRes, projectsRes, tasksRes] =
         await Promise.all([
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
           ),
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
           ),
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+           `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
           ),
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=${API_KEY}`
           ),
         ]);
 
@@ -135,11 +137,11 @@ function MemberProfile() {
     setLoading(true);
     try {
       await axios.delete(
-        `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=69205e8dbf3939eacf2e89f2`
+        `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=${API_KEY}`
       );
 
       await axios.delete(
-        `https://mindx-mockup-server.vercel.app/api/resources/projectMembers/${selectedMember._id}?apiKey=69205e8dbf3939eacf2e89f2`
+        `https://mindx-mockup-server.vercel.app/api/resources/projectMembers/${selectedMember._id}?apiKey=${API_KEY}`
       );
 
       handleCloseDeleteDialog();

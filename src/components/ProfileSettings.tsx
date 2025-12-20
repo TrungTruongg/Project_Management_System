@@ -19,6 +19,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/Visibility";
 import { useUser } from "./context/UserContext";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 const ProfileSettings = () => {
   const { user, setUser } = useUser();
   const [form, setForm] = useState({
@@ -145,7 +147,7 @@ const ProfileSettings = () => {
       }
 
       const response = await axios.put(
-        `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+        `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=${API_KEY}`,
         updatedData
       );
 

@@ -21,6 +21,8 @@ import { useUser } from "../context/UserContext";
 import { useSearch } from "../context/SearchContext";
 import { useNavigate } from "react-router-dom";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function Projects() {
   const [open, setOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -29,6 +31,7 @@ function Projects() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { searchTerm } = useSearch();
   const navigate = useNavigate();
 
@@ -61,13 +64,13 @@ function Projects() {
     try {
       const [responseProject, responseUser, responseTask] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
         ),
       ]);
 
@@ -147,9 +150,10 @@ function Projects() {
   };
 
   const handleDeleteProject = async () => {
+    setDeleteLoading(true);
     try {
       await axios.delete(
-        `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=69205e8dbf3939eacf2e89f2`
+        `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=${API_KEY}`
       );
 
       setProjectList(
@@ -160,7 +164,7 @@ function Projects() {
     } catch (error) {
       console.error("Error deleting project:", error);
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -518,7 +522,7 @@ function Projects() {
         onClose={handleCloseDeleteDialog}
         onDelete={handleDeleteProject}
         selected={selectedProject ? selectedProject.title : ""}
-        loading={loading}
+        loading={deleteLoading}
       />
     </>
   );

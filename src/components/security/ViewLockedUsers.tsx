@@ -28,6 +28,8 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function ViewLockedUsers() {
   const [locks, setLocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,7 +57,7 @@ function ViewLockedUsers() {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/locks?apiKey=${API_KEY}`
       );
       setLocks(response.data.data.data);
     } catch (err) {
@@ -88,7 +90,7 @@ function ViewLockedUsers() {
   const handleUnlock = async (lock: any) => {
     setLoading(true);
     try {
-      await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`, {
+      await axios.put(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=${API_KEY}`, {
         ...lock,
         attempts: 0,
         lockUntil: null
@@ -110,7 +112,7 @@ function ViewLockedUsers() {
   const handleDelete = async (lock: any) => {
     setLoading(true);
     try {
-      await axios.delete(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=69205e8dbf3939eacf2e89f2`)
+      await axios.delete(`https://mindx-mockup-server.vercel.app/api/resources/locks/${lock._id}?apiKey=${API_KEY}`)
       setLocks((prev) => prev.filter((l) => l._id !== lock._id));
       
       setSnackbar({

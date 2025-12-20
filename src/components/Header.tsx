@@ -21,6 +21,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import NotificationModal from "./NotificationModal";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function Header() {
   const [open, setOpen] = useState(false);
   const { setUser, user } = useUser();
@@ -34,7 +36,7 @@ function Header() {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
       );
       setUsers(response.data.data.data);
     } catch (error) {
@@ -53,10 +55,10 @@ function Header() {
     try {
       const [projectsRes, tasksRes] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
         ),
       ]);
 

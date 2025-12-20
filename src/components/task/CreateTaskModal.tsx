@@ -26,6 +26,8 @@ import axios from "axios";
 import { createNotification } from "../utils/createNotification";
 import { useUser } from "../context/UserContext";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function CreateTaskModal({
   open,
   onClose,
@@ -61,13 +63,13 @@ function CreateTaskModal({
       const [responseProject, responseUser, responseAttachment] =
         await Promise.all([
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
           ),
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
           ),
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
           ),
         ]);
 
@@ -178,12 +180,12 @@ function CreateTaskModal({
         };
 
         await axios.put(
-          `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`,
           updatedTask
         );
 
         const existingAttachmentsRes = await axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
         );
         const existingAttachments = existingAttachmentsRes.data.data.data;
         let maxAttachmentId =
@@ -206,7 +208,7 @@ function CreateTaskModal({
             };
 
             await axios.post(
-              "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2",
+              `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`,
               attachmentData
             );
           }
@@ -240,14 +242,14 @@ function CreateTaskModal({
         };
 
         const response = await axios.post(
-          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2",
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`,
           newTask
         );
 
         const createdTask = response.data.data;
 
         const existingAttachmentsRes = await axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
         );
         const existingAttachments = existingAttachmentsRes.data.data.data;
         let maxAttachmentId =
@@ -269,7 +271,7 @@ function CreateTaskModal({
           };
 
           await axios.post(
-            "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2",
+            `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`,
             attachmentData
           );
         }

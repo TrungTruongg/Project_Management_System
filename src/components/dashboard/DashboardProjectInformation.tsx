@@ -15,6 +15,8 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function DashboardProjectInformation() {
   const [users, setUsers] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
@@ -36,10 +38,10 @@ function DashboardProjectInformation() {
     try {
       const [projectsRes, usersRes] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
         ),
       ]);
       setProjects(projectsRes.data.data.data);
@@ -56,10 +58,10 @@ function DashboardProjectInformation() {
   }, []);
 
   if (loading) {
-    return (   
-        <Box sx={{ borderRadius: 2, p: 3, boxShadow: 1, textAlign: "center" }}>
-          <CircularProgress />
-        </Box>   
+    return (
+      <Box sx={{ borderRadius: 2, p: 3, boxShadow: 1, textAlign: "center" }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
@@ -152,6 +154,7 @@ function DashboardProjectInformation() {
             {projects.map((project: any, index) => {
               const leader = users.find(user => user.id === project.leaderId);
               const members = project.member || [];
+              const calculateDays = calculateDeadline(project.startDate, project.endDate);
 
               return (
                 <TableRow
@@ -184,13 +187,20 @@ function DashboardProjectInformation() {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {calculateDeadline(
-                        project.startDate,
-                        project.endDate
-                      )}{" "}
-                      Days
-                    </Typography>
+                    {calculateDays >= 1 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {calculateDeadline(
+                          project.startDate,
+                          project.endDate
+                        )}{" "}
+                        Days
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="red">
+                        Expired
+                      </Typography>
+                    )}
+
                   </TableCell>
                   <TableCell>
                     {leader ? (

@@ -17,6 +17,8 @@ import axios from "axios";
 import { createNotification } from "../utils/createNotification";
 import { useUser } from "../context/UserContext";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function CreateProjectModal({
   open,
   onClose,
@@ -46,6 +48,12 @@ function CreateProjectModal({
     if (!title.trim()) {
       setShowError(true);
       return;
+    } if (new Date(startDate) >= new Date(endDate)) {
+      setShowError(true);
+      return
+    } if (new Date(endDate) < new Date()) {
+      setShowError(true);
+      return
     }
 
     setLoading(true);
@@ -65,7 +73,7 @@ function CreateProjectModal({
         };
 
         const response = await axios.put(
-          `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+          `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=${API_KEY}`,
           updatedProject
         );
 
@@ -97,7 +105,7 @@ function CreateProjectModal({
         };
 
         const response = await axios.post(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2",
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`,
           newProject
         );
 
@@ -122,7 +130,7 @@ function CreateProjectModal({
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
       );
       setUsers(response.data.data.data);
     } catch (error) {
@@ -144,8 +152,8 @@ function CreateProjectModal({
           Array.isArray(selectedProject.member)
             ? selectedProject.member
             : selectedProject.member
-            ? [selectedProject.member]
-            : []
+              ? [selectedProject.member]
+              : []
         );
       } else {
         // Create
@@ -316,7 +324,7 @@ function CreateProjectModal({
                 fullWidth
                 type="date"
                 size="small"
-                value={endDate}
+                value={startDate ? endDate : ""}
                 onChange={(e) => setEndDate(e.target.value)}
                 sx={{
                   "& .MuiOutlinedInput-root": {
@@ -327,113 +335,130 @@ function CreateProjectModal({
                   borderRadius: "4px",
                 }}
               />
+
+              {showError && startDate >= endDate && (
+                <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
+                  End Date cannot smaller or equal than Start Date
+                </Typography>
+              )}
+
+              {showError && new Date(endDate) < new Date() && (
+                <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
+                  End Date cannot be in the past
+                </Typography>
+              )}
             </Box>
           </Box>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-            >
-              Task Assign Person
-            </Typography>
 
-            <Select
-              fullWidth
-              size="small"
-              multiple
-              onChange={(e) => {
-                const value = e.target.value;
-                setMember(typeof value === "string" ? [] : value);
-              }}
-              value={member}
-              renderValue={(selected) => {
-                if (selected.length === 0) {
+          {(user?.role === "leader" || isUpdate) &&
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                sx={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  mb: 0.5,
+                  color: "#374151",
+                }}
+              >
+                Task Assign Person
+              </Typography>
+
+              <Select
+                fullWidth
+                size="small"
+                multiple
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setMember(typeof value === "string" ? [] : value);
+                }}
+                value={member}
+                renderValue={(selected) => {
+                  if (selected.length === 0) {
+                    return (
+                      <span style={{ color: "#9ca3af" }}>Choose members</span>
+                    );
+                  }
                   return (
-                    <span style={{ color: "#9ca3af" }}>Choose members</span>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((userId: number) => {
+                        const user = users.find((u: any) => u.id === userId);
+                        return (
+                          <Chip
+                            key={userId}
+                            label={`${user?.firstName} ${user?.lastName}`}
+                            size="small"
+                            sx={{ color: "black" }}
+                          />
+                        );
+                      })}
+                    </Box>
                   );
-                }
-                return (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selected.map((userId: number) => {
-                      const user = users.find((u: any) => u.id === userId);
-                      return (
-                        <Chip
-                          key={userId}
-                          label={`${user?.firstName} ${user?.lastName}`}
-                          size="small"
-                          sx={{ color: "black" }}
-                        />
-                      );
-                    })}
-                  </Box>
-                );
-              }}
-              sx={{
-                fontSize: "14px",
-                textTransform: "capitalize",
-                color: member.length === 0 ? "#9ca3af" : "#111827",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-              }}
-            >
-              {staffUsers.map((user: any) => (
-                <MenuItem value={user.id} key={user.id}>
-                  <ListItemText
-                    primary={`${user.firstName} ${user.lastName}`}
-                    secondary={user.role}
-                    sx={{ textTransform: "capitalize" }}
-                  />
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+                }}
+                sx={{
+                  fontSize: "14px",
+                  textTransform: "capitalize",
+                  color: member.length === 0 ? "#9ca3af" : "#111827",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "4px",
+                }}
+              >
+                {staffUsers.map((user: any) => (
+                  <MenuItem value={user.id} key={user.id}>
+                    <ListItemText
+                      primary={`${user.firstName} ${user.lastName}`}
+                      secondary={user.role}
+                      sx={{ textTransform: "capitalize" }}
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+          }
 
           {/* Choose Leader */}
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-            >
-              Choose Leader <span className="text-red-500">*</span>
-            </Typography>
-            <Select
-              fullWidth
-              size="small"
-              displayEmpty
-              value={leaderId}
-              onChange={(e) => setLeaderId(e.target.value)}
-              sx={{
-                fontSize: "14px",
-                color: leaderId === "" ? "#9ca3af" : "#111827",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-              }}
-            >
-              <MenuItem value="" disabled>
-                <span style={{ color: "#9ca3af" }}>Choose leader</span>
-              </MenuItem>
-              {leaderUsers.map((user: any) => (
-                <MenuItem
-                  value={user.id}
-                  key={user.id}
-                  sx={{ fontSize: "14px" }}
-                >
-                  <Typography>
-                    {user.firstName} {user.lastName}
-                  </Typography>
+          {user?.role === "leader" &&
+            <Box>
+              <Typography
+                sx={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  mb: 0.5,
+                  color: "#374151",
+                }}
+              >
+                Choose Leader <span className="text-red-500">*</span>
+              </Typography>
+              <Select
+                fullWidth
+                size="small"
+                displayEmpty
+                value={leaderId}
+                onChange={(e) => setLeaderId(e.target.value)}
+                sx={{
+                  fontSize: "14px",
+                  color: leaderId === "" ? "#9ca3af" : "#111827",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "4px",
+                }}
+              >
+                <MenuItem value="" disabled>
+                  <span style={{ color: "#9ca3af" }}>Choose leader</span>
                 </MenuItem>
-              ))}
-            </Select>
-          </Box>
+                {leaderUsers.map((user: any) => (
+                  <MenuItem
+                    value={user.id}
+                    key={user.id}
+                    sx={{ fontSize: "14px" }}
+                  >
+                    <Typography>
+                      {user.firstName} {user.lastName}
+                    </Typography>
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+          }
 
           <Box sx={{ mb: 3 }}>
             <Typography

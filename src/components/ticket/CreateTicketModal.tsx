@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function CreateTicketModal({
     open,
     onClose,
@@ -35,7 +37,7 @@ function CreateTicketModal({
     const fetchUsers = async () => {
         try {
             const response = await axios.get(
-                "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+                `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
             );
             setUsers(response.data.data.data);
         } catch (error) {
@@ -77,7 +79,7 @@ function CreateTicketModal({
                 };
 
                 const response = await axios.put(
-                    `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${selectedTicket._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+                    `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${selectedTicket._id}?apiKey=${API_KEY}`,
                     updatedTicket
                 );
 
@@ -101,7 +103,7 @@ function CreateTicketModal({
                 };
 
                 const response = await axios.post(
-                    "https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=69205e8dbf3939eacf2e89f2",
+                    `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`,
                     newTicket
                 );
 

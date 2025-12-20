@@ -6,7 +6,6 @@ import {
   createTheme,
   StyledEngineProvider,
   ThemeProvider,
-  Experimental_CssVarsProvider as CssVarsProvider,
 } from "@mui/material/styles";
 import { CssBaseline, GlobalStyles } from "@mui/material";
 import { UserProvider } from "./components/context/UserContext";
@@ -51,8 +50,7 @@ function App() {
   return (
     <StyledEngineProvider enableCssLayer>
       <GlobalStyles styles="@layer theme, base, mui, components, utilities;" />
-      <ThemeProvider theme={theme}>
-        <CssVarsProvider theme={theme} defaultMode="light">
+      <ThemeProvider theme={theme} defaultMode="light">
         <CssBaseline />
         <UserProvider>
           <SearchProvider>
@@ -88,7 +86,6 @@ function App() {
             </Router>
           </SearchProvider>
         </UserProvider>
-        </CssVarsProvider>
       </ThemeProvider>
     </StyledEngineProvider>
   );

@@ -4,7 +4,7 @@ import { useSearch } from "./context/SearchContext";
 
 function SearchInput() {
   const { searchTerm, setSearchTerm } = useSearch();
-  
+
   return (
     <TextField
       placeholder="Search"
@@ -15,10 +15,25 @@ function SearchInput() {
       onChange={(e) => setSearchTerm(e.target.value)}
       value={searchTerm}
       sx={{
-        width: 350,     
+        width: 350,
         "& .MuiOutlinedInput-root": {
           borderRadius: 2,
+          "& fieldset": {
+            borderColor: (theme) =>
+              theme.palette.mode === "light" ? "#e0e0e0" : "#444",
+          },
+
+          "&:hover fieldset": {
+            borderColor: (theme) =>
+              theme.palette.mode === "light" ? "#f0f0f0" : "#2a2a2a",
+          },
+
+          "&.Mui-focused fieldset": {
+            borderColor: (theme) =>
+              theme.palette.mode === "light" ? "#f0f0f0" : "#2a2a2a",
+          },
         },
+
       }}
       slotProps={{
         input: {

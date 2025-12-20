@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function AddMemberModal({
   open,
   onClose,
@@ -31,7 +33,7 @@ function AddMemberModal({
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
       );
       setUsers(response.data.data.data);
     } catch (err) {
@@ -88,7 +90,7 @@ function AddMemberModal({
       };
 
       const response = await axios.post(
-        "https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=69205e8dbf3939eacf2e89f2",
+        `https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=${API_KEY}`,
         newMember
       );
 

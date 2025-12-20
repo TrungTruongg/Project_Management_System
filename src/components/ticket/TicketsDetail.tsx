@@ -16,6 +16,8 @@ import {
   Loop as StatusIcon,
 } from "@mui/icons-material";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function TicketsDetail() {
   const [searchParams] = useSearchParams();
   const ticketId = searchParams.get("id");
@@ -31,10 +33,10 @@ function TicketsDetail() {
     try {
       const [ticketsRes, usersRes] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
         ),
       ]);
 

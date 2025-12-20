@@ -12,6 +12,8 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function DashboardContent() {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -34,10 +36,10 @@ function DashboardContent() {
       const [projectsRes, tasksRes] =
         await Promise.all([
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
           ),
           axios.get(
-            "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+            `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
           )
         ]);
       setProjects(projectsRes.data.data.data);
@@ -76,7 +78,7 @@ function DashboardContent() {
 
   return (
     <>
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 4, gap: 1 }}>
         {/* Total Task Cards */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }} >
           <Card

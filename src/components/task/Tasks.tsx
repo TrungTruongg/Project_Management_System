@@ -21,6 +21,8 @@ import { useUser } from "../context/UserContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSearch } from "../context/SearchContext";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 function Tasks() {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('projectId');
@@ -32,32 +34,33 @@ function Tasks() {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useUser();
   const { searchTerm } = useSearch();
 
-  // const calculateDeadline = (dateStart: string, dateEnd: string) => {
-  //   const startDate = new Date(dateStart);
-  //   const endDate = new Date(dateEnd);
+  const calculateDeadline = (dateStart: string, dateEnd: string) => {
+    const startDate = new Date(dateStart);
+    const endDate = new Date(dateEnd);
 
-  //   const diffTime = endDate.getTime() - startDate.getTime();
-  //   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  //   return diffDays;
-  // };
+    return diffDays;
+  };
 
   const fetchAllData = async () => {
     setLoading(true);
     try {
       const [responseTask, responseProject, responseUser] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
         ),
       ]);
 
@@ -147,10 +150,10 @@ function Tasks() {
     try {
       const [tasksRes, projectsRes] = await Promise.all([
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
         ),
         axios.get(
-          "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
         ),
       ]);
 
@@ -179,7 +182,7 @@ function Tasks() {
       };
 
       await axios.put(
-        `https://mindx-mockup-server.vercel.app/api/resources/projects/${projectToUpdate._id}?apiKey=69205e8dbf3939eacf2e89f2`,
+        `https://mindx-mockup-server.vercel.app/api/resources/projects/${projectToUpdate._id}?apiKey=${API_KEY}`,
         updatedProject
       );
 
@@ -222,9 +225,9 @@ function Tasks() {
     }
   };
 
-  // Khi xóa task
+  // Delete Task
   const handleDeleteTask = async () => {
-    setLoading(true);
+    setDeleteLoading(true);
 
     if (!selectedTask) return;
 
@@ -232,7 +235,7 @@ function Tasks() {
       const projectId = selectedTask.projectId;
 
       await axios.delete(
-        `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=69205e8dbf3939eacf2e89f2`
+        `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`
       );
 
       setTaskList(taskList.filter((task: any) => task.id !== selectedTask.id));
@@ -246,7 +249,7 @@ function Tasks() {
     } catch (error) {
       console.error("Error deleting task:", error);
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -294,13 +297,15 @@ function Tasks() {
       .map((userId: number) => users.find((u) => u.id === userId))
       .filter(Boolean);
 
+    const calculateDays = calculateDeadline(task.startDate, task.endDate)
+
     return (
       <Card
         key={task.id}
-        elevation={0}
         sx={{
           mb: 2,
           cursor: "pointer",
+          boxShadow: 1,
           border: (theme) =>
             `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
         }}
@@ -316,12 +321,13 @@ function Tasks() {
           >
             <Chip
               label={task.title}
-              size="small"
+              size="medium"
               sx={{
                 bgcolor: "#E8F5E9",
                 color: "#2E7D32",
                 fontWeight: 600,
-                fontSize: "0.75rem",
+                fontSize: "15px",
+                textTransform: "capitalize"
               }}
             />
             <Box sx={{ display: "flex", gap: 1 }} onClick={(e) => e.stopPropagation()}>
@@ -342,29 +348,30 @@ function Tasks() {
             </Box>
           </Box>
 
-          <Chip
-            label={priorityConfig.label}
-            size="small"
-            sx={{
-              ...priorityConfig,
-              fontSize: "0.65rem",
-              height: 20,
-              mb: 1,
-            }}
-          />
+          <Box sx={{ mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Chip
+              label={priorityConfig.label}
+              size="small"
+              sx={{
+                ...priorityConfig,
+                fontSize: "0.65rem",
+                height: 20,
 
-          <Box sx={{ mb: 2 }}>
-            <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+              }}
+            />
+
+            <AvatarGroup max={5}>
               {assignedUsers.length > 0 ? (
                 assignedUsers.map((user: any) => (
                   <Avatar
                     key={user.id}
                     src={user.avatar}
                     sx={{
-                      width: 32,
-                      height: 32,
-                      fontSize: "16px",
+                      width: 20,
+                      height: 20,
+                      fontSize: "10px",
                       bgcolor: "#E0E0E0",
+                      textTransform: "uppercase"
                     }}
                   >
                     {user.firstName?.[0]}
@@ -382,8 +389,8 @@ function Tasks() {
             </AvatarGroup>
           </Box>
 
-          {task.description && (
-            <Box sx={{ mb: 2 }}>
+          <Box sx={{ mb: 2 }}>
+            {task.description ? (
               <Typography
                 variant="body2"
                 color="text.secondary"
@@ -391,8 +398,17 @@ function Tasks() {
               >
                 {task.description}
               </Typography>
-            </Box>
-          )}
+
+            ) : (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ color: "text.secondary", fontStyle: "italic", mb: 2, minHeight: 40 }}
+              >
+                No Description
+              </Typography>
+            )}
+          </Box>
 
           <Box
             sx={{
@@ -401,36 +417,41 @@ function Tasks() {
               alignItems: "center",
             }}
           >
-            {task.startDate ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
-                  <Typography variant="caption">
-                    {new Date(task.startDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                    })}
-                  </Typography>
-                </Box>
-                -
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
-                  <Typography variant="caption">
-                    {new Date(task.endDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                    })}
-                  </Typography>
-                </Box>
-              </Box>
-            ) : (
-              <Typography
-                variant="caption"
-                sx={{ color: "text.secondary", fontStyle: "italic" }}
-              >
-                No Dates provided
+            {calculateDays <= 0 ? (
+              <Typography variant="caption" color="red">
+                Expired
               </Typography>
-            )}
+            ) :
+              task.startDate ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
+                    <Typography variant="caption">
+                      {new Date(task.startDate).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </Typography>
+                  </Box>
+                  -
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <CalendarToday sx={{ fontSize: 14, color: "text.secondary" }} />
+                    <Typography variant="caption">
+                      {new Date(task.endDate).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                <Typography
+                  variant="caption"
+                  sx={{ color: "text.secondary", fontStyle: "italic" }}
+                >
+                  No Dates provided
+                </Typography>
+              )}
 
 
             {project && (
@@ -441,6 +462,7 @@ function Tasks() {
                   bgcolor: "#F3E5F5",
                   color: "#7B1FA2",
                   fontSize: "0.85rem",
+                  textTransform: "capitalize"
                 }}
               />
             )}
@@ -551,7 +573,7 @@ function Tasks() {
         onClose={handleCloseDeleteDialog}
         onDelete={handleDeleteTask}
         selected={selectedTask ? selectedTask.title : ""}
-        loading={loading}
+        loading={deleteLoading}
       />
     </>
   );
