@@ -137,7 +137,7 @@ function Header() {
       <SearchInput />
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <IconButton sx={{ bgcolor: "white" }}>
+        {/* <IconButton sx={{ bgcolor: "white" }}>
           <Info color="primary" />
         </IconButton>
         <AvatarGroup
@@ -174,7 +174,7 @@ function Header() {
               </Avatar>
             ))
           )}
-        </AvatarGroup>
+        </AvatarGroup> */}
         <IconButton sx={{ bgcolor: "white" }} onClick={handleOpenNotification}>
           <Badge
             variant="dot"

@@ -7,6 +7,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Divider,
   Grid,
   IconButton,
   Typography,
@@ -146,6 +147,18 @@ function Tasks() {
     setOpenCreateTaskModal(true);
   };
 
+  const calculateTaskCompletion = (taskId: number) => {
+    const task = taskList.filter((task) => task.projectId === taskId);
+
+    if (task.length === 0) return 0;
+
+    const completedTasks = task.filter(
+      (task: any) => task.status === "completed"
+    );
+
+    return Math.round((completedTasks.length / task.length) * 100);
+  };
+
   const updateProjectCompletion = async (projectId: number) => {
     try {
       const [tasksRes, projectsRes] = await Promise.all([
@@ -233,10 +246,25 @@ function Tasks() {
 
     try {
       const projectId = selectedTask.projectId;
-
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`
       );
+
+      // XÓA TẤT CẢ ATTACHMENTS CỦA TASK NÀY
+      const attachmentsRes = await axios.get(
+        `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
+      );
+
+      const taskAttachments = attachmentsRes.data.data.data.filter(
+        (att: any) => att.taskId === selectedTask.id
+      );
+
+      // Xóa từng attachment
+      for (const attachment of taskAttachments) {
+        await axios.delete(
+          `https://mindx-mockup-server.vercel.app/api/resources/attachments/${attachment._id}?apiKey=${API_KEY}`
+        );
+      }
 
       setTaskList(taskList.filter((task: any) => task.id !== selectedTask.id));
 
@@ -244,8 +272,8 @@ function Tasks() {
       if (projectId) {
         await updateProjectCompletion(projectId);
       }
-
       handleCloseDeleteDialog();
+
     } catch (error) {
       console.error("Error deleting task:", error);
     } finally {
@@ -267,22 +295,6 @@ function Tasks() {
     navigate(`/task-detail?id=${taskId}`)
   }
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          height: "60vh",
-          width: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
     const project = projects.find((p) => p.id === task.projectId);
@@ -298,6 +310,7 @@ function Tasks() {
       .filter(Boolean);
 
     const calculateDays = calculateDeadline(task.startDate, task.endDate)
+    const completion = calculateTaskCompletion(project.id);
 
     return (
       <Card
@@ -415,6 +428,7 @@ function Tasks() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              mb: 2
             }}
           >
             {calculateDays <= 0 ? (
@@ -467,6 +481,63 @@ function Tasks() {
               />
             )}
           </Box>
+
+          <Divider sx={{ mb: 2 }} />
+
+          {/* Progress */}
+          <Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                mb: 1,
+              }}
+            >
+              <Typography variant="caption" fontWeight="600">
+                Progress
+              </Typography>
+              <Chip
+                label={`${calculateDeadline(
+                  task.startDate,
+                  task.endDate
+                )} Days Left`}
+                size="small"
+                sx={{
+                  bgcolor: "#FFEBEE",
+                  color: "#C62828",
+                  height: 20,
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                }}
+              />
+            </Box>
+            <Box sx={{ display: "flex", gap: 0.5 }}>
+              {[1, 2, 3, 4].map((i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    flex: 1,
+                    height: 8,
+                    bgcolor:
+                      i <= Math.floor(completion / 25)
+                        ? "#FF9800"
+                        : "#E0E0E0",
+                    borderRadius: 1,
+                  }}
+                />
+              ))}
+            </Box>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                mt: 0.5,
+                display: "block",
+              }}
+            >
+              {completion}% Complete
+            </Typography>
+          </Box>
         </CardContent>
       </Card>
     );
@@ -474,7 +545,7 @@ function Tasks() {
 
   return (
     <>
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      <Grid container spacing={3} sx={{ mb: 3, width: "100%" }}>
         <Box
           sx={{
             width: "100%",
@@ -532,6 +603,8 @@ function Tasks() {
           >
             <CircularProgress />
           </Box>
+        ) : taskList.length === 0 ? (
+          <Typography fontStyle="italic">No tasks available!</Typography>
         ) : (
           <Grid container spacing={3} sx={{ width: "100%" }}>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -557,6 +630,7 @@ function Tasks() {
           </Grid>
         )}
       </Grid>
+
       <CreateTaskModal
         open={openCreateTaskModal}
         onClose={handleCloseModal}

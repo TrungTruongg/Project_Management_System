@@ -117,7 +117,6 @@ function CreateTaskModal({
     setAttachments([...attachments, ...newAttachments]);
   };
 
-  // Remove attachment
   const handleRemoveAttachment = (attachmentId: number) => {
     setAttachments(attachments.filter((att) => att.id !== attachmentId));
   };
@@ -160,6 +159,12 @@ function CreateTaskModal({
     if (!title.trim()) {
       setShowError(true);
       return;
+    } if (new Date(startDate) >= new Date(endDate)) {
+      setShowError(true);
+      return
+    } if (new Date(endDate) < new Date()) {
+      setShowError(true);
+      return
     }
 
     setLoading(true);
@@ -238,7 +243,7 @@ function CreateTaskModal({
           assignedTo: assignedTo,
           priority: priority.toLowerCase(),
           status: status,
-          completion: 0,
+          completion: status === "completed" ? 100 : 0,
         };
 
         const response = await axios.post(
@@ -295,7 +300,7 @@ function CreateTaskModal({
   };
 
   useEffect(() => {
-    if (open) {
+    if (open && users.length > 0) {
       if (selectedTask) {
         // Edit
         const taskAttachments = allAttachments.filter(
@@ -313,8 +318,8 @@ function CreateTaskModal({
           Array.isArray(selectedTask.assignedTo)
             ? selectedTask.assignedTo
             : selectedTask.assignedTo
-            ? [selectedTask.assignedTo]
-            : []
+              ? [selectedTask.assignedTo]
+              : []
         );
         setStatus(selectedTask.status || "");
       } else {
@@ -332,7 +337,7 @@ function CreateTaskModal({
       setShowError(false);
       setLoading(false);
     }
-  }, [open, selectedTask, currentProject]);
+  }, [open, selectedTask, currentProject, allAttachments]);
 
   useEffect(() => {
     if (open) {
@@ -433,7 +438,7 @@ function CreateTaskModal({
                 fontSize: "14px",
                 color: projectId === "" ? "#9ca3af" : "#111827",
               }}
-              // disabled={!!currentProject}
+            // disabled={!!currentProject}
             >
               <MenuItem value="" disabled>
                 Choose Project
@@ -608,6 +613,18 @@ function CreateTaskModal({
                   },
                 }}
               />
+
+              {showError && startDate >= endDate && (
+                <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
+                  End Date cannot smaller or equal than Start Date
+                </Typography>
+              )}
+
+              {showError && new Date(endDate) < new Date() && (
+                <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
+                  End Date cannot be in the past
+                </Typography>
+              )}
             </Box>
           </Box>
 
@@ -641,8 +658,8 @@ function CreateTaskModal({
                       {!projectId && !currentProject
                         ? "Please select a project first"
                         : projectMembers.length === 0
-                        ? "No members in this project"
-                        : "Choose members"}
+                          ? "No members in this project"
+                          : "Choose members"}
                     </span>
                   );
                 }

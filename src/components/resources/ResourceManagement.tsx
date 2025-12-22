@@ -129,7 +129,6 @@ function ResourceManagement() {
                         title={attachment.name}
                         scrolling="no"
                     />
-                    {/* Overlay for better visibility */}
                     <Box
                         sx={{
                             position: "absolute",
@@ -227,6 +226,8 @@ function ResourceManagement() {
                 >
                     <CircularProgress />
                 </Box>
+            ) : attachments.length === 0 ? (
+                <Typography fontStyle="italic" >No attachments available!</Typography>
             ) : (
                 <Box
                     sx={{

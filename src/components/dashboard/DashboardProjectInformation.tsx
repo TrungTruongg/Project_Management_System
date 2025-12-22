@@ -316,8 +316,8 @@ function DashboardProjectInformation() {
 
       {projects.length === 0 && !loading && (
         <Box sx={{ textAlign: "center", py: 4 }}>
-          <Typography color="text.secondary">
-            Chưa có project nào
+          <Typography fontStyle="italic" color="text.secondary">
+            No projects available!
           </Typography>
         </Box>
       )}

@@ -230,6 +230,8 @@ function Projects() {
         >
           <CircularProgress />
         </Box>
+      ) : filteredProjects.length === 0 ? (
+        <Typography fontStyle="italic" >No project available!</Typography>
       ) : (
         <Box
           sx={{

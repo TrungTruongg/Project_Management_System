@@ -24,8 +24,8 @@ const routeMapping: Record<string, string> = {
   Tasks: "/task",
   Members: "/member",
   "Members Profile": "/member-profile",
-  "Tickets View": "/tickets-view",
-  "Tickets Detail": "/tickets-detail",
+  "Supports View": "/supports-view",
+  "Supports Detail": "/supports-detail",
   Resources: "/resources",
   "Locked Users": "/view-locked-users",
 };
@@ -214,18 +214,6 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                             }}
                           >
                             <span>{item.text}</span>
-                            {/* {leaderOnlyMenus.includes(item.text) && isLeader && (
-                              <Chip
-                                label="👑"
-                                size="small"
-                                sx={{
-                                  height: "18px",
-                                  fontSize: "10px",
-                                  backgroundColor: "rgba(255,183,77,0.2)",
-                                  color: "#FFB74D",
-                                }}
-                              />
-                            )} */}
                           </Box>
                         }
                         slotProps={{
@@ -270,19 +258,6 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                                       }}
                                     >
                                       <span>{subitem}</span>
-                                      {/* {isLeaderOnlyItem && isLeader && (
-                                        <Chip
-                                          label="👑"
-                                          size="small"
-                                          sx={{
-                                            height: "18px",
-                                            fontSize: "10px",
-                                            backgroundColor:
-                                              "rgba(255,183,77,0.2)",
-                                            color: "#FFB74D",
-                                          }}
-                                        />
-                                      )} */}
                                     </Box>
                                   }
                                   slotProps={{

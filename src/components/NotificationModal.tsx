@@ -12,9 +12,11 @@ import {
   Typography,
 } from "@mui/material";
 import { IoMdClose as CloseIcon } from "react-icons/io";
-import { CalendarToday, Assignment } from "@mui/icons-material";
+import { CalendarToday, Assignment, ContactSupport as SupportIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useUser } from "./context/UserContext";
+import { useNavigate } from "react-router-dom";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -22,6 +24,8 @@ function NotificationModal({ open, onClose, currentUser }: any) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useUser();
+  const navigate = useNavigate();
 
   const fetchNotifications = async () => {
     if (!currentUser) return;
@@ -210,6 +214,12 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                   <>
                     <ListItem
                       key={notification.id}
+                      onClick={notification.type === "project"
+                        ? () => navigate("/project")
+                        : notification.type === "task"
+                          ? () => navigate("/task")
+                          : () => navigate("/supports-view")
+                      }
                       sx={{
                         alignItems: "flex-start",
                         py: 2,
@@ -220,6 +230,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                           bgcolor: "#f9fafb",
                         },
                         transition: "all 0.2s",
+                        cursor: "pointer"
                       }}
                     >
                       <ListItemAvatar>
@@ -228,13 +239,17 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                             bgcolor:
                               notification.type === "project"
                                 ? "#2196F3"
-                                : "#FF9800",
+                                : user?.role === "leader" && notification.type === "support"
+                                  ? "#9C27B0"
+                                  : "#FF9800",
                             width: 48,
                             height: 48,
                           }}
                         >
                           {notification.type === "project" ? (
                             <Assignment />
+                          ) : user?.role === "leader" && notification.type === "support" ? (
+                            <SupportIcon /> // Hoặc icon phù hợp
                           ) : (
                             <CalendarToday />
                           )}
@@ -274,7 +289,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                               color="text.primary"
                               sx={{ mb: 1 }}
                             >
-                             {assignedBy.firstName} {assignedBy.lastName} {notification.description}
+                              {assignedBy?.firstName} {assignedBy?.lastName} {notification?.description}
                             </Typography>
 
                           </Box>

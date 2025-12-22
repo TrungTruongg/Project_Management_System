@@ -9,6 +9,7 @@ import {
 } from "@mui/material/styles";
 import { CssBaseline, GlobalStyles } from "@mui/material";
 import { UserProvider } from "./components/context/UserContext";
+import { SearchProvider } from "./components/context/SearchContext";
 import Projects from "./components/project/Projects";
 import Tasks from "./components/task/Tasks";
 import MemberList from "./components/member/MemberList";
@@ -16,13 +17,12 @@ import DashboardContent from "./components/dashboard/DashboardContent";
 import Register from "./components/Register";
 import MemberProfile from "./components/member/MemberProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
-import TicketsView from "./components/ticket/TicketsView";
-import TicketsDetail from "./components/ticket/TicketsDetail";
 import TaskDetail from "./components/task/TaskDetail";
 import ResourceManagement from "./components/resources/ResourceManagement";
 import ProfileSettings from "./components/ProfileSettings";
 import ViewLockedUsers from "./components/security/ViewLockedUsers";
-import { SearchProvider } from "./components/context/SearchContext";
+import SupportsView from "./components/ticket/SupportsView";
+import SupportsDetail from "./components/ticket/SupportsDetail";
 
 function App() {
   const theme = createTheme({
@@ -64,8 +64,8 @@ function App() {
                     <Route path="/task-detail" element={<TaskDetail />} />
                     <Route path="/member" element={<MemberList />} />
                     <Route path="/member-profile" element={<MemberProfile />} />
-                    <Route path="/tickets-view" element={<TicketsView />} />
-                    <Route path="/tickets-detail" element={<TicketsDetail />} />
+                    <Route path="/supports-view" element={<SupportsView />} />
+                    <Route path="/supports-detail" element={<SupportsDetail />} />
                     <Route path="/resources" element={<ResourceManagement />} />
                     <Route
                       path="/profile-settings"

@@ -65,16 +65,16 @@ function MemberList() {
     }
   }
 
- const filteredMembers = members.filter((member: any) => {
-  if (!searchTerm.trim()) return true;
+  const filteredMembers = members.filter((member: any) => {
+    if (!searchTerm.trim()) return true;
 
-  const user = users.find((u: any) => u.id === member.userId);
-  if (!user) return false;
+    const user = users.find((u: any) => u.id === member.userId);
+    if (!user) return false;
 
-  const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
 
-  return fullName.includes(searchTerm.toLowerCase());
-});
+    return fullName.includes(searchTerm.toLowerCase());
+  });
 
   useEffect(() => {
     fetchAllData();
@@ -148,6 +148,8 @@ function MemberList() {
         >
           <CircularProgress />
         </Box>
+      ) : filteredMembers.length === 0 ? (
+        <Typography fontStyle="italic" >No members available!</Typography>
       ) : (
         <Grid container spacing={3}>
           {filteredMembers.map((member: any) => {

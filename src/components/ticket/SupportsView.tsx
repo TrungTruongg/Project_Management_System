@@ -1,15 +1,16 @@
 import { Avatar, Box, Button, Chip, CircularProgress, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from "@mui/material"
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
-import { Delete, Edit } from "@mui/icons-material";
+import { Delete, Edit, CheckCircle as CheckCompleteIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import CreateTicketModal from "./CreateTicketModal";
+import { useUser } from "../context/UserContext";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-function TicketsView() {
+function SupportsView() {
     const [open, setOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [supTickets, setSupTickets] = useState<any[]>([]);
@@ -18,6 +19,7 @@ function TicketsView() {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const { user } = useUser();
     const navigate = useNavigate();
 
     const fetchAllData = async () => {
@@ -112,6 +114,29 @@ function TicketsView() {
         setPage(0);
     };
 
+    const checkCompleteSupport = async (ticket: any) => {
+        try {
+            const updatedTicket = {
+                ...ticket,
+                status: "completed"
+            };
+
+            await axios.put(
+                `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${ticket._id}?apiKey=${API_KEY}`,
+                updatedTicket
+            );
+
+            setSupTickets(
+                supTickets.map((t: any) =>
+                    t.id === ticket.id ? updatedTicket : t
+                )
+            );
+
+        } catch (error) {
+            console.error("Error completing ticket:", error);
+        }
+    };
+
     const getStatusChip = (status: string) => {
         const config: any = {
             completed: { label: "Completed", bgcolor: "#4CAF50", color: "white" },
@@ -144,7 +169,7 @@ function TicketsView() {
     };
 
     const handleRowClick = (ticketId: string) => {
-        navigate(`/tickets-detail?id=${ticketId}`);
+        navigate(`/supports-detail?id=${ticketId}`);
     };
     return (
         <>
@@ -189,6 +214,8 @@ function TicketsView() {
                 >
                     <CircularProgress />
                 </Box>
+            ) : supTickets.length === 0 ? (
+                <Typography fontStyle="italic" >No support tickets available!</Typography>
             ) : (
                 <TableContainer
                     component={Paper}
@@ -201,8 +228,8 @@ function TicketsView() {
                         <TableHead>
                             <TableRow sx={{ bgcolor: (theme) => theme.palette.mode === 'light' ? "#f5f5f5" : "black" }}>
                                 <TableCell sx={{ fontWeight: 700 }}>TICKET ID</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>SUBJECT</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>ASSIGNED</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>TITLE</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>ASSIGNED BY</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>CREATE DATE</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>STATUS</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }} align="center">
@@ -214,7 +241,7 @@ function TicketsView() {
                             {supTickets
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((ticket): any => {
-                                    const assignedUser = getAssignedUser(ticket.assignedTo);
+                                    const assignedUser = getAssignedUser(ticket.assignedBy);
 
                                     return (
                                         <TableRow
@@ -233,12 +260,13 @@ function TicketsView() {
                                                         color: "#FF9800",
                                                         fontWeight: 600,
                                                         fontSize: "0.9rem",
+                                                        textAlign: "center"
                                                     }}
                                                 >
-                                                    #{ticket.ticketId}
+                                                    {ticket.id}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell>{ticket.subject}</TableCell>
+                                            <TableCell>{ticket.title}</TableCell>
                                             <TableCell>
                                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                     <Avatar
@@ -273,6 +301,18 @@ function TicketsView() {
                                             </TableCell>
                                             <TableCell>{getStatusChip(ticket.status)}</TableCell>
                                             <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                                                {user?.role === "leader" &&
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{ color: "#4CAF50" }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            checkCompleteSupport(ticket);
+                                                        }}
+                                                    >
+                                                        <CheckCompleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                }
                                                 <IconButton
                                                     size="small"
                                                     sx={{ color: "#4CAF50" }}
@@ -331,4 +371,4 @@ function TicketsView() {
     )
 }
 
-export default TicketsView
+export default SupportsView

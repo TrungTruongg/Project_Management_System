@@ -11,6 +11,8 @@ import {
     Typography,
 } from "@mui/material";
 import axios from "axios";
+import { useUser } from "../context/UserContext";
+import { createNotification } from "../utils/createNotification";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -22,45 +24,21 @@ function CreateTicketModal({
     ticketList,
     selectedTicket,
 }: any) {
-    const [ticketId, setTicketId] = useState("");
-    const [subject, setSubject] = useState("");
+    const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [assignedTo, setAssignedTo] = useState<number | "">("");
     const [status, setStatus] = useState("pending");
     const [priority, setPriority] = useState("medium");
-    const [users, setUsers] = useState<any[]>([]);
     const [showError, setShowError] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const { user } = useUser();
+
     const isUpdate = selectedTicket !== null;
-
-    const fetchUsers = async () => {
-        try {
-            const response = await axios.get(
-                `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-            );
-            setUsers(response.data.data.data);
-        } catch (error) {
-            console.error("Error fetching users:", error);
-        }
-    };
-
-    const generateTicketId = () => {
-        const maxId =
-            ticketList.length > 0
-                ? Math.max(
-                    ...ticketList.map((t: any) =>
-                        parseInt(t.ticketId.replace("TC-", ""))
-                    )
-                )
-                : 0;
-        return `TC-${String(maxId + 1).padStart(5, "0")}`;
-    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!subject.trim() || !description.trim()) {
+        if (!title.trim() || !description.trim()) {
             setShowError(true);
             return;
         }
@@ -71,9 +49,8 @@ function CreateTicketModal({
             if (isUpdate) {
                 const updatedTicket = {
                     ...selectedTicket,
-                    subject,
+                    title,
                     description,
-                    assignedTo,
                     status,
                     priority,
                 };
@@ -93,10 +70,9 @@ function CreateTicketModal({
 
                 const newTicket = {
                     id: maxId + 1,
-                    ticketId: generateTicketId(),
-                    subject,
+                    title,
                     description,
-                    assignedTo,
+                    assignedBy: user?.id,
                     status,
                     priority,
                     createdDate: new Date().toISOString().split("T")[0],
@@ -106,6 +82,26 @@ function CreateTicketModal({
                     `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`,
                     newTicket
                 );
+
+
+                //Send notify for leader
+                const usersResponse = await axios.get(
+                    `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
+                );
+
+                const leaderUsers = usersResponse.data.data.data.filter(
+                    (u: any) => u.role === "leader"
+                );
+
+                const leaderIds = leaderUsers.map((u: any) => u.id);
+
+                await createNotification({
+                    userId: leaderIds,
+                    type: "support",
+                    title: `New Support Ticket`,
+                    description: `created ticket ${title}`,
+                    createdBy: user?.id,
+                });
 
                 onSave(response.data.data);
                 onClose();
@@ -120,24 +116,19 @@ function CreateTicketModal({
     useEffect(() => {
         if (open) {
             if (selectedTicket) {
-                setTicketId(selectedTicket.ticketId || "");
-                setSubject(selectedTicket.subject || "");
+                setTitle(selectedTicket.subject || "");
                 setDescription(selectedTicket.description || "");
-                setAssignedTo(selectedTicket.assignedTo || "");
                 setStatus(selectedTicket.status || "pending");
                 setPriority(selectedTicket.priority || "medium");
             } else {
-                setTicketId(generateTicketId());
-                setSubject("");
+                setTitle("");
                 setDescription("");
-                setAssignedTo("");
                 setStatus("pending");
                 setPriority("medium");
             }
             setShowError(false);
             setLoading(false);
         }
-        fetchUsers();
     }, [open, selectedTicket]);
 
     return (
@@ -173,34 +164,20 @@ function CreateTicketModal({
                 <Box component="form" className="space-y-4" onSubmit={handleSave}>
                     <Box>
                         <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
-                            Ticket ID
+                            Title <span className="text-red-500">*</span>
                         </Typography>
                         <TextField
                             fullWidth
                             type="text"
                             size="small"
-                            value={ticketId}
-                            disabled
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Enter ticket title"
                             sx={{ "& .MuiOutlinedInput-root": { fontSize: "14px" } }}
                         />
-                    </Box>
-
-                    <Box>
-                        <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
-                            Subject <span className="text-red-500">*</span>
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            type="text"
-                            size="small"
-                            value={subject}
-                            onChange={(e) => setSubject(e.target.value)}
-                            placeholder="Enter ticket subject"
-                            sx={{ "& .MuiOutlinedInput-root": { fontSize: "14px" } }}
-                        />
-                        {showError && !subject.trim() && (
+                        {showError && !title.trim() && (
                             <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
-                                Subject is required
+                                Title is required
                             </Typography>
                         )}
                     </Box>
@@ -232,7 +209,7 @@ function CreateTicketModal({
                         )}
                     </Box>
 
-                    <Box>
+                    {/* <Box>
                         <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
                             Assign To
                         </Typography>
@@ -254,7 +231,7 @@ function CreateTicketModal({
                                 </MenuItem>
                             ))}
                         </Select>
-                    </Box>
+                    </Box> */}
 
                     <Box className="flex gap-4">
                         <Box className="w-full">
@@ -275,7 +252,7 @@ function CreateTicketModal({
                             </Select>
                         </Box>
 
-                        <Box className="w-full">
+                        {/* <Box className="w-full">
                             <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
                                 Status
                             </Typography>
@@ -291,7 +268,7 @@ function CreateTicketModal({
                                 <MenuItem value="in-progress">In Progress</MenuItem>
                                 <MenuItem value="completed">Completed</MenuItem>
                             </Select>
-                        </Box>
+                        </Box> */}
                     </Box>
 
                     <Box sx={{ display: "flex", gap: 1.5 }}>
