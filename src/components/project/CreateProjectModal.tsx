@@ -24,7 +24,7 @@ function CreateProjectModal({
   onClose,
   onSave,
   onUpdate,
-  projectList = [],
+  // projectList = [],
   selectedProject = null,
 }: any) {
   const [title, setTitle] = useState("");
@@ -87,9 +87,15 @@ function CreateProjectModal({
 
         onUpdate(response.data.data);
       } else {
+        const allProjectsRes = await axios.get(
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
+        );
+
+        const allProjects = allProjectsRes.data.data.data;
+
         const maxId =
-          projectList.length > 0
-            ? Math.max(...projectList.map((p: any) => p.id))
+          allProjects.length > 0
+            ? Math.max(...allProjects.map((p: any) => p.id))
             : 0;
 
         const newProject = {
@@ -98,8 +104,8 @@ function CreateProjectModal({
           description: description,
           startDate: startDate,
           endDate: endDate,
-          leaderId: leaderId,
-          member: member,
+          leaderId: user?.role === "leader" ? leaderId : user?.id,
+          member: user?.role === "leader" ? member : [],
           priority: priority.toLowerCase(),
           completion: 0,
         };
@@ -162,7 +168,7 @@ function CreateProjectModal({
         setStartDate("");
         setEndDate("");
         setPriority("");
-        setLeaderId("");
+        setLeaderId(user?.role === "leader" ? "" : user?.id || "");
         setMember([]);
       }
       setShowError(false);

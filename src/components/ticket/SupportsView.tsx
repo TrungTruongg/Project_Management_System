@@ -260,7 +260,7 @@ function SupportsView() {
                                                         color: "#FF9800",
                                                         fontWeight: 600,
                                                         fontSize: "0.9rem",
-                                                        textAlign: "center"
+                                                        textAlign: "left"
                                                     }}
                                                 >
                                                     {ticket.id}
@@ -313,26 +313,33 @@ function SupportsView() {
                                                         <CheckCompleteIcon fontSize="small" />
                                                     </IconButton>
                                                 }
-                                                <IconButton
-                                                    size="small"
-                                                    sx={{ color: "#4CAF50" }}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleEditTicket(ticket);
-                                                    }}
-                                                >
-                                                    <Edit fontSize="small" />
-                                                </IconButton>
-                                                <IconButton
-                                                    size="small"
-                                                    sx={{ color: "#EF5350" }}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleOpenDeleteDialog(ticket);
-                                                    }}
-                                                >
-                                                    <Delete fontSize="small" />
-                                                </IconButton>
+                                                {(user?.role === "leader" || ticket.assignedBy === user?.id) &&
+                                                    (
+                                                        <>
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={{ color: "#4CAF50" }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditTicket(ticket);
+                                                                }}
+                                                            >
+                                                                <Edit fontSize="small" />
+                                                            </IconButton>
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={{ color: "#EF5350" }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleOpenDeleteDialog(ticket);
+                                                                }}
+                                                            >
+                                                                <Delete fontSize="small" />
+                                                            </IconButton>
+                                                        </>
+                                                    )
+                                                }
+
                                             </TableCell>
                                         </TableRow>
                                     );

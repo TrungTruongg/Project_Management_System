@@ -246,6 +246,7 @@ function Tasks() {
 
     try {
       const projectId = selectedTask.projectId;
+      console.log(selectedTask._id)
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`
       );

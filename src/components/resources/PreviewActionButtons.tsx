@@ -1,8 +1,8 @@
 import { Box, IconButton } from "@mui/material"
-import { RiDownload2Fill as DownloadIcon } from "react-icons/ri";
+import { RiEyeFill as ViewIcon } from "react-icons/ri";
 import { FaRegTrashAlt as DeleteIcon } from "react-icons/fa";
 
-function PreviewActionButtons({ attachment, onDelete}: any) {
+function PreviewActionButtons({ attachment, onDelete }: any) {
     return (
         <Box
             className="preview-actions"
@@ -18,9 +18,12 @@ function PreviewActionButtons({ attachment, onDelete}: any) {
             }}
         >
             <IconButton
-                size="small"
+                component="a"
                 href={attachment.url}
-                download={attachment.name}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                size="small"
                 sx={{
                     width: 32,
                     height: 32,
@@ -30,7 +33,7 @@ function PreviewActionButtons({ attachment, onDelete}: any) {
                     "&:hover": { bgcolor: "#b7b9be" },
                 }}
             >
-                <DownloadIcon />
+                <ViewIcon />
             </IconButton>
 
             <IconButton

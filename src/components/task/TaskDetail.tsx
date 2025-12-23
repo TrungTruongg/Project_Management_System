@@ -5,7 +5,6 @@ import {
     CardContent,
     Chip,
     CircularProgress,
-    IconButton,
     List,
     ListItem,
     ListItemIcon,
@@ -19,10 +18,11 @@ import {
     Person as PersonIcon,
     Label as PriorityIcon,
     Loop as StatusIcon,
-    AttachFile as FileIcon,
-    Download as DownloadIcon
+    AttachFile as AttachmentIcon
 } from "@mui/icons-material";
 import CommentSection from "../comment/CommentSection";
+
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 function TaskDetail() {
     const [searchParams] = useSearchParams();
@@ -43,19 +43,19 @@ function TaskDetail() {
         try {
             const [tasksRes, usersRes, projectsRes, commentsRes, attachmentsRes] = await Promise.all([
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
                 ),
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
                 ),
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
                 ),
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=${API_KEY}`
                 ),
                 axios.get(
-                    "https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=69205e8dbf3939eacf2e89f2"
+                    `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
                 ),
             ]);
 
@@ -104,20 +104,31 @@ function TaskDetail() {
         fetchTaskDetail();
     }, [taskId]);
 
+    const getShortenedUrl = (url: string) => {
+        try {
+            const urlObj = new URL(url);
+            const hostname = urlObj.hostname.replace('www.', '');
+            const pathname = urlObj.pathname;
+
+            // Lấy tên file hoặc path cuối
+            const fileName = pathname.split('/').filter(Boolean).pop() || hostname;
+
+            if (fileName.length > 40) {
+                return fileName.substring(0, 37) + '...';
+            }
+
+            return fileName;
+        } catch {
+            return url.length > 40 ? url.substring(0, 37) + '...' : url;
+        }
+    };
+
     const handleSubmitComment = (newComment: any) => {
         setComments([...comments, newComment]);
     };
 
     const handleDeleteComment = (commentId: number) => {
         setComments(comments.filter((c) => c.id !== commentId));
-    };
-
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return "0 Bytes";
-        const k = 1024;
-        const sizes = ["Bytes", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
     };
 
     const getStatusChip = (status: string) => {
@@ -497,64 +508,58 @@ function TaskDetail() {
                         </Box>
                     </Box>
 
-                    <Box sx={{
-                        mt: 4,
-                        pt: 3,
-                        borderTop: "1px solid #e0e0e0",
-                        gap: 4,
-                    }}>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
-                            <FileIcon sx={{ width: 15, height: 15 }} />
-                            <Typography variant="h6" fontSize="small" fontWeight="700" >
-                                Attachments ({attachments.length})
+                    {attachments && attachments.length > 0 && (
+                        <Box sx={{ mt: 3 }}>
+                            <Typography variant="h6" sx={{ mb: 2 }}>
+                                Attachments
                             </Typography>
-                        </Box>
-
-                        <List sx={{ p: 0 }}>
-                            {attachments.map((attachment: any) => (
-                                <ListItem
-                                    key={attachment.id}
-                                    sx={{
-                                        border: "1px solid #e0e0e0",
-                                        borderRadius: 1,
-                                        mb: 1,
-                                        "&:hover": {
-                                            bgcolor: "#f5f5f5",
-                                        },
-                                    }}
-                                    secondaryAction={
-                                        <IconButton
-                                            size="small"
-                                            href={attachment.url}
-                                            download={attachment.name}
-                                            sx={{ textTransform: "none" }}
+                            <List>
+                                {attachments.map((att: any, index: number) => {
+                                    const shortUrl = getShortenedUrl(att.url);
+                                    return (
+                                        <ListItem
+                                            key={att._id || index}
+                                            component="a"
+                                            href={att.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            sx={{
+                                                border: "1px solid #e0e0e0",
+                                                borderRadius: 1,
+                                                mb: 1,
+                                                bgcolor: "white",
+                                                textDecoration: "none",
+                                                "&:hover": {
+                                                    bgcolor: "#f5f5f5",
+                                                },
+                                            }}
                                         >
-                                            <DownloadIcon />
-                                        </IconButton>
-                                    }
-                                >
-                                    <ListItemIcon>
-                                        <FileIcon sx={{ color: "#2196F3", fontSize: 32 }} />
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary={
-                                            <Typography variant="body1" fontWeight="600">
-                                                {attachment.name}
-                                            </Typography>
-                                        }
-                                        secondary={
-                                            <Box>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {formatFileSize(attachment.size)} • Added{" "}
-                                                    {new Date(attachment.uploadedAt).toLocaleDateString("en-GB")}
-                                                </Typography>
-                                            </Box>
-                                        }
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Box>
+                                            <ListItemIcon>
+                                                <AttachmentIcon sx={{ color: "#2196F3" }} />
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary={
+                                                    <Typography
+                                                        sx={{
+                                                            color: "#2196F3",
+                                                            wordBreak: "break-all",
+                                                        }}
+                                                    >
+                                                        {shortUrl}
+                                                    </Typography>
+                                                }
+                                                secondary={
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Uploaded at: {new Date(att.uploadedAt).toLocaleString()}
+                                                    </Typography>
+                                                }
+                                            />
+                                        </ListItem>
+                                    )
+                                })}
+                            </List>
+                        </Box>
+                    )}
                 </CardContent>
             </Card>
 

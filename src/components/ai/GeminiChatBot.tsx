@@ -62,7 +62,6 @@ const GeminiChatBox = () => {
     try {
       const result = await chat.sendMessage(prompt);
       const responseText = result.response.text();
-      console.log(responseText);
 
       // Thêm phản hồi từ model vào lịch sử
       setMessages([...newMessages, { role: "model", content: responseText }]);

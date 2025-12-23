@@ -6,10 +6,48 @@ import PreviewActionButtons from "./PreviewActionButtons";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
+const LinkImagePreview = ({ attachment, onDelete }: any) => {
+    const [isImage, setIsImage] = useState(true);
+
+    return (
+        <Box
+            sx={{
+                height: 200,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                bgcolor: "white",
+                overflow: "hidden",
+            }}
+        >
+            {isImage ? (
+                <img
+                    src={attachment.url}
+                    alt={attachment.name}
+                    loading="lazy"
+                    style={{
+                        maxWidth: "100%",
+                        maxHeight: "100%",
+                        objectFit: "contain",
+                    }}
+                    onError={() => setIsImage(false)}
+                />
+            ) : (
+                <Box sx={{ fontSize: 20 }}>📎</Box>
+            )}
+
+            <PreviewActionButtons
+                attachment={attachment}
+                onDelete={onDelete}
+            />
+        </Box>
+    );
+};
+
 function ResourceManagement() {
     const [loading, setLoading] = useState(false);
     const [attachments, setAttachments] = useState<any[]>([]);
-    // const [tasks, setTasks] = useState<any[]>([]);
     const navigate = useNavigate();
 
     const fetchAllData = async () => {
@@ -68,132 +106,6 @@ function ResourceManagement() {
         }
     };
 
-    const getFilePreview = (attachment: any) => {
-        const isImage = attachment.type?.startsWith("image/");
-        const isVideo = attachment.type?.startsWith("video/");
-        const isPDF = attachment.type === "application/pdf";
-        const isText = attachment.type?.startsWith("text/");
-
-        if (isImage) {
-            return (
-                <Box
-                    sx={{
-                        height: 200,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        p: 2,
-                        position: "relative",
-                        backgroundColor: "white"
-                    }}
-                >
-                    <img
-                        src={attachment.url}
-                        alt={attachment.name}
-                        style={{
-                            maxWidth: "100%",
-                            maxHeight: "100%",
-                            objectFit: "contain",
-                        }}
-                        onError={(e: any) => { e.target.src = "/images/no-content.png"; }}
-                    />
-                    <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
-                </Box>
-            );
-        }
-
-        // Text/PDF preview
-        if (isText || isPDF) {
-            return (
-                <Box
-                    sx={{
-                        height: 200,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        p: 2,
-                        position: "relative",
-                        // backgroundColor: "white"
-                    }}
-                >
-                    <iframe
-                        src={attachment.url}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            border: "none",
-                            pointerEvents: "none",
-                        }}
-                        title={attachment.name}
-                        scrolling="no"
-                    />
-                    <Box
-                        sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            bgcolor: "rgba(255,255,255,0.1)",
-                            pointerEvents: "none",
-                        }}
-                    />
-
-                    <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
-                </Box>
-            );
-        }
-
-        // Video
-        if (isVideo) {
-            return (
-                <Box
-                    sx={{
-                        height: 200,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        p: 2,
-                        position: "relative",
-                    }}
-                >
-                    <video
-                        src={attachment.url}
-                        title={attachment.name}
-                        style={{
-                            maxWidth: "100%",
-                            maxHeight: "100%",
-                            objectFit: "contain",
-                        }}
-                        controls
-                    />
-                    <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
-                </Box>
-            );
-        }
-
-        // Other files - show icon
-        return (
-            <Box
-                sx={{
-                    height: 200,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    p: 2,
-                    position: "relative",
-                }}
-            >
-                📎
-                <PreviewActionButtons attachment={attachment} onDelete={handleDeleteAttachment} />
-            </Box>
-        );
-    };
-
     return (
         <>
             <Box
@@ -240,7 +152,6 @@ function ResourceManagement() {
                         <Card
                             key={attachment.id}
                             elevation={0}
-                            // onClick={() => handleToggleSelect(index)}
                             sx={{
                                 border: (theme) =>
                                     `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
@@ -252,7 +163,10 @@ function ResourceManagement() {
                                 }
                             }}
                         >
-                            {getFilePreview(attachment)}
+                            <LinkImagePreview
+                                attachment={attachment}
+                                onDelete={handleDeleteAttachment}
+                            />
 
                             {/* Content */}
                             <CardContent sx={{ p: 2 }}>

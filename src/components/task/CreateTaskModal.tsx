@@ -3,7 +3,6 @@ import { IoMdClose as CloseIcon } from "react-icons/io";
 import {
   AttachFile as AttachmentIcon,
   Delete as DeleteIcon,
-  InsertDriveFile as FileIcon,
 } from "@mui/icons-material";
 
 import {
@@ -17,7 +16,6 @@ import {
   MenuItem,
   Modal,
   Select,
-  Skeleton,
   TextareaAutosize,
   TextField,
   Typography,
@@ -40,7 +38,8 @@ function CreateTaskModal({
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<number | "">("");
   const [description, setDescription] = useState("");
-  const [attachments, setAttachments] = useState<any[]>([]);
+  const [attachments, setAttachments] = useState<string[]>([]); // Array of URLs
+  const [attachmentInput, setAttachmentInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [priority, setPriority] = useState("");
@@ -83,51 +82,44 @@ function CreateTaskModal({
     }
   };
 
-  // Handle file upload
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = event.target.files;
-    if (!files) return;
+  const handleAddAttachment = () => {
+    const url = attachmentInput.trim();
 
-    const convertFileToBase64 = (file: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = (error) => reject(error);
-      });
-    };
+    if (!url) return;
 
-    // Convert files to base64
-    const filePromises = Array.from(files).map(async (file) => {
-      const base64 = await convertFileToBase64(file);
+    // Validate URL (optional)
+    try {
+      new URL(url);
+    } catch (error) {
+      alert('Please enter a valid URL');
+      return;
+    }
 
-      return {
-        id: Date.now() + Math.random(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: base64,
-        uploadedAt: new Date().toISOString(),
-      };
-    });
-
-    const newAttachments = await Promise.all(filePromises);
-    setAttachments([...attachments, ...newAttachments]);
+    setAttachments([...attachments, url]);
+    setAttachmentInput("");
   };
 
-  const handleRemoveAttachment = (attachmentId: number) => {
-    setAttachments(attachments.filter((att) => att.id !== attachmentId));
+  const handleRemoveAttachment = (index: number) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  const getShortenedUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.replace('www.', '');
+      const pathname = urlObj.pathname;
+
+      // Lấy tên file hoặc path cuối
+      const fileName = pathname.split('/').filter(Boolean).pop() || hostname;
+
+      if (fileName.length > 40) {
+        return fileName.substring(0, 37) + '...';
+      }
+
+      return fileName;
+    } catch {
+      return url.length > 40 ? url.substring(0, 37) + '...' : url;
+    }
   };
 
   const getProjectMembers = () => {
@@ -151,6 +143,12 @@ function CreateTaskModal({
   const handleProjectChange = (newProjectId: number) => {
     setProjectId(newProjectId);
     setAssignedTo([]);
+
+    const selectedProject = projects.find((p) => p.id === newProjectId);
+    if (selectedProject) {
+      setStartDate(selectedProject.startDate || "");
+      setEndDate(selectedProject.endDate || "");
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -163,6 +161,12 @@ function CreateTaskModal({
       setShowError(true);
       return
     } if (new Date(endDate) < new Date()) {
+      setShowError(true);
+      return
+    } if (new Date(startDate) < new Date(currentProject?.startDate)) {
+      setShowError(true);
+      return
+    } if (new Date(endDate) > new Date(currentProject?.endDate)) {
       setShowError(true);
       return
     }
@@ -193,30 +197,41 @@ function CreateTaskModal({
           `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
         );
         const existingAttachments = existingAttachmentsRes.data.data.data;
+        const taskAttachments = existingAttachments.filter(
+          (att: any) => att.taskId === selectedTask.id
+        );
+
+        // Xóa attachments cũ
+        await Promise.all(
+          taskAttachments.map((att: any) =>
+            axios.delete(
+              `https://mindx-mockup-server.vercel.app/api/resources/attachments/${att._id}?apiKey=${API_KEY}`
+            )
+          )
+        );
+
+        // TẠO ATTACHMENTS MỚI (từ links)
         let maxAttachmentId =
           existingAttachments.length > 0
             ? Math.max(...existingAttachments.map((a: any) => a.id))
             : 0;
 
-        for (const attachment of attachments) {
-          if (!attachment._id) {
-            maxAttachmentId++;
+        for (const url of attachments) {
+          maxAttachmentId++;
 
-            const attachmentData = {
-              id: maxAttachmentId,
-              taskId: selectedTask.id,
-              name: attachment.name,
-              size: attachment.size,
-              type: attachment.type,
-              url: attachment.url,
-              uploadedAt: attachment.uploadedAt,
-            };
+          const attachmentData = {
+            id: maxAttachmentId,
+            taskId: selectedTask.id,
+            url: url,
+            name: url.split('/').pop() || 'Link', // Lấy tên từ URL
+            type: 'link',
+            uploadedAt: new Date().toISOString(),
+          };
 
-            await axios.post(
-              `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`,
-              attachmentData
-            );
-          }
+          await axios.post(
+            `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`,
+            attachmentData
+          );
         }
 
         await createNotification({
@@ -262,17 +277,16 @@ function CreateTaskModal({
             ? Math.max(...existingAttachments.map((a: any) => a.id))
             : 0;
 
-        for (const attachment of attachments) {
+        for (const url of attachments) {
           maxAttachmentId++;
 
           const attachmentData = {
             id: maxAttachmentId,
             taskId: createdTask.id,
-            name: attachment.name,
-            size: attachment.size,
-            type: attachment.type,
-            url: attachment.url,
-            uploadedAt: attachment.uploadedAt,
+            url: url,
+            name: url.split('/').pop() || 'Link',
+            type: 'link',
+            uploadedAt: new Date().toISOString(),
           };
 
           await axios.post(
@@ -310,7 +324,7 @@ function CreateTaskModal({
         setTitle(selectedTask.title || "");
         setProjectId(selectedTask.projectId || "");
         setDescription(selectedTask.description || "");
-        setAttachments(taskAttachments);
+        setAttachments(taskAttachments.map((att: any) => att.url));
         setStartDate(selectedTask.startDate || "");
         setEndDate(selectedTask.endDate || "");
         setPriority(selectedTask.priority || "");
@@ -328,8 +342,13 @@ function CreateTaskModal({
         setProjectId(currentProject ? currentProject.id : "");
         setDescription("");
         setAttachments([]);
-        setStartDate("");
-        setEndDate("");
+        if (currentProject) {
+          setStartDate(currentProject.startDate || "");
+          setEndDate(currentProject.endDate || "");
+        } else {
+          setStartDate("");
+          setEndDate("");
+        }
         setPriority("");
         setAssignedTo([]);
         setStatus("in-progress");
@@ -483,33 +502,47 @@ function CreateTaskModal({
           {/* Attachments Section */}
           <Box>
             <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
-              Attachments
+              Attachments (Links)
             </Typography>
 
-            {/* Upload Button */}
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<AttachmentIcon />}
-              sx={{ textTransform: "none", mb: 2 }}
-            >
-              Upload files
-              <input type="file" hidden multiple onChange={handleFileChange} />
-            </Button>
-
-            {/* Attachments List */}
-            {loading ? (
-              <Skeleton
-                variant="rectangular"
-                animation="wave"
-                sx={{ border: "2px solid white" }}
+            <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Paste link"
+                value={attachmentInput}
+                onChange={(e) => setAttachmentInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddAttachment();
+                  }
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    fontSize: "14px",
+                  },
+                }}
               />
-            ) : attachments.length > 0 ? (
+              <Button
+                variant="outlined"
+                onClick={handleAddAttachment}
+                sx={{
+                  textTransform: "none",
+                  minWidth: "80px"
+                }}
+              >
+                Add
+              </Button>
+            </Box>
+
+            {attachments.length > 0 ? (
               <List sx={{ bgcolor: "#f9fafb", borderRadius: 1, p: 1 }}>
-                {attachments.map((attachment: any) => {
+                {attachments.map((url, index) => {
+                  const shortUrl = getShortenedUrl(url);
                   return (
                     <ListItem
-                      key={attachment.id}
+                      key={index}
                       sx={{
                         border: "1px solid #e0e0e0",
                         borderRadius: 1,
@@ -520,7 +553,7 @@ function CreateTaskModal({
                         <IconButton
                           edge="end"
                           size="small"
-                          onClick={() => handleRemoveAttachment(attachment.id)}
+                          onClick={() => handleRemoveAttachment(index)}
                           sx={{ color: "#EF5350" }}
                         >
                           <DeleteIcon fontSize="small" />
@@ -528,25 +561,32 @@ function CreateTaskModal({
                       }
                     >
                       <ListItemIcon>
-                        <FileIcon sx={{ color: "#2196F3" }} />
+                        <AttachmentIcon sx={{ color: "#2196F3" }} />
                       </ListItemIcon>
                       <ListItemText
                         primary={
                           <Typography
-                            variant="body2"
-                            sx={{ fontWeight: 500, fontSize: "0.9rem" }}
+                            component="a"
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                              fontWeight: 500,
+                              fontSize: "0.9rem",
+                              color: "#2196F3",
+                              textDecoration: "none",
+                              "&:hover": {
+                                textDecoration: "underline",
+                              },
+                              wordBreak: "break-all",
+                            }}
                           >
-                            {attachment.name}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
-                            {formatFileSize(attachment?.size)}
+                            {shortUrl}
                           </Typography>
                         }
                       />
                     </ListItem>
-                  );
+                  )
                 })}
               </List>
             ) : (
@@ -557,6 +597,8 @@ function CreateTaskModal({
                   fontStyle: "italic",
                   textAlign: "center",
                   py: 2,
+                  bgcolor: "#f9fafb",
+                  borderRadius: 1,
                 }}
               >
                 No attachments yet
@@ -588,6 +630,11 @@ function CreateTaskModal({
                   },
                 }}
               />
+              {new Date(startDate) < new Date(currentProject?.startDate) && (
+                <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
+                  Start Date cannot be before project Start Date
+                </Typography>
+              )}
             </Box>
 
             <Box className="w-full">
@@ -614,17 +661,20 @@ function CreateTaskModal({
                 }}
               />
 
-              {showError && startDate >= endDate && (
+              {showError && startDate >= endDate ? (
                 <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
                   End Date cannot smaller or equal than Start Date
                 </Typography>
-              )}
-
-              {showError && new Date(endDate) < new Date() && (
+              ) : new Date(endDate) < new Date() ? (
                 <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
                   End Date cannot be in the past
                 </Typography>
-              )}
+              ) : new Date(endDate) > new Date(currentProject?.endDate) ? (
+                <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
+                  End Date cannot be after project End Date
+                </Typography>
+              ) : null}
+
             </Box>
           </Box>
 
