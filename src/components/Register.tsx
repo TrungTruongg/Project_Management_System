@@ -100,7 +100,7 @@ function Register() {
         lastName: lastName,
         phone: phone,
         location: location,
-        role: "member",
+        role: "leader",
         avatar: "",
         joinDate: new Date().toISOString().split("T")[0],
       };

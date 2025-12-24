@@ -32,8 +32,7 @@ function CreateProjectModal({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [priority, setPriority] = useState("");
-  const [leaderId, setLeaderId] = useState<number | "">("");
-  const [member, setMember] = useState<number[]>([]);
+  const [members, setMembers] = useState<number[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -66,8 +65,10 @@ function CreateProjectModal({
           description: description,
           startDate: startDate,
           endDate: endDate,
-          leaderId: leaderId,
-          member: member,
+          //leaderId: leaderId,
+          //member: member,
+          ownerId: selectedProject.ownerId,
+          members: members,
           priority: priority.toLowerCase(),
           completion: selectedProject.completion || 0,
         };
@@ -78,7 +79,7 @@ function CreateProjectModal({
         );
 
         await createNotification({
-          userId: member,
+          userId: members,
           type: "project",
           title: `Updated Project`,
           description: `updated project ${title}`,
@@ -104,8 +105,9 @@ function CreateProjectModal({
           description: description,
           startDate: startDate,
           endDate: endDate,
-          leaderId: user?.role === "leader" ? leaderId : user?.id,
-          member: user?.role === "leader" ? member : [],
+          // member: user?.role === "leader" ? members : [],
+          ownerId: user?.id,
+          members: members,
           priority: priority.toLowerCase(),
           completion: 0,
         };
@@ -116,12 +118,22 @@ function CreateProjectModal({
         );
 
         await createNotification({
-          userId: member,
+          userId: members,
           type: "project",
           title: `New Project Assignment`,
           description: `created project ${title}`,
           createdBy: user?.id,
         });
+
+        if (members.length > 0) {
+          await createNotification({
+            userId: members,
+            type: "project",
+            title: `Added to Project`,
+            description: `added you to project: ${title}`,
+            createdBy: user?.id,
+          });
+        }
 
         onSave(response.data.data);
       }
@@ -138,7 +150,12 @@ function CreateProjectModal({
       const response = await axios.get(
         `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
       );
-      setUsers(response.data.data.data);
+
+      const otherUsers = response.data.data.data.filter(
+        (u: any) => u.id !== user?.id
+      );
+
+      setUsers(otherUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -153,13 +170,17 @@ function CreateProjectModal({
         setStartDate(selectedProject.startDate || "");
         setEndDate(selectedProject.endDate || "");
         setPriority(selectedProject.priority || "");
-        setLeaderId(selectedProject.leaderId || "");
-        setMember(
-          Array.isArray(selectedProject.member)
-            ? selectedProject.member
-            : selectedProject.member
-              ? [selectedProject.member]
-              : []
+        // setMembers(
+        //   Array.isArray(selectedProject.member)
+        //     ? selectedProject.member
+        //     : selectedProject.member
+        //       ? [selectedProject.member]
+        //       : []
+        // );
+        setMembers(
+          Array.isArray(selectedProject.members)
+            ? selectedProject.members
+            : []
         );
       } else {
         // Create
@@ -168,17 +189,13 @@ function CreateProjectModal({
         setStartDate("");
         setEndDate("");
         setPriority("");
-        setLeaderId(user?.role === "leader" ? "" : user?.id || "");
-        setMember([]);
+        setMembers([]);
       }
       setShowError(false);
       setLoading(false);
     }
     fetchUsers();
-  }, [open, selectedProject]);
-
-  const leaderUsers = users.filter((user: any) => user.role === "leader");
-  const staffUsers = users.filter((user: any) => user.role === "member");
+  }, [open, selectedProject, user]);
 
   return (
     <Modal
@@ -367,7 +384,7 @@ function CreateProjectModal({
                   color: "#374151",
                 }}
               >
-                Task Assign Person
+                Invite Members
               </Typography>
 
               <Select
@@ -376,9 +393,9 @@ function CreateProjectModal({
                 multiple
                 onChange={(e) => {
                   const value = e.target.value;
-                  setMember(typeof value === "string" ? [] : value);
+                  setMembers(typeof value === "string" ? [] : value);
                 }}
-                value={member}
+                value={members}
                 renderValue={(selected) => {
                   if (selected.length === 0) {
                     return (
@@ -388,11 +405,11 @@ function CreateProjectModal({
                   return (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                       {selected.map((userId: number) => {
-                        const user = users.find((u: any) => u.id === userId);
+                        const member = users.find((u: any) => u.id === userId);
                         return (
                           <Chip
                             key={userId}
-                            label={`${user?.firstName} ${user?.lastName}`}
+                            label={`${member?.firstName} ${member?.lastName}`}
                             size="small"
                             sx={{ color: "black" }}
                           />
@@ -404,26 +421,33 @@ function CreateProjectModal({
                 sx={{
                   fontSize: "14px",
                   textTransform: "capitalize",
-                  color: member.length === 0 ? "#9ca3af" : "#111827",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "4px",
+                  color: members.length === 0 ? "#9ca3af" : "#111827",
+                  // border: "1px solid #d1d5db",
+                  // borderRadius: "4px",
                 }}
               >
-                {staffUsers.map((user: any) => (
-                  <MenuItem value={user.id} key={user.id}>
-                    <ListItemText
-                      primary={`${user.firstName} ${user.lastName}`}
-                      secondary={user.role}
-                      sx={{ textTransform: "capitalize" }}
-                    />
+                {users.length === 0 ? (
+                  <MenuItem disabled>
+                    <Typography sx={{ fontSize: "14px", fontStyle: "italic" }}>
+                      No other users available
+                    </Typography>
                   </MenuItem>
-                ))}
+                ) : (
+                  users.map((u: any) => (
+                    <MenuItem value={u.id} key={u.id}>
+                      <ListItemText
+                        primary={`${u.firstName} ${u.lastName}`}
+                        secondary={u.email.toLowerCase()}
+                      />
+                    </MenuItem>
+                  ))
+                )}
               </Select>
             </Box>
           }
 
           {/* Choose Leader */}
-          {user?.role === "leader" &&
+          {/* {user?.role === "leader" &&
             <Box>
               <Typography
                 sx={{
@@ -464,7 +488,7 @@ function CreateProjectModal({
                 ))}
               </Select>
             </Box>
-          }
+          } */}
 
           <Box sx={{ mb: 3 }}>
             <Typography

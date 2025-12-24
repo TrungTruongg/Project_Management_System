@@ -168,17 +168,13 @@ function Projects() {
     }
   };
 
-  const getProjectMembers = (project: any) => {
-    if (!project.member || !Array.isArray(project.member)) {
-      return [];
-    }
+  // const getProjectMembers = (project: any) => {
+  //   if (!project.member || !Array.isArray(project.member)) {
+  //     return [];
+  //   }
 
-    return users.filter((user) => project.member.includes(user.id));
-  };
-
-  const getProjectLeader = (project: any) => {
-    return users.find((user) => user.id === project.leaderId);
-  };
+  //   return users.filter((user) => project.member.includes(user.id));
+  // };
 
   const handleViewTasksInProject = (projectId: any) => {
     navigate(`/task?projectId=${projectId}`)
@@ -241,9 +237,10 @@ function Projects() {
           }}
         >
           {filteredProjects.map((project: any) => {
-            const projectMembers = getProjectMembers(project);
-            const projectLeader = getProjectLeader(project);
+            const projectMembers = users.filter((user) => project.members.includes(user.id));          
             const completion = calculateProjectCompletion(project.id);
+            const projectOwner = users.find((user) => user.id === project.ownerId);
+            const isOwner = project.ownerId === user?.id;
 
             return (
               <Card
@@ -276,30 +273,32 @@ function Projects() {
                         {project.title}
                       </Typography>
                     </Box>
-                    <Box sx={{ display: "flex", gap: 1 }} onClick={(e) => e.stopPropagation()}>
-                      <IconButton
-                        size="small"
-                        sx={{ color: "#4CAF50" }}
-                        onClick={() => handleEditProject(project)}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        sx={{ color: "#EF5350" }}
-                        onClick={() => handleOpenDeleteDialog(project)}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
+                    {isOwner && (
+                      <Box sx={{ display: "flex", gap: 1 }} onClick={(e) => e.stopPropagation()}>
+                        <IconButton
+                          size="small"
+                          sx={{ color: "#4CAF50" }}
+                          onClick={() => handleEditProject(project)}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          sx={{ color: "#EF5350" }}
+                          onClick={() => handleOpenDeleteDialog(project)}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    )}
                   </Box>
 
                   {/* Members */}
                   <Box sx={{ mb: 2 }}>
                     <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
-                      {projectLeader && (
+                      {projectOwner && (
                         <Avatar
-                          key={`leader-${projectLeader.id}`}
+                          key={`leader-${projectOwner.id}`}
                           sx={{
                             width: 32,
                             height: 32,
@@ -310,14 +309,14 @@ function Projects() {
                             textTransform: "uppercase",
                             border: "2px solid #FFA726",
                           }}
-                          title={`Leader: ${projectLeader.firstName} ${projectLeader.lastName}`}
+                          title={`Leader: ${projectOwner.firstName} ${projectOwner.lastName}`}
                         >
-                          {projectLeader.firstName?.[0]}
-                          {projectLeader.lastName?.[0]}
+                          {projectOwner.firstName?.[0]}
+                          {projectOwner.lastName?.[0]}
                         </Avatar>
                       )}
 
-                      {projectMembers.length > 0 ? (
+                      {projectMembers.length > 0 && (
                         projectMembers.map((member) => (
                           <Avatar
                             key={member.id}
@@ -337,17 +336,7 @@ function Projects() {
                             {member.lastName?.[0]}
                           </Avatar>
                         ))
-                      ) : !projectLeader ? (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: "text.secondary",
-                            fontStyle: "italic",
-                          }}
-                        >
-                          No members yet
-                        </Typography>
-                      ) : null}
+                      )}
                     </AvatarGroup>
                   </Box>
 

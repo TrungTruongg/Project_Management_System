@@ -468,7 +468,6 @@ function Tasks() {
                 </Typography>
               )}
 
-
             {project && (
               <Chip
                 label={project.title}

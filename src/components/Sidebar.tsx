@@ -15,7 +15,6 @@ import { ArrowBack, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { menuItems } from "../constants/constants";
 import { useUser } from "./context/UserContext";
-import { useUserProjects } from "../hooks/useUserProject";
 
 const routeMapping: Record<string, string> = {
   Dashboard: "/",
@@ -34,12 +33,9 @@ function Sidebar({ openMenus, toggleMenu }: any) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
-  const { hasProjects } = useUserProjects(user?.id);
 
   const isLeader = user?.role === "leader";
   const leaderOnlyMenus = ["Locked Users"];
-
-  const basicMenuItems = ["Dashboard", "Projects", "Tasks"];
 
   const { mode, setMode } = useColorScheme();
   if (!mode) {
@@ -56,10 +52,6 @@ function Sidebar({ openMenus, toggleMenu }: any) {
         return true;
       }
       return true;
-    }
-
-    if (!hasProjects) {
-      return basicMenuItems.includes(menuText);
     }
 
     if (leaderOnlyMenus.includes(menuText)) {

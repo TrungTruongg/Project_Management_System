@@ -1,18 +1,10 @@
 import { useEffect, useState } from "react";
 import { IoMdClose as CloseIcon } from "react-icons/io";
-import {
-  AttachFile as AttachmentIcon,
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
 
 import {
   Box,
   Button,
-  IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  Chip,
   MenuItem,
   Modal,
   Select,
@@ -31,7 +23,7 @@ function CreateTaskModal({
   onClose,
   onSave,
   onUpdate,
-  taskList = [],
+  // taskList = [],
   selectedTask = null,
   currentProject,
 }: any) {
@@ -50,7 +42,6 @@ function CreateTaskModal({
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
-  const [allAttachments, setAllAttachments] = useState<any[]>([]);
 
   const { user } = useUser();
 
@@ -74,7 +65,13 @@ function CreateTaskModal({
 
       setProjects(responseProject.data.data.data);
       setUsers(responseUser.data.data.data);
-      setAllAttachments(responseAttachment.data.data.data);
+
+      if (selectedTask) {
+        const taskAttachments = responseAttachment.data.data.data
+          .filter((att: any) => att.taskId === selectedTask.id)
+          .map((att: any) => att.url);
+        setAttachments(taskAttachments);
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -84,10 +81,14 @@ function CreateTaskModal({
 
   const handleAddAttachment = () => {
     const url = attachmentInput.trim();
-
     if (!url) return;
 
-    // Validate URL (optional)
+    if (url.startsWith('data:')) {
+      setShowError(true);
+      return;
+    }
+
+    // Validate URL 
     try {
       new URL(url);
     } catch (error) {
@@ -106,17 +107,9 @@ function CreateTaskModal({
   const getShortenedUrl = (url: string) => {
     try {
       const urlObj = new URL(url);
-      const hostname = urlObj.hostname.replace('www.', '');
       const pathname = urlObj.pathname;
-
-      // Lấy tên file hoặc path cuối
-      const fileName = pathname.split('/').filter(Boolean).pop() || hostname;
-
-      if (fileName.length > 40) {
-        return fileName.substring(0, 37) + '...';
-      }
-
-      return fileName;
+      const fileName = pathname.split('/').filter(Boolean).pop() || urlObj.hostname.replace('www.', '');
+      return fileName.length > 40 ? fileName.substring(0, 37) + '...' : fileName;
     } catch {
       return url.length > 40 ? url.substring(0, 37) + '...' : url;
     }
@@ -124,20 +117,12 @@ function CreateTaskModal({
 
   const getProjectMembers = () => {
     const selectedProjectId = currentProject?.id || projectId;
-
     if (!selectedProjectId) return [];
 
-    const selectedProject = projects.find((p) => p.id === selectedProjectId);
+    const project = projects.find((p) => p.id === selectedProjectId);
+    if (!project?.members) return [];
 
-    if (
-      !selectedProject ||
-      !selectedProject.member ||
-      !Array.isArray(selectedProject.member)
-    ) {
-      return [];
-    }
-
-    return users.filter((user) => selectedProject.member.includes(user.id));
+    return users.filter((u) => project.members.includes(u.id));
   };
 
   const handleProjectChange = (newProjectId: number) => {
@@ -151,161 +136,116 @@ function CreateTaskModal({
     }
   };
 
+  const validateDates = () => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const now = new Date();
+    const projectStart = currentProject ? new Date(currentProject.startDate) : null;
+    const projectEnd = currentProject ? new Date(currentProject.endDate) : null;
+
+    if (start >= end) return "End Date must be after Start Date";
+    if (end < now) return "End Date cannot be in the past";
+    if (projectStart && start < projectStart) return "Start Date cannot be before Project Start Date";
+    if (projectEnd && end > projectEnd) return "End Date cannot be after Project End Date";
+    return null;
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim()) {
       setShowError(true);
       return;
-    } if (new Date(startDate) >= new Date(endDate)) {
-      setShowError(true);
-      return
-    } if (new Date(endDate) < new Date()) {
-      setShowError(true);
-      return
-    } if (new Date(startDate) < new Date(currentProject?.startDate)) {
-      setShowError(true);
-      return
-    } if (new Date(endDate) > new Date(currentProject?.endDate)) {
-      setShowError(true);
-      return
+    }
+
+    const dateError = validateDates();
+    if (dateError) {
+      alert(dateError);
+      return;
     }
 
     setLoading(true);
 
     try {
-      if (isUpdate) {
-        const updatedTask = {
-          id: selectedTask.id,
-          projectId: selectedTask.projectId,
-          title: title,
-          description: description,
-          startDate: startDate,
-          endDate: endDate,
-          assignedTo: assignedTo,
-          priority: priority.toLowerCase(),
-          status: status,
-          completion: selectedTask.completion || 0,
-        };
+      const taskData = {
+        id: isUpdate ? selectedTask.id : Date.now(),
+        projectId: isUpdate ? selectedTask.projectId : (currentProject?.id || projectId),
+        title,
+        description,
+        startDate,
+        endDate,
+        assignedTo,
+        priority: priority.toLowerCase(),
+        status,
+        completion: status === "completed" ? 100 : 0,
+      };
 
+      if (isUpdate) {
         await axios.put(
           `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`,
-          updatedTask
+          taskData
         );
 
-        const existingAttachmentsRes = await axios.get(
+        // Delete old attachments
+        const attachmentsRes = await axios.get(
           `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
         );
-        const existingAttachments = existingAttachmentsRes.data.data.data;
-        const taskAttachments = existingAttachments.filter(
+        const oldAttachments = attachmentsRes.data.data.data.filter(
           (att: any) => att.taskId === selectedTask.id
         );
 
-        // Xóa attachments cũ
         await Promise.all(
-          taskAttachments.map((att: any) =>
-            axios.delete(
-              `https://mindx-mockup-server.vercel.app/api/resources/attachments/${att._id}?apiKey=${API_KEY}`
-            )
+          oldAttachments.map((att: any) =>
+            axios.delete(`https://mindx-mockup-server.vercel.app/api/resources/attachments/${att._id}?apiKey=${API_KEY}`)
           )
         );
-
-        // TẠO ATTACHMENTS MỚI (từ links)
-        let maxAttachmentId =
-          existingAttachments.length > 0
-            ? Math.max(...existingAttachments.map((a: any) => a.id))
-            : 0;
-
-        for (const url of attachments) {
-          maxAttachmentId++;
-
-          const attachmentData = {
-            id: maxAttachmentId,
-            taskId: selectedTask.id,
-            url: url,
-            name: url.split('/').pop() || 'Link', // Lấy tên từ URL
-            type: 'link',
-            uploadedAt: new Date().toISOString(),
-          };
-
-          await axios.post(
-            `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`,
-            attachmentData
-          );
-        }
-
-        await createNotification({
-          userId: assignedTo,
-          type: "task",
-          title: `Updated Task ${title}`,
-          description: `Updated task: ${title}`,
-          createdBy: user?.id,
-        });
-
-        onUpdate(updatedTask);
-        onClose();
       } else {
-        const maxId =
-          taskList.length > 0 ? Math.max(...taskList.map((p: any) => p.id)) : 0;
-
-        const newTask = {
-          id: maxId + 1,
-          projectId: currentProject ? currentProject.id : projectId,
-          title: title,
-          description: description,
-          startDate: startDate,
-          endDate: endDate,
-          assignedTo: assignedTo,
-          priority: priority.toLowerCase(),
-          status: status,
-          completion: status === "completed" ? 100 : 0,
-        };
-
         const response = await axios.post(
           `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`,
-          newTask
+          taskData
         );
+        taskData.id = response.data.data.id;
+      }
 
-        const createdTask = response.data.data;
-
-        const existingAttachmentsRes = await axios.get(
+      // Save new attachments
+      if (attachments.length > 0) {
+        const attachmentsRes = await axios.get(
           `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
         );
-        const existingAttachments = existingAttachmentsRes.data.data.data;
-        let maxAttachmentId =
-          existingAttachments.length > 0
-            ? Math.max(...existingAttachments.map((a: any) => a.id))
-            : 0;
+        let maxId = attachmentsRes.data.data.data.length > 0
+          ? Math.max(...attachmentsRes.data.data.data.map((a: any) => a.id))
+          : 0;
 
         for (const url of attachments) {
-          maxAttachmentId++;
-
-          const attachmentData = {
-            id: maxAttachmentId,
-            taskId: createdTask.id,
-            url: url,
-            name: url.split('/').pop() || 'Link',
-            type: 'link',
-            uploadedAt: new Date().toISOString(),
-          };
-
+          maxId++;
           await axios.post(
             `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`,
-            attachmentData
+            {
+              id: maxId,
+              taskId: taskData.id,
+              url,
+              name: url.split('/').pop() || 'Link',
+              type: 'link',
+              uploadedAt: new Date().toISOString(),
+            }
           );
         }
+      }
 
+      // Send notification
+      if (assignedTo.length > 0) {
         await createNotification({
           userId: assignedTo,
           type: "task",
-          title: `Created Task ${title}`,
-          description: `created task: ${title}`,
+          title: isUpdate ? `Task Updated` : `New Task Assignment`,
+          description: isUpdate ? `updated task: ${title}` : `assigned you to task: ${title}`,
           createdBy: user?.id,
         });
-
-        onSave(createdTask);
-        onClose();
       }
+
+      isUpdate ? onUpdate(taskData) : onSave(taskData);
+      onClose();
+
     } catch (error) {
       console.error(error);
     } finally {
@@ -314,57 +254,35 @@ function CreateTaskModal({
   };
 
   useEffect(() => {
-    if (open && users.length > 0) {
-      if (selectedTask) {
-        // Edit
-        const taskAttachments = allAttachments.filter(
-          (att: any) => att.taskId === selectedTask.id
-        );
+    if (open) {
+      fetchAllData();
 
+      if (selectedTask) {
         setTitle(selectedTask.title || "");
         setProjectId(selectedTask.projectId || "");
         setDescription(selectedTask.description || "");
-        setAttachments(taskAttachments.map((att: any) => att.url));
         setStartDate(selectedTask.startDate || "");
         setEndDate(selectedTask.endDate || "");
         setPriority(selectedTask.priority || "");
-        setAssignedTo(
-          Array.isArray(selectedTask.assignedTo)
-            ? selectedTask.assignedTo
-            : selectedTask.assignedTo
-              ? [selectedTask.assignedTo]
-              : []
-        );
+        setAssignedTo(Array.isArray(selectedTask.assignedTo) ? selectedTask.assignedTo : []);
         setStatus(selectedTask.status || "");
       } else {
-        // Create
         setTitle("");
-        setProjectId(currentProject ? currentProject.id : "");
+        setProjectId(currentProject?.id || "");
         setDescription("");
         setAttachments([]);
-        if (currentProject) {
-          setStartDate(currentProject.startDate || "");
-          setEndDate(currentProject.endDate || "");
-        } else {
-          setStartDate("");
-          setEndDate("");
-        }
+        setStartDate(currentProject?.startDate || "");
+        setEndDate(currentProject?.endDate || "");
         setPriority("");
         setAssignedTo([]);
-        setStatus("in-progress");
+        setStatus("to-do");
       }
       setShowError(false);
-      setLoading(false);
     }
-  }, [open, selectedTask, currentProject, allAttachments]);
-
-  useEffect(() => {
-    if (open) {
-      fetchAllData();
-    }
-  }, [open]);
+  }, [open, selectedTask, currentProject]);
 
   const projectMembers = getProjectMembers();
+  const dateError = validateDates();
 
   return (
     <Modal
@@ -405,13 +323,13 @@ function CreateTaskModal({
         </Box>
 
         <Box component="form" className="space-y-4" onSubmit={handleSave}>
-          <Box className=" gap-4">
+          {/* Title */}
+          <Box>
             <Typography
               sx={{
                 fontSize: "14px",
                 fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
+                mb: 0.5
               }}
             >
               Title <span className="text-red-500">*</span>
@@ -422,28 +340,25 @@ function CreateTaskModal({
               size="small"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Type title of task"
+              placeholder="Type task title"
+              error={showError && !title.trim()}
+              helperText={showError && !title.trim() ? "Title is required" : ""}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   fontSize: "14px",
                 },
               }}
             />
-            {showError && !title.trim() && (
-              <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
-                Title is required
-              </Typography>
-            )}
           </Box>
 
-          <Box className="gap-4">
+          {/* Project */}
+          <Box>
             <Typography
               sx={{
+                fontSize: "14px",
                 fontWeight: 500,
                 mb: 0.5,
-                color: "#374151",
               }}
-              className="text-[14px]"
             >
               Project
             </Typography>
@@ -457,7 +372,7 @@ function CreateTaskModal({
                 fontSize: "14px",
                 color: projectId === "" ? "#9ca3af" : "#111827",
               }}
-            // disabled={!!currentProject}
+              disabled={!!currentProject}
             >
               <MenuItem value="" disabled>
                 Choose Project
@@ -485,7 +400,7 @@ function CreateTaskModal({
               placeholder="Type description..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              minRows={4}
+              minRows={3}
               style={{
                 width: "100%",
                 padding: "8px 12px",
@@ -494,7 +409,6 @@ function CreateTaskModal({
                 fontSize: "14px",
                 fontFamily: "inherit",
                 resize: "none",
-                outline: "none",
               }}
             />
           </Box>
@@ -502,7 +416,7 @@ function CreateTaskModal({
           {/* Attachments Section */}
           <Box>
             <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
-              Attachments (Links)
+              Attachments
             </Typography>
 
             <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
@@ -527,93 +441,35 @@ function CreateTaskModal({
               <Button
                 variant="outlined"
                 onClick={handleAddAttachment}
-                sx={{
-                  textTransform: "none",
-                  minWidth: "80px"
-                }}
               >
                 Add
               </Button>
             </Box>
 
-            {attachments.length > 0 ? (
-              <List sx={{ bgcolor: "#f9fafb", borderRadius: 1, p: 1 }}>
-                {attachments.map((url, index) => {
-                  const shortUrl = getShortenedUrl(url);
-                  return (
-                    <ListItem
-                      key={index}
-                      sx={{
-                        border: "1px solid #e0e0e0",
-                        borderRadius: 1,
-                        mb: 1,
-                        bgcolor: "white",
-                      }}
-                      secondaryAction={
-                        <IconButton
-                          edge="end"
-                          size="small"
-                          onClick={() => handleRemoveAttachment(index)}
-                          sx={{ color: "#EF5350" }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      }
-                    >
-                      <ListItemIcon>
-                        <AttachmentIcon sx={{ color: "#2196F3" }} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Typography
-                            component="a"
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                              fontWeight: 500,
-                              fontSize: "0.9rem",
-                              color: "#2196F3",
-                              textDecoration: "none",
-                              "&:hover": {
-                                textDecoration: "underline",
-                              },
-                              wordBreak: "break-all",
-                            }}
-                          >
-                            {shortUrl}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                  )
-                })}
-              </List>
-            ) : (
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  color: "#9ca3af",
-                  fontStyle: "italic",
-                  textAlign: "center",
-                  py: 2,
-                  bgcolor: "#f9fafb",
-                  borderRadius: 1,
-                }}
-              >
-                No attachments yet
-              </Typography>
+            {attachments.length > 0 && (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {attachments.map((url, i) => (
+                  <Chip
+                    key={i}
+                    // icon={<Typography>{getDomainIcon(url)}</Typography>}
+                    label={getShortenedUrl(url)}
+                    onClick={() => window.open(url, '_blank')}
+                    onDelete={() => handleRemoveAttachment(i)}
+                    sx={{ maxWidth: "200px", cursor: "pointer" }}
+                  />
+                ))}
+              </Box>
             )}
           </Box>
 
+          {/* Dates */}
           <Box className="flex gap-4">
             <Box className="w-full">
               <Typography
                 sx={{
                   fontSize: "14px",
                   fontWeight: 500,
-                  mb: 0.5,
-                  color: "#374151",
+                  mb: 0.5
                 }}
               >
                 Start Date
@@ -630,11 +486,109 @@ function CreateTaskModal({
                   },
                 }}
               />
-              {new Date(startDate) < new Date(currentProject?.startDate) && (
-                <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
-                  Start Date cannot be before project Start Date
-                </Typography>
+            </Box>
+
+            <Box className="w-full">
+              <Typography
+                sx={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  mb: 0.5,
+                }}
+              >
+                End Date
+              </Typography>
+              <TextField
+                fullWidth
+                type="date"
+                size="small"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                error={!!dateError}
+                helperText={dateError}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    fontSize: "14px",
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+
+          <Box>
+            <Typography
+              sx={{
+                fontSize: "14px",
+                fontWeight: 500,
+                mb: 0.5,
+              }}
+            >
+              Assign To
+            </Typography>
+
+            <Select
+              fullWidth
+              size="small"
+              displayEmpty
+              disabled={!projectId && !currentProject}
+              multiple
+              onChange={(e) => setAssignedTo(e.target.value as number[])}
+              value={assignedTo}
+              renderValue={(selected) =>
+                selected.length === 0
+                  ? "Choose members"
+                  : selected.map((id: number) => {
+                    const m = users.find((u) => u.id === id);
+                    return `${m?.firstName} ${m?.lastName}`;
+                  }).join(", ")
+              }
+              sx={{
+                fontSize: "14px",
+              }}
+            >
+              {projectMembers.length === 0 ? (
+                <MenuItem disabled>No members in project</MenuItem>
+              ) : (
+                projectMembers.map((m: any) => (
+                  <MenuItem key={m.id} value={m.id}>
+                    {m.firstName} {m.lastName}
+                  </MenuItem>
+                ))
               )}
+            </Select>
+          </Box>
+
+          {/* Priority & Status */}
+          <Box sx={{ display: "flex", gap: 4 }}>
+            <Box className="w-full">
+              <Typography
+                sx={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  mb: 0.5,
+                  color: "#374151",
+                }}
+              >
+                Priority
+              </Typography>
+              <Select
+                fullWidth
+                displayEmpty
+                size="small"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                sx={{
+                  fontSize: "14px",
+                  color: priority === "" ? "#9ca3af" : "#111827",
+                }}
+              >
+                <MenuItem value="" disabled>
+                  Choose priority
+                </MenuItem>
+                <MenuItem value="high">High</MenuItem>
+                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="low">Low</MenuItem>
+              </Select>
             </Box>
 
             <Box className="w-full">
@@ -646,218 +600,38 @@ function CreateTaskModal({
                   color: "#374151",
                 }}
               >
-                End Date
+                Status
               </Typography>
-              <TextField
+              <Select
                 fullWidth
-                type="date"
+                displayEmpty
                 size="small"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    fontSize: "14px",
-                  },
+                  fontSize: "14px",
+                  color: status === "" ? "#9ca3af" : "#111827",
                 }}
-              />
-
-              {showError && startDate >= endDate ? (
-                <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
-                  End Date cannot smaller or equal than Start Date
-                </Typography>
-              ) : new Date(endDate) < new Date() ? (
-                <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
-                  End Date cannot be in the past
-                </Typography>
-              ) : new Date(endDate) > new Date(currentProject?.endDate) ? (
-                <Typography sx={{ fontSize: 12, color: "#ef4444", mt: 0.5 }}>
-                  End Date cannot be after project End Date
-                </Typography>
-              ) : null}
-
+              >
+                <MenuItem value="to-do">To Do</MenuItem>
+                <MenuItem value="in-progress">In progress</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+              </Select>
             </Box>
           </Box>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-            >
-              Task Assign Person
-            </Typography>
-
-            <Select
-              fullWidth
-              size="small"
-              displayEmpty
-              disabled={!projectId && !currentProject}
-              multiple
-              onChange={(e) => {
-                const value = e.target.value;
-                setAssignedTo(typeof value === "string" ? [] : value);
-              }}
-              value={assignedTo}
-              renderValue={(selected) => {
-                if (selected.length === 0) {
-                  return (
-                    <span style={{ color: "#9ca3af" }}>
-                      {!projectId && !currentProject
-                        ? "Please select a project first"
-                        : projectMembers.length === 0
-                          ? "No members in this project"
-                          : "Choose members"}
-                    </span>
-                  );
-                }
-
-                const selectedNames = selected.map((userId: number) => {
-                  const member = users.find((m: any) => m.id === userId);
-                  return (
-                    `${member?.firstName} ${member?.lastName}` || "Unknown"
-                  );
-                });
-
-                return selectedNames.join(", ");
-              }}
-              sx={{
-                fontSize: "14px",
-                color: assignedTo.length === 0 ? "#9ca3af" : "#111827",
-                textTransform: "capitalize",
-              }}
-            >
-              {projectMembers.length === 0 ? (
-                <MenuItem disabled>
-                  <Typography
-                    sx={{
-                      fontSize: "14px",
-                      fontStyle: "italic",
-                      color: "#9ca3af",
-                    }}
-                  >
-                    No members available in this project
-                  </Typography>
-                </MenuItem>
-              ) : (
-                projectMembers.map((member: any) => (
-                  <MenuItem
-                    value={member.id}
-                    key={member.id}
-                    sx={{
-                      fontSize: "14px",
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {member.firstName} {member.lastName}
-                  </MenuItem>
-                ))
-              )}
-            </Select>
-          </Box>
-
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              sx={{
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-              className="text-[14px]"
-            >
-              Priority
-            </Typography>
-            <Select
-              fullWidth
-              displayEmpty
-              size="small"
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              sx={{
-                fontSize: "14px",
-                color: priority === "" ? "#9ca3af" : "#111827",
-              }}
-            >
-              <MenuItem value="" disabled>
-                Choose priority
-              </MenuItem>
-              <MenuItem value="high">High</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="low">Low</MenuItem>
-            </Select>
-          </Box>
-
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              sx={{
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-              className="text-[14px]"
-            >
-              Status
-            </Typography>
-            <Select
-              fullWidth
-              displayEmpty
-              size="small"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              sx={{
-                fontSize: "14px",
-                color: status === "" ? "#9ca3af" : "#111827",
-              }}
-            >
-              <MenuItem value="" disabled>
-                Choose status
-              </MenuItem>
-              <MenuItem value="to-do">To Do</MenuItem>
-              <MenuItem value="in-progress">In progress</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
-            </Select>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 1.5 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={onClose}
-              sx={{
-                textTransform: "none",
-                color: "#374151",
-                borderColor: "#d1d5db",
-                fontSize: "14px",
-                fontWeight: 500,
-                py: 1,
-                "&:hover": {
-                  borderColor: "#9ca3af",
-                  backgroundColor: "#f9fafb",
-                },
-              }}
-            >
+          <Box sx={{ display: "flex", gap: 1.5, pt: 2 }}>
+            <Button fullWidth variant="outlined" onClick={onClose}>
               Cancel
             </Button>
             <Button
               fullWidth
               variant="contained"
               type="submit"
-              loading={loading}
-              loadingPosition="end"
-              sx={{
-                textTransform: "none",
-                backgroundColor: "#9333ea",
-                fontSize: "14px",
-                fontWeight: 500,
-                py: 1,
-                "&:hover": {
-                  backgroundColor: "#7e22ce",
-                },
-              }}
+              disabled={loading}
+              sx={{ bgcolor: "#9333ea", "&:hover": { bgcolor: "#7e22ce" } }}
             >
-              {isUpdate ? "Update" : "Save"}
+              {loading ? "Saving..." : isUpdate ? "Update" : "Create"}
             </Button>
           </Box>
         </Box>
