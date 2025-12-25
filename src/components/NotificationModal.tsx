@@ -2,6 +2,7 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Divider,
   IconButton,
   List,
@@ -12,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { IoMdClose as CloseIcon } from "react-icons/io";
-import { CalendarToday, Assignment, ContactSupport as SupportIcon } from "@mui/icons-material";
+import { CalendarToday, Assignment, ContactSupport as SupportIcon, Delete } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useUser } from "./context/UserContext";
@@ -24,11 +25,12 @@ function NotificationModal({ open, onClose, currentUser }: any) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { user } = useUser();
   const navigate = useNavigate();
 
   const fetchNotifications = async () => {
-    if (!currentUser) return;
+    if (!currentUser || !user?.id) return;
 
     setLoading(true);
     try {
@@ -41,12 +43,20 @@ function NotificationModal({ open, onClose, currentUser }: any) {
         )
       ]);
 
-      responseNotification.data.data.data.sort(
+      // Filter notifications for current user only
+      const allNotifications = responseNotification.data.data.data || [];
+      const userNotifications = allNotifications.filter((notification: any) => {
+        return Array.isArray(notification.userId)
+          ? notification.userId.includes(user.id)
+          : notification.userId === user.id;
+      });
+
+      userNotifications.sort(
         (a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
-      setNotifications(responseNotification.data.data.data);
+      setNotifications(userNotifications);
       setUsers(responseUser.data.data.data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -56,10 +66,10 @@ function NotificationModal({ open, onClose, currentUser }: any) {
   };
 
   useEffect(() => {
-    if (open) {
+    if (open && user?.id) {
       fetchNotifications();
     }
-  }, [open, currentUser]);
+  }, [open, currentUser, user?.id]);
 
   const getTimeAgo = (timestamp: string) => {
     const now = new Date();
@@ -95,6 +105,48 @@ function NotificationModal({ open, onClose, currentUser }: any) {
       return `${months} month${months > 1 ? 's' : ''} ago`;
     }
   }
+
+  const handleDeleteAllNotifications = async () => {
+    if (notifications.length === 0) return;
+
+    setDeleteLoading(true);
+    let successCount = 0;
+    let failureCount = 0;
+
+    try {
+      for (const notification of notifications) {
+        try {
+          if (!notification._id) {
+            console.warn("Notification missing _id:", notification);
+            failureCount++;
+            continue;
+          }
+
+          await axios.delete(
+            `https://mindx-mockup-server.vercel.app/api/resources/notifications/${notification._id}?apiKey=${API_KEY}`
+          );
+          successCount++;
+
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.error(`Error deleting notification ${notification.id}:`, error);
+          failureCount++;
+        }
+      }
+
+      // Clear notifications từ state nếu xóa thành công
+      setNotifications([]);
+
+      if (failureCount > 0) {
+        alert(`Deleted ${successCount} notifications. Failed to delete ${failureCount}.`);
+      }
+    } catch (error) {
+      console.error("Error in delete process:", error);
+      alert("Error deleting notifications");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   return (
     <Modal
@@ -148,18 +200,33 @@ function NotificationModal({ open, onClose, currentUser }: any) {
               }}
             />
           </Box>
-          <IconButton
-            onClick={onClose}
-            size="small"
-            sx={{
-              color: "white",
-              "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.1)",
-              },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <IconButton
+              size="small"
+              onClick={handleDeleteAllNotifications}
+              disabled={deleteLoading || notifications.length === 0}
+              sx={{
+                color: "white",
+                textTransform: "none",
+                "&:hover": {
+                  bgcolor: "rgba(255, 255, 255, 0.1)",
+                },
+              }}>
+              <Delete />
+            </IconButton>
+            <IconButton
+              onClick={onClose}
+              size="small"
+              sx={{
+                color: "white",
+                "&:hover": {
+                  bgcolor: "rgba(255, 255, 255, 0.1)",
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </Box>
 
         {/* Notification List */}
@@ -226,9 +293,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                         px: 2,
                         bgcolor:
                           notification.status === "new" ? "#f3f4f6" : "transparent",
-                        "&:hover": {
-                          bgcolor: "#f9fafb",
-                        },
+                        "&:hover": { bgcolor: 'action.hover' },
                         transition: "all 0.2s",
                         cursor: "pointer"
                       }}
@@ -249,7 +314,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                           {notification.type === "project" ? (
                             <Assignment />
                           ) : user?.role === "leader" && notification.type === "support" ? (
-                            <SupportIcon /> // Hoặc icon phù hợp
+                            <SupportIcon />
                           ) : (
                             <CalendarToday />
                           )}

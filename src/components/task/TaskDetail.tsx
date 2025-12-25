@@ -322,43 +322,6 @@ function TaskDetail() {
                         </Box>
                     </CardContent>
                 </Card>
-
-                {/* Priority Card */}
-                <Card
-                    sx={{
-                        boxShadow: 2,
-                        borderRadius: 2,
-                        transition: "all 0.3s",
-                    }}
-                >
-                    <CardContent>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                            <Box
-                                sx={{
-                                    width: 56,
-                                    height: 56,
-                                    borderRadius: 2,
-                                    bgcolor: "#B2DFDB",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <PriorityIcon sx={{ fontSize: 32, color: "#00796B" }} />
-                            </Box>
-                            <Box sx={{ flex: 1 }}>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{ fontWeight: 600 }}
-                                >
-                                    Priority
-                                </Typography>
-                                <Box sx={{ mt: 0.5 }}>{getPriorityChip(task.priority)}</Box>
-                            </Box>
-                        </Box>
-                    </CardContent>
-                </Card>
             </Box>
 
             {/* Task Content */}
@@ -418,10 +381,6 @@ function TaskDetail() {
                     <Typography
                         variant="h5"
                         fontWeight="700"
-                        sx={{
-                            color: "#2E7D32",
-                            mb: 3,
-                        }}
                     >
                         {task.title}
                     </Typography>

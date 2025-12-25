@@ -28,6 +28,8 @@ function CreateTicketModal({
     const [description, setDescription] = useState("");
     const [status, setStatus] = useState("pending");
     const [priority, setPriority] = useState("medium");
+    const [selectedProject, setSelectedProject] = useState<any>(null);
+    const [projects, setProjects] = useState<any[]>([]);
     const [showError, setShowError] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -38,7 +40,7 @@ function CreateTicketModal({
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!title.trim() || !description.trim()) {
+        if (!title.trim() || !description.trim() || !selectedProject) {
             setShowError(true);
             return;
         }
@@ -51,6 +53,7 @@ function CreateTicketModal({
                     ...selectedTicket,
                     title,
                     description,
+                    projectId: selectedProject?.id,
                     status,
                     priority,
                 };
@@ -73,6 +76,7 @@ function CreateTicketModal({
                     title,
                     description,
                     assignedBy: user?.id,
+                    projectId: selectedProject?.id,
                     status,
                     priority,
                     createdDate: new Date().toISOString().split("T")[0],
@@ -83,25 +87,16 @@ function CreateTicketModal({
                     newTicket
                 );
 
-
-                //Send notify for leader
-                const usersResponse = await axios.get(
-                    `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-                );
-
-                const leaderUsers = usersResponse.data.data.data.filter(
-                    (u: any) => u.role === "leader"
-                );
-
-                const leaderIds = leaderUsers.map((u: any) => u.id);
-
-                await createNotification({
-                    userId: leaderIds,
-                    type: "support",
-                    title: `New Support Ticket`,
-                    description: `created ticket ${title}`,
-                    createdBy: user?.id,
-                });
+                //Send notify to project owner only
+                if (selectedProject?.ownerId) {
+                    await createNotification({
+                        userId: [selectedProject.ownerId],
+                        type: "support",
+                        title: `New Support Ticket`,
+                        description: `created ticket ${title}`,
+                        createdBy: user?.id,
+                    });
+                }
 
                 onSave(response.data.data);
                 onClose();
@@ -115,21 +110,40 @@ function CreateTicketModal({
 
     useEffect(() => {
         if (open) {
+            // Fetch projects
+            const fetchProjects = async () => {
+                try {
+                    const projectsRes = await axios.get(
+                        `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
+                    );
+                    const allProjects = projectsRes.data.data.data;
+                    // Filter projects where user is not the owner
+                    const availableProjects = allProjects.filter((p: any) => p.ownerId !== user?.id);
+                    setProjects(availableProjects);
+                } catch (error) {
+                    console.error("Error fetching projects:", error);
+                }
+            };
+
+            fetchProjects();
+
             if (selectedTicket) {
                 setTitle(selectedTicket.subject || "");
                 setDescription(selectedTicket.description || "");
                 setStatus(selectedTicket.status || "pending");
                 setPriority(selectedTicket.priority || "medium");
+                setSelectedProject(selectedTicket.projectId ? { id: selectedTicket.projectId } : null);
             } else {
                 setTitle("");
                 setDescription("");
                 setStatus("pending");
                 setPriority("medium");
+                setSelectedProject(null);
             }
             setShowError(false);
             setLoading(false);
         }
-    }, [open, selectedTicket]);
+    }, [open, selectedTicket, user?.id]);
 
     return (
         <Modal
@@ -209,66 +223,53 @@ function CreateTicketModal({
                         )}
                     </Box>
 
-                    {/* <Box>
+                    <Box>
                         <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
-                            Assign To
+                            Project <span className="text-red-500">*</span>
                         </Typography>
                         <Select
                             fullWidth
                             displayEmpty
                             size="small"
-                            value={assignedTo}
-                            onChange={(e) => setAssignedTo(Number(e.target.value))}
+                            value={selectedProject?.id || ""}
+                            onChange={(e) => {
+                                const project = projects.find((p: any) => p.id === Number(e.target.value));
+                                setSelectedProject(project);
+                            }}
                             sx={{ fontSize: "14px", textTransform: "capitalize" }}
                         >
                             <MenuItem value="" disabled>
-                                Choose member
+                                Select project
                             </MenuItem>
-                            {users.map((user) => (
-                                <MenuItem key={user.id} value={user.id} sx={{ textTransform: "capitalize" }}
-                                >
-                                    {user.firstName} {user.lastName}
+                            {projects.map((project) => (
+                                <MenuItem key={project.id} value={project.id} sx={{ textTransform: "capitalize" }}>
+                                    {project.title}
                                 </MenuItem>
                             ))}
                         </Select>
-                    </Box> */}
-
-                    <Box className="flex gap-4">
-                        <Box className="w-full">
-                            <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
-                                Priority
+                        {showError && !selectedProject && (
+                            <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
+                                Project is required
                             </Typography>
-                            <Select
-                                fullWidth
-                                displayEmpty
-                                size="small"
-                                value={priority}
-                                onChange={(e) => setPriority(e.target.value)}
-                                sx={{ fontSize: "14px" }}
-                            >
-                                <MenuItem value="high">High</MenuItem>
-                                <MenuItem value="medium">Medium</MenuItem>
-                                <MenuItem value="low">Low</MenuItem>
-                            </Select>
-                        </Box>
+                        )}
+                    </Box>
 
-                        {/* <Box className="w-full">
-                            <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
-                                Status
-                            </Typography>
-                            <Select
-                                fullWidth
-                                displayEmpty
-                                size="small"
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value)}
-                                sx={{ fontSize: "14px" }}
-                            >
-                                <MenuItem value="pending">Pending</MenuItem>
-                                <MenuItem value="in-progress">In Progress</MenuItem>
-                                <MenuItem value="completed">Completed</MenuItem>
-                            </Select>
-                        </Box> */}
+                    <Box>
+                        <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
+                            Priority
+                        </Typography>
+                        <Select
+                            fullWidth
+                            displayEmpty
+                            size="small"
+                            value={priority}
+                            onChange={(e) => setPriority(e.target.value)}
+                            sx={{ fontSize: "14px" }}
+                        >
+                            <MenuItem value="high">High</MenuItem>
+                            <MenuItem value="medium">Medium</MenuItem>
+                            <MenuItem value="low">Low</MenuItem>
+                        </Select>
                     </Box>
 
                     <Box sx={{ display: "flex", gap: 1.5 }}>

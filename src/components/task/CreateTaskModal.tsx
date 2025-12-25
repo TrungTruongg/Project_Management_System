@@ -167,8 +167,16 @@ function CreateTaskModal({
     setLoading(true);
 
     try {
+      const taskRes = await axios.get(
+        `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
+      );
+      let maxId = taskRes.data.data.data.length > 0
+        ? Math.max(...taskRes.data.data.data.map((a: any) => a.id))
+        : 0;
+      
+      console.log(selectedTask._id)
       const taskData = {
-        id: isUpdate ? selectedTask.id : Date.now(),
+        id: isUpdate ? selectedTask.id : maxId + 1,
         projectId: isUpdate ? selectedTask.projectId : (currentProject?.id || projectId),
         title,
         description,
@@ -186,19 +194,30 @@ function CreateTaskModal({
           taskData
         );
 
-        // Delete old attachments
-        const attachmentsRes = await axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
-        );
-        const oldAttachments = attachmentsRes.data.data.data.filter(
-          (att: any) => att.taskId === selectedTask.id
-        );
+        // Delete old attachments tuần tự
+        try {
+          const attachmentsRes = await axios.get(
+            `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
+          );
+          const oldAttachments = attachmentsRes.data.data.data.filter(
+            (att: any) => att.taskId === selectedTask.id
+          );
 
-        await Promise.all(
-          oldAttachments.map((att: any) =>
-            axios.delete(`https://mindx-mockup-server.vercel.app/api/resources/attachments/${att._id}?apiKey=${API_KEY}`)
-          )
-        );
+          // Xóa từng attachment một
+          for (const att of oldAttachments) {
+            try {
+              await axios.delete(
+                `https://mindx-mockup-server.vercel.app/api/resources/attachments/${att._id}?apiKey=${API_KEY}`
+              );
+              // Delay 100ms giữa các request
+              await new Promise(resolve => setTimeout(resolve, 100));
+            } catch (error) {
+              console.error(`Error deleting attachment ${att._id}:`, error);
+            }
+          }
+        } catch (error) {
+          console.error("Error deleting attachments:", error);
+        }
       } else {
         const response = await axios.post(
           `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`,

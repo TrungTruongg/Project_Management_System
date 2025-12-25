@@ -78,14 +78,14 @@ function Projects() {
 
       let filteredProjects = allProjects;
 
-      if (user) {
-        if (user.role === "member") {
-          filteredProjects = allProjects.filter(
-            (project: any) =>
-              project.member?.includes(user.id) || project.leaderId === user.id
-          );
-        }
-      }
+      // if (user) {
+      //   if (user.role === "member") {
+      //     filteredProjects = allProjects.filter(
+      //       (project: any) =>
+      //         project.member?.includes(user.id) || project.leaderId === user.id
+      //     );
+      //   }
+      // }
 
       setProjectList(filteredProjects);
       setUsers(responseUser.data.data.data);
@@ -167,14 +167,6 @@ function Projects() {
       setDeleteLoading(false);
     }
   };
-
-  // const getProjectMembers = (project: any) => {
-  //   if (!project.member || !Array.isArray(project.member)) {
-  //     return [];
-  //   }
-
-  //   return users.filter((user) => project.member.includes(user.id));
-  // };
 
   const handleViewTasksInProject = (projectId: any) => {
     navigate(`/task?projectId=${projectId}`)

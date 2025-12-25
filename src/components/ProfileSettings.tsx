@@ -301,7 +301,7 @@ const ProfileSettings = () => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Avatar
                 src={newAvatar || user?.avatar}
-                sx={{ width: 56, height: 56 }}
+                sx={{ width: 56, height: 56, textTransform: "uppercase" }}
               >
                 {user?.firstName?.[0]}
                 {user?.lastName?.[0]}

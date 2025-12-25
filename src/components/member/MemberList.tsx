@@ -101,7 +101,7 @@ function MemberList() {
   };
 
   const handleViewProfile = (member: any) => {
-    navigate("/member-profile", { state: { member } });
+    navigate("/member-profile", { state: { memberId: member.id } });
   }
 
   return (

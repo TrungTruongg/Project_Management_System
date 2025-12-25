@@ -1,10 +1,12 @@
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
   CircularProgress,
+  IconButton,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -14,34 +16,43 @@ import {
   Person as PersonIcon,
   Label as PriorityIcon,
   Loop as StatusIcon,
+  CheckCircle as CheckCompleteIcon
 } from "@mui/icons-material";
+import { useUser } from "../context/UserContext";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 function SupportsDetail() {
   const [searchParams] = useSearchParams();
   const ticketId = searchParams.get("id");
+  const { user } = useUser();
 
   const [ticket, setTicket] = useState<any>(null);
   const [assignedUser, setAssignedUser] = useState<any>(null);
+  const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [isProjectOwner, setIsProjectOwner] = useState(false);
 
   const fetchTicketDetail = async () => {
     if (!ticketId) return;
 
     setLoading(true);
     try {
-      const [ticketsRes, usersRes] = await Promise.all([
+      const [ticketsRes, usersRes, projectsRes] = await Promise.all([
         axios.get(
           `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`
         ),
         axios.get(
           `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
         ),
+        axios.get(
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
+        ),
       ]);
 
       const tickets = ticketsRes.data.data.data;
       const users = usersRes.data.data.data;
+      const projects = projectsRes.data.data.data;
 
       const foundTicket = tickets.find(
         (t: any) => t.id === parseInt(ticketId)
@@ -50,8 +61,19 @@ function SupportsDetail() {
       if (foundTicket) {
         setTicket(foundTicket);
 
-        const user = users.find((u: any) => u.id === foundTicket.assignedTo);
-        setAssignedUser(user);
+        // Find user by assignedBy 
+        const ticketUser = users.find((u: any) => u.id === foundTicket.assignedBy);
+        setAssignedUser(ticketUser);
+
+        const foundProject = projects.find((p: any) => p.id === foundTicket.projectId);
+        setProject(foundProject);
+
+        if (foundProject && user) {
+          const isOwner = foundProject.ownerId === user.id;
+          setIsProjectOwner(isOwner);
+        } else {
+          setIsProjectOwner(false);
+        }
       }
     } catch (error) {
       console.error("Error fetching ticket detail:", error);
@@ -62,7 +84,7 @@ function SupportsDetail() {
 
   useEffect(() => {
     fetchTicketDetail();
-  }, [ticketId]);
+  }, [ticketId, user]);
 
   const getStatusChip = (status: string) => {
     const config: any = {
@@ -114,11 +136,67 @@ function SupportsDetail() {
     );
   };
 
+  const handleCompleteTicket = async () => {
+    if (!ticket || !isProjectOwner) return;
+
+    try {
+      const updatedTicket = {
+        ...ticket,
+        status: "completed",
+      };
+
+      await axios.put(
+        `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${ticket._id}?apiKey=${API_KEY}`,
+        updatedTicket
+      );
+
+      setTicket(updatedTicket);
+    } catch (error) {
+      console.error("Error updating ticket status:", error);
+    }
+  };
+
   return (
     <Box>
-      <Typography variant="h4" fontWeight="700" sx={{ mb: 4 }}>
-        Support Tickets Detail
-      </Typography>
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h4" fontWeight="700">
+          Support Tickets Detail
+        </Typography>
+        {isProjectOwner && ticket?.status !== "completed" && (
+          // <IconButton
+          //   size="small"
+          //   sx={{ color: "#4CAF50" }}
+          //   onClick={handleCompleteTicket}
+          //   title="Mark as complete"
+          // >
+          //   <CheckCompleteIcon fontSize="small" />
+          // </IconButton>
+
+          <Button
+            variant="contained"
+            size="medium"
+            startIcon={<CheckCompleteIcon />}
+            onClick={handleCompleteTicket}
+            sx={{
+              backgroundColor: "#4CAF50",
+              color: "white",
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            Check Complete
+          </Button>
+        )}
+      </Box>
 
       {/* Info Cards */}
       {loading ? (
@@ -175,7 +253,9 @@ function SupportsDetail() {
                     >
                       Status
                     </Typography>
-                    <Box sx={{ mt: 0.5 }}>{getStatusChip(ticket?.status)}</Box>
+                    <Box sx={{ mt: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
+                      {getStatusChip(ticket?.status)}
+                    </Box>
                   </Box>
                 </Box>
               </CardContent>
@@ -240,49 +320,13 @@ function SupportsDetail() {
                 </Box>
               </CardContent>
             </Card>
-
-            {/* Priority Card */}
-            <Card
-              sx={{
-                boxShadow: 2,
-                borderRadius: 2,
-                transition: "all 0.3s",
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Box
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 2,
-                      bgcolor: "#B2DFDB",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <PriorityIcon sx={{ fontSize: 32, color: "#00796B" }} />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontWeight: 600 }}
-                    >
-                      Priority
-                    </Typography>
-                    <Box sx={{ mt: 0.5 }}>{getPriorityChip(ticket?.priority)}</Box>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
           </Box>
 
           <Card
             sx={{
               boxShadow: 2,
               borderRadius: 2,
+              mb: 4,
             }}
           >
             <CardContent sx={{ p: 4 }}>
@@ -297,25 +341,38 @@ function SupportsDetail() {
                   borderBottom: "1px solid #e0e0e0",
                 }}
               >
-                <Typography
-                  variant="h5"
-                  fontWeight="700"
-                  sx={{
-                    color: "#EF5350",
-                    mb: 1,
-                  }}
-                >
-                  {ticket.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Created:{" "}
-                  {new Date(ticket.createdDate).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </Typography>
+                <Box>
+                  {project && (
+                    <Chip
+                      label={project.title}
+                      size="small"
+                      sx={{
+                        bgcolor: "#F3E5F5",
+                        color: "#7B1FA2",
+                        fontSize: "0.75rem",
+                        mb: 1,
+                        textTransform: "capitalize",
+                      }}
+                    />
+                  )}
+                  <Typography variant="body2" color="text.secondary">
+                    Created:{" "}
+                    {new Date(ticket.createdDate).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </Typography>
+                </Box>
               </Box>
+
+              {/* Title */}
+              <Typography
+                variant="h5"
+                fontWeight="700"
+              >
+                {ticket.title}
+              </Typography>
 
               <Box>
                 <Typography
@@ -340,34 +397,6 @@ function SupportsDetail() {
                   flexWrap: "wrap",
                 }}
               >
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                  >
-                    Created Date
-                  </Typography>
-                  <Typography variant="body2" fontWeight="600">
-                    {new Date(ticket.createdDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
-                  >
-                    Status
-                  </Typography>
-                  {getStatusChip(ticket.status)}
-                </Box>
-
                 <Box>
                   <Typography
                     variant="caption"

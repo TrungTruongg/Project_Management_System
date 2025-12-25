@@ -152,8 +152,8 @@ function DashboardProjectInformation() {
           </TableHead>
           <TableBody>
             {projects.map((project: any, index) => {
-              const leader = users.find(user => user.id === project.leaderId);
-              const members = project.member || [];
+              const leader = users.find(user => user.id === project.ownerId);
+              const projectMembers = users.filter((user) => project.members.includes(user.id));      
               const calculateDays = calculateDeadline(project.startDate, project.endDate);
 
               return (
@@ -213,11 +213,12 @@ function DashboardProjectInformation() {
                             height: 32,
                             fontSize: "14px",
                             bgcolor: "#E0E0E0",
+                            textTransform: "uppercase"
                           }}
                         >
                           {leader.firstName?.[0]}{leader.lastName?.[0]}
                         </Avatar>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ textTransform: "capitalize" }}>
                           {leader.firstName} {leader.lastName}
                         </Typography>
                       </Box>
@@ -228,15 +229,14 @@ function DashboardProjectInformation() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {members.length > 0 ? (
+                    {projectMembers.length > 0 ? (
                       <AvatarGroup max={4}>
-                        {members.map((memberId: any) => {
-                          const memberInfo = users.find(user => user.id === memberId);
+                        {projectMembers.map((member: any) => {
 
                           return (
                             <Avatar
-                              key={memberId}
-                              src={memberInfo?.avatar}
+                              key={member.id}
+                              src={member.avatar}
                               sx={{
                                 width: 32,
                                 height: 32,
@@ -244,9 +244,9 @@ function DashboardProjectInformation() {
                                 bgcolor: "#E0E0E0",
                                 textTransform: "uppercase"
                               }}
-                              title={memberInfo ? `${memberInfo.firstName} ${memberInfo.lastName}` : "Unknown"}
+                              title={member ? `${member.firstName} ${member.lastName}` : "Unknown"}
                             >
-                              {memberInfo?.firstName?.[0]}{memberInfo?.lastName?.[0]}
+                              {member?.firstName?.[0]}{member?.lastName?.[0]}
                             </Avatar>
                           );
                         })}

@@ -15,6 +15,7 @@ function SupportsView() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [supTickets, setSupTickets] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
+    const [projects, setProjects] = useState<any[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(0);
@@ -25,17 +26,21 @@ function SupportsView() {
     const fetchAllData = async () => {
         setLoading(true);
         try {
-            const [ticketsRes, usersRes] = await Promise.all([
+            const [ticketsRes, usersRes, projectsRes] = await Promise.all([
                 axios.get(
                     `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`
                 ),
                 axios.get(
                     `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
                 ),
+                axios.get(
+                    `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
+                ),
             ]);
 
             setSupTickets(ticketsRes.data.data.data || []);
             setUsers(usersRes.data.data.data || []);
+            setProjects(projectsRes.data.data.data || []);
         } catch (error) {
             console.error("Error fetching tickets:", error);
         } finally {
@@ -168,6 +173,12 @@ function SupportsView() {
         return users.find((user) => user.id === userId);
     };
 
+    const isProjectOwnerForTicket = (ticket: any): boolean => {
+        if (!ticket.projectId || !user) return false;
+        const project = projects.find((p: any) => p.id === ticket.projectId);
+        return project && project.ownerId === user.id;
+    };
+
     const handleRowClick = (ticketId: string) => {
         navigate(`/supports-detail?id=${ticketId}`);
     };
@@ -189,7 +200,7 @@ function SupportsView() {
                 <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                     <Button
                         variant="contained"
-                        size="large"
+                        size="medium"
                         startIcon={<AddTaskIcon />}
                         onClick={handleOpenModal}
                         sx={{
@@ -301,7 +312,7 @@ function SupportsView() {
                                             </TableCell>
                                             <TableCell>{getStatusChip(ticket.status)}</TableCell>
                                             <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                                                {user?.role === "leader" &&
+                                                {isProjectOwnerForTicket(ticket) && ticket.status !== "completed" &&
                                                     <IconButton
                                                         size="small"
                                                         sx={{ color: "#4CAF50" }}
@@ -309,6 +320,7 @@ function SupportsView() {
                                                             e.stopPropagation();
                                                             checkCompleteSupport(ticket);
                                                         }}
+                                                        title="Mark as complete"
                                                     >
                                                         <CheckCompleteIcon fontSize="small" />
                                                     </IconButton>

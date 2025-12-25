@@ -118,9 +118,9 @@ function Tasks() {
 
   const tasksByStatus = () => {
     return {
-      toDo: filteredTasks.filter((t) => t.status === "to-do"),
-      inProgress: filteredTasks.filter((t) => t.status === "in-progress"),
-      completed: filteredTasks.filter((t) => t.status === "completed"),
+      toDo: filteredTasks.filter((t) => t.completion === 0),
+      inProgress: filteredTasks.filter((t) => t.completion > 0 && t.completion < 100),
+      completed: filteredTasks.filter((t) => t.completion === 100),
     };
   };
 

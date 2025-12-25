@@ -175,7 +175,7 @@ function Header() {
             ))
           )}
         </AvatarGroup> */}
-        <IconButton sx={{ bgcolor: "white" }} onClick={handleOpenNotification}>
+        <IconButton onClick={handleOpenNotification}>
           <Badge
             variant="dot"
             color="error"
