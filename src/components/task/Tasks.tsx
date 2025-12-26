@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
-import { CalendarToday, Delete, Edit } from "@mui/icons-material";
+import { CalendarToday, Delete, Edit, CheckCircle as CheckStatusIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateTaskModal from "./CreateTaskModal";
 import axios from "axios";
@@ -147,17 +147,17 @@ function Tasks() {
     setOpenCreateTaskModal(true);
   };
 
-  const calculateTaskCompletion = (taskId: number) => {
-    const task = taskList.filter((task) => task.projectId === taskId);
+  // const calculateTaskCompletion = (taskId: number) => {
+  //   const task = taskList.filter((task) => task.projectId === taskId);
 
-    if (task.length === 0) return 0;
+  //   if (task.length === 0) return 0;
 
-    const completedTasks = task.filter(
-      (task: any) => task.status === "completed"
-    );
+  //   const completedTasks = task.filter(
+  //     (task: any) => task.status === "completed"
+  //   );
 
-    return Math.round((completedTasks.length / task.length) * 100);
-  };
+  //   return Math.round((completedTasks.length / task.length) * 100);
+  // };
 
   const updateProjectCompletion = async (projectId: number) => {
     try {
@@ -221,19 +221,24 @@ function Tasks() {
   const handleUpdateTask = async (updatedTask: any) => {
     const oldTask = taskList.find(t => t.id === updatedTask.id);
 
+    const taskToUpdate = {
+      ...updatedTask,
+      _id: updatedTask._id || oldTask?._id
+    };
+
     setTaskList(
       taskList.map((task: any) =>
-        task.id === updatedTask.id ? updatedTask : task
+        task.id === taskToUpdate.id ? taskToUpdate : task
       )
     );
 
     // Update completion nếu status thay đổi HOẶC projectId thay đổi
-    if (updatedTask.projectId) {
-      await updateProjectCompletion(updatedTask.projectId);
+    if (taskToUpdate.projectId) {
+      await updateProjectCompletion(taskToUpdate.projectId);
     }
 
     // Nếu task được chuyển sang project khác, cập nhật cả project cũ
-    if (oldTask?.projectId && oldTask.projectId !== updatedTask.projectId) {
+    if (oldTask?.projectId && oldTask.projectId !== taskToUpdate.projectId) {
       await updateProjectCompletion(oldTask.projectId);
     }
   };
@@ -299,6 +304,10 @@ function Tasks() {
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
     const project = projects.find((p) => p.id === task.projectId);
+    const isProjectOwner = project?.ownerId === user?.id;
+    const isTaskAssignedToMe = Array.isArray(task.assignedTo)
+      ? task.assignedTo.includes(user?.id)
+      : task.assignedTo === user?.id;
 
     const assignedUserIds = Array.isArray(task.assignedTo)
       ? task.assignedTo
@@ -311,7 +320,12 @@ function Tasks() {
       .filter(Boolean);
 
     const calculateDays = calculateDeadline(task.startDate, task.endDate)
-    const completion = calculateTaskCompletion(project.id);
+    const completion = task.completion;
+
+    const handleStatusUpdate = () => {
+      setSelectedTask(task);
+      setOpenCreateTaskModal(true);
+    };
 
     return (
       <Card
@@ -341,24 +355,45 @@ function Tasks() {
                 color: "#2E7D32",
                 fontWeight: 600,
                 fontSize: "15px",
-                textTransform: "capitalize"
               }}
             />
             <Box sx={{ display: "flex", gap: 1 }} onClick={(e) => e.stopPropagation()}>
-              <IconButton
-                size="small"
-                sx={{ color: "#4CAF50" }}
-                onClick={() => handleEditTask(task)}
-              >
-                <Edit fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                sx={{ color: "#EF5350" }}
-                onClick={() => handleOpenDeleteDialog(task)}
-              >
-                <Delete fontSize="small" />
-              </IconButton>
+              {isProjectOwner ? (
+                <>
+                  <IconButton
+                    size="small"
+                    sx={{ color: "#4CAF50" }}
+                    onClick={() => handleEditTask(task)}
+                  >
+                    <Edit fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    sx={{ color: "#EF5350" }}
+                    onClick={() => handleOpenDeleteDialog(task)}
+                  >
+                    <Delete fontSize="small" />
+                  </IconButton>
+                </>
+              ) : isTaskAssignedToMe ? (
+                // <Button
+                //   size="small"
+                //   variant="outlined"
+                //   sx={{ textTransform: "none", fontSize: "12px" }}
+                //   onClick={handleStatusUpdate}
+                // >
+                //   Update Status
+                // </Button>
+
+                <IconButton
+                  size="small"
+                  sx={{ color: "#4CAF50" }}
+                  onClick={handleStatusUpdate}
+                  title="Change status"
+                >
+                  <CheckStatusIcon fontSize="small" />
+                </IconButton>
+              ) : null}
             </Box>
           </Box>
 
@@ -375,6 +410,26 @@ function Tasks() {
             />
 
             <AvatarGroup max={5}>
+              {project?.ownerId && (
+                <Avatar
+                  key={`owner-${project.ownerId}`}
+                  src={users.find((u) => u.id === project.ownerId)?.avatar}
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    fontSize: "10px",
+                    bgcolor: "#FF9800",
+                    color: "white",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    border: "2px solid #FFA726",
+                  }}
+                  title={`Leader: ${users.find((u) => u.id === project.ownerId)?.firstName} ${users.find((u) => u.id === project.ownerId)?.lastName}`}
+                >
+                  {users.find((u) => u.id === project.ownerId)?.firstName?.[0]}
+                  {users.find((u) => u.id === project.ownerId)?.lastName?.[0]}
+                </Avatar>
+              )}
               {assignedUsers.length > 0 ? (
                 assignedUsers.map((user: any) => (
                   <Avatar
@@ -387,6 +442,7 @@ function Tasks() {
                       bgcolor: "#E0E0E0",
                       textTransform: "uppercase"
                     }}
+                    title={`Members: ${user.firstName} ${user.lastName}`}
                   >
                     {user.firstName?.[0]}
                     {user.lastName?.[0]}
@@ -539,7 +595,7 @@ function Tasks() {
             </Typography>
           </Box>
         </CardContent>
-      </Card>
+      </Card >
     );
   };
 

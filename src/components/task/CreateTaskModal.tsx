@@ -27,6 +27,8 @@ function CreateTaskModal({
   selectedTask = null,
   currentProject,
 }: any) {
+  // Check if this is a status-only update (member updating assigned task)
+  const [isStatusOnly, setIsStatusOnly] = useState(false);
   const [title, setTitle] = useState("");
   const [projectId, setProjectId] = useState<number | "">("");
   const [description, setDescription] = useState("");
@@ -153,6 +155,10 @@ function CreateTaskModal({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('selectedTask:', selectedTask);
+    console.log('selectedTask._id:', selectedTask?._id);
+    console.log('isUpdate:', isUpdate);
+
     if (!title.trim()) {
       setShowError(true);
       return;
@@ -173,8 +179,18 @@ function CreateTaskModal({
       let maxId = taskRes.data.data.data.length > 0
         ? Math.max(...taskRes.data.data.data.map((a: any) => a.id))
         : 0;
-      
-      console.log(selectedTask._id)
+
+
+      // Tính completion dựa vào status
+      let completion = 0;
+      if (status === "to-do") {
+        completion = 0;
+      } else if (status === "in-progress") {
+        completion = 50; 
+      } else if (status === "completed") {
+        completion = 100;
+      }
+
       const taskData = {
         id: isUpdate ? selectedTask.id : maxId + 1,
         projectId: isUpdate ? selectedTask.projectId : (currentProject?.id || projectId),
@@ -185,12 +201,23 @@ function CreateTaskModal({
         assignedTo,
         priority: priority.toLowerCase(),
         status,
-        completion: status === "completed" ? 100 : 0,
+        completion,
       };
 
       if (isUpdate) {
+        const taskToUpdate = taskRes.data.data.data.find(
+          (t: any) => t.id === selectedTask.id
+        );
+        
+        if (!taskToUpdate || !taskToUpdate._id) {
+          console.error("Cannot find task to update:", selectedTask.id);
+          alert("Error: Cannot find task to update");
+          setLoading(false);
+          return;
+        }
+
         await axios.put(
-          `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`,
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks/${taskToUpdate._id}?apiKey=${API_KEY}`,
           taskData
         );
 
@@ -277,6 +304,16 @@ function CreateTaskModal({
       fetchAllData();
 
       if (selectedTask) {
+        // Check if current user is project owner
+        const project = projects.find((p) => p.id === selectedTask.projectId);
+        const isOwner = project?.ownerId === user?.id;
+        const isAssigned = Array.isArray(selectedTask.assignedTo)
+          ? selectedTask.assignedTo.includes(user?.id)
+          : selectedTask.assignedTo === user?.id;
+        
+        // Status-only mode if not owner but assigned to task
+        setIsStatusOnly(!isOwner && isAssigned);
+        
         setTitle(selectedTask.title || "");
         setProjectId(selectedTask.projectId || "");
         setDescription(selectedTask.description || "");
@@ -286,6 +323,7 @@ function CreateTaskModal({
         setAssignedTo(Array.isArray(selectedTask.assignedTo) ? selectedTask.assignedTo : []);
         setStatus(selectedTask.status || "");
       } else {
+        setIsStatusOnly(false);
         setTitle("");
         setProjectId(currentProject?.id || "");
         setDescription("");
@@ -319,7 +357,7 @@ function CreateTaskModal({
               fontWeight: 600,
             }}
           >
-            {isUpdate ? "Update Task" : "Create Task"}
+            {isStatusOnly ? "Update Task Status" : isUpdate ? "Update Task" : "Create Task"}
           </Typography>
           <Button
             onClick={onClose}
@@ -342,69 +380,279 @@ function CreateTaskModal({
         </Box>
 
         <Box component="form" className="space-y-4" onSubmit={handleSave}>
-          {/* Title */}
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5
-              }}
-            >
-              Title <span className="text-red-500">*</span>
-            </Typography>
-            <TextField
-              fullWidth
-              type="text"
-              size="small"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Type task title"
-              error={showError && !title.trim()}
-              helperText={showError && !title.trim() ? "Title is required" : ""}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  fontSize: "14px",
-                },
-              }}
-            />
-          </Box>
+          {!isStatusOnly && (
+            <>
+              {/* Title */}
+              <Box>
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    mb: 0.5
+                  }}
+                >
+                  Title <span className="text-red-500">*</span>
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="text"
+                  size="small"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Type task title"
+                  error={showError && !title.trim()}
+                  helperText={showError && !title.trim() ? "Title is required" : ""}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      fontSize: "14px",
+                    },
+                  }}
+                />
+              </Box>
 
-          {/* Project */}
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-              }}
-            >
-              Project
-            </Typography>
-            <Select
-              fullWidth
-              displayEmpty
-              size="small"
-              value={projectId}
-              onChange={(e) => handleProjectChange(Number(e.target.value))}
-              sx={{
-                fontSize: "14px",
-                color: projectId === "" ? "#9ca3af" : "#111827",
-              }}
-              disabled={!!currentProject}
-            >
-              <MenuItem value="" disabled>
-                Choose Project
-              </MenuItem>
-              {projects.map((project) => (
-                <MenuItem key={project.id} value={project.id}>
-                  {project.title}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+              {/* Project */}
+              <Box>
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    mb: 0.5,
+                  }}
+                >
+                  Project
+                </Typography>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  size="small"
+                  value={projectId}
+                  onChange={(e) => handleProjectChange(Number(e.target.value))}
+                  sx={{
+                    fontSize: "14px",
+                    color: projectId === "" ? "#9ca3af" : "#111827",
+                  }}
+                  disabled={!!currentProject}
+                >
+                  <MenuItem value="" disabled>
+                    Choose Project
+                  </MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project.id} value={project.id}>
+                      {project.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
 
-          <Box className="gap-4">
+              <Box className="gap-4">
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    mb: 0.5,
+                    color: "#374151",
+                  }}
+                >
+                  Description
+                </Typography>
+                <TextareaAutosize
+                  placeholder="Type description..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  minRows={3}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                    resize: "none",
+                  }}
+                />
+              </Box>
+
+              {/* Attachments Section */}
+              <Box>
+                <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
+                  Attachments
+                </Typography>
+
+                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="Paste link"
+                    value={attachmentInput}
+                    onChange={(e) => setAttachmentInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddAttachment();
+                      }
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: "14px",
+                      },
+                    }}
+                  />
+                  <Button
+                    variant="outlined"
+                    onClick={handleAddAttachment}
+                  >
+                    Add
+                  </Button>
+                </Box>
+
+                {attachments.length > 0 && (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {attachments.map((url, i) => (
+                      <Chip
+                        key={i}
+                        // icon={<Typography>{getDomainIcon(url)}</Typography>}
+                        label={getShortenedUrl(url)}
+                        onClick={() => window.open(url, '_blank')}
+                        onDelete={() => handleRemoveAttachment(i)}
+                        sx={{ maxWidth: "200px", cursor: "pointer" }}
+                      />
+                    ))}
+                  </Box>
+                )}
+              </Box>
+
+              {/* Dates */}
+              <Box className="flex gap-4">
+                <Box className="w-full">
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      mb: 0.5
+                    }}
+                  >
+                    Start Date
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    size="small"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: "14px",
+                      },
+                    }}
+                  />
+                </Box>
+
+                <Box className="w-full">
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      mb: 0.5,
+                    }}
+                  >
+                    End Date
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    size="small"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    error={!!dateError}
+                    helperText={dateError}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        fontSize: "14px",
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+
+              <Box>
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    mb: 0.5,
+                  }}
+                >
+                  Assign To
+                </Typography>
+
+                <Select
+                  fullWidth
+                  size="small"
+                  displayEmpty
+                  disabled={!projectId && !currentProject}
+                  multiple
+                  onChange={(e) => setAssignedTo(e.target.value as number[])}
+                  value={assignedTo}
+                  renderValue={(selected) =>
+                    selected.length === 0
+                      ? "Choose members"
+                      : selected.map((id: number) => {
+                        const m = users.find((u) => u.id === id);
+                        return `${m?.firstName} ${m?.lastName}`;
+                      }).join(", ")
+                  }
+                  sx={{
+                    fontSize: "14px",
+                  }}
+                >
+                  {projectMembers.length === 0 ? (
+                    <MenuItem disabled>No members in project</MenuItem>
+                  ) : (
+                    projectMembers.map((m: any) => (
+                      <MenuItem key={m.id} value={m.id}>
+                        {m.firstName} {m.lastName}
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </Box>
+
+              {/* Priority */}
+              <Box>
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    mb: 0.5,
+                    color: "#374151",
+                  }}
+                >
+                  Priority
+                </Typography>
+                <Select
+                  fullWidth
+                  displayEmpty
+                  size="small"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  sx={{
+                    fontSize: "14px",
+                    color: priority === "" ? "#9ca3af" : "#111827",
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    Choose priority
+                  </MenuItem>
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="low">Low</MenuItem>
+                </Select>
+              </Box>
+            </>
+          )}
+
+          {/* Status - Always visible */}
+          <Box>
             <Typography
               sx={{
                 fontSize: "14px",
@@ -413,230 +661,23 @@ function CreateTaskModal({
                 color: "#374151",
               }}
             >
-              Description
+              Status
             </Typography>
-            <TextareaAutosize
-              placeholder="Type description..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              minRows={3}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                fontSize: "14px",
-                fontFamily: "inherit",
-                resize: "none",
-              }}
-            />
-          </Box>
-
-          {/* Attachments Section */}
-          <Box>
-            <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
-              Attachments
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Paste link"
-                value={attachmentInput}
-                onChange={(e) => setAttachmentInput(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddAttachment();
-                  }
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    fontSize: "14px",
-                  },
-                }}
-              />
-              <Button
-                variant="outlined"
-                onClick={handleAddAttachment}
-              >
-                Add
-              </Button>
-            </Box>
-
-            {attachments.length > 0 && (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {attachments.map((url, i) => (
-                  <Chip
-                    key={i}
-                    // icon={<Typography>{getDomainIcon(url)}</Typography>}
-                    label={getShortenedUrl(url)}
-                    onClick={() => window.open(url, '_blank')}
-                    onDelete={() => handleRemoveAttachment(i)}
-                    sx={{ maxWidth: "200px", cursor: "pointer" }}
-                  />
-                ))}
-              </Box>
-            )}
-          </Box>
-
-          {/* Dates */}
-          <Box className="flex gap-4">
-            <Box className="w-full">
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  mb: 0.5
-                }}
-              >
-                Start Date
-              </Typography>
-              <TextField
-                fullWidth
-                type="date"
-                size="small"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    fontSize: "14px",
-                  },
-                }}
-              />
-            </Box>
-
-            <Box className="w-full">
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  mb: 0.5,
-                }}
-              >
-                End Date
-              </Typography>
-              <TextField
-                fullWidth
-                type="date"
-                size="small"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                error={!!dateError}
-                helperText={dateError}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    fontSize: "14px",
-                  },
-                }}
-              />
-            </Box>
-          </Box>
-
-          <Box>
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-              }}
-            >
-              Assign To
-            </Typography>
-
             <Select
               fullWidth
-              size="small"
               displayEmpty
-              disabled={!projectId && !currentProject}
-              multiple
-              onChange={(e) => setAssignedTo(e.target.value as number[])}
-              value={assignedTo}
-              renderValue={(selected) =>
-                selected.length === 0
-                  ? "Choose members"
-                  : selected.map((id: number) => {
-                    const m = users.find((u) => u.id === id);
-                    return `${m?.firstName} ${m?.lastName}`;
-                  }).join(", ")
-              }
+              size="small"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
               sx={{
                 fontSize: "14px",
+                color: status === "" ? "#9ca3af" : "#111827",
               }}
             >
-              {projectMembers.length === 0 ? (
-                <MenuItem disabled>No members in project</MenuItem>
-              ) : (
-                projectMembers.map((m: any) => (
-                  <MenuItem key={m.id} value={m.id}>
-                    {m.firstName} {m.lastName}
-                  </MenuItem>
-                ))
-              )}
+              <MenuItem value="to-do">To Do</MenuItem>
+              <MenuItem value="in-progress">In progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
             </Select>
-          </Box>
-
-          {/* Priority & Status */}
-          <Box sx={{ display: "flex", gap: 4 }}>
-            <Box className="w-full">
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  mb: 0.5,
-                  color: "#374151",
-                }}
-              >
-                Priority
-              </Typography>
-              <Select
-                fullWidth
-                displayEmpty
-                size="small"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                sx={{
-                  fontSize: "14px",
-                  color: priority === "" ? "#9ca3af" : "#111827",
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Choose priority
-                </MenuItem>
-                <MenuItem value="high">High</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="low">Low</MenuItem>
-              </Select>
-            </Box>
-
-            <Box className="w-full">
-              <Typography
-                sx={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  mb: 0.5,
-                  color: "#374151",
-                }}
-              >
-                Status
-              </Typography>
-              <Select
-                fullWidth
-                displayEmpty
-                size="small"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                sx={{
-                  fontSize: "14px",
-                  color: status === "" ? "#9ca3af" : "#111827",
-                }}
-              >
-                <MenuItem value="to-do">To Do</MenuItem>
-                <MenuItem value="in-progress">In progress</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-              </Select>
-            </Box>
           </Box>
 
           <Box sx={{ display: "flex", gap: 1.5, pt: 2 }}>

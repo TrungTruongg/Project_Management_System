@@ -1,22 +1,20 @@
-import { CalendarToday, People } from "@mui/icons-material";
 import {
   Avatar,
   Box,
   Button,
   Card,
-  CardContent,
   Chip,
   CircularProgress,
   Grid,
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddIcon } from "react-icons/go";
-import { BiTask as TotalTaskIcon } from "react-icons/bi";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AddMemberModal from "./AddMemberModal";
 import { useSearch } from "../context/SearchContext";
+import { useUser } from "../context/UserContext";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -25,9 +23,11 @@ function MemberList() {
   const [projects, setProjects] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { searchTerm } = useSearch();
+  const { user } = useUser();
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -55,83 +55,127 @@ function MemberList() {
   }
 
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    if (user) {
+      fetchAllData();
+    }
+  }, [user]);
 
-  const memberIds = new Set<number>(
-    projects.flatMap((project) => project.members || [])
-  );
-
-  const members = users.filter((user) => memberIds.has(user.id));
-
-  const filteredMembers = members.filter((member: any) => {
-    if (!searchTerm.trim()) return true;
-
-    const user = users.find((u: any) => u.id === member.userId);
-    if (!user) return false;
-
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-
-    return fullName.includes(searchTerm.toLowerCase());
-  });
-
-  const handleAddMember = (newMember: any) => {
-    setProjects([...members, newMember]);
+  // Get all members (owners and members) from current user's projects
+  const getUserProjects = () => {
+    if (!user) return [];
+    return projects.filter((p) => p.ownerId === user.id || p.members?.includes(user.id));
   };
 
-  const getTaskCount = (userId: number) => {
-    return tasks.filter((task: any) => {
-      if (Array.isArray(task.assignedTo)) {
-        return task.assignedTo.includes(userId);
-      }
-      return task.assignedTo === userId;
-    }).length;
+  const userProjects = getUserProjects();
+
+  const getProjectMembers = () => {
+    const memberSet = new Set<number>();
+    userProjects.forEach((project) => {
+      memberSet.add(project.ownerId);
+      project.members?.forEach((m: number) => memberSet.add(m));
+    });
+    return Array.from(memberSet)
+      .map((id) => users.find((u) => u.id === id))
+      .filter(Boolean);
   };
 
-  const handleAddTask = () => {
-    navigate("/task");
+  const projectMembers = getProjectMembers();
+
+  // const filteredMembers = projectMembers.filter((member: any) => {
+  //   if (!searchTerm.trim()) return true;
+  //   const fullName = `${member.firstName} ${member.lastName}`.toLowerCase();
+  //   return fullName.includes(searchTerm.toLowerCase());
+  // });
+
+  const handleAddMember = async (newMember: any) => {
+    await fetchAllData();
   };
 
-  const handleOpenAddMemberModal = () => {
+  // const getTaskCount = (userId: number) => {
+  //   return tasks.filter((task: any) => {
+  //     if (Array.isArray(task.assignedTo)) {
+  //       return task.assignedTo.includes(userId);
+  //     }
+  //     return task.assignedTo === userId;
+  //   }).length;
+  // };
+
+  const handleOpenAddMemberModal = (project: any) => {
+    setSelectedProject(project);
     setOpen(true);
   };
 
   const handleCloseModal = () => {
     setOpen(false);
+    setSelectedProject(null);
   };
 
   const handleViewProfile = (member: any) => {
     navigate("/member-profile", { state: { memberId: member.id } });
   }
 
+  // Get all unique members from user's projects with owner/member distinction
+  const getAllMembers = () => {
+    const membersMap = new Map<number, { user: any; isOwner: boolean }>();
+
+    userProjects.forEach((project) => {
+      const owner = users.find((u) => u.id === project.ownerId);
+      if (owner) {
+        membersMap.set(owner.id, { user: owner, isOwner: true });
+      }
+
+      project.members?.forEach((memberId: number) => {
+        const member = users.find((u) => u.id === memberId);
+        if (member && !membersMap.has(memberId)) {
+          membersMap.set(memberId, { user: member, isOwner: false });
+        }
+      });
+    });
+
+    return Array.from(membersMap.values());
+  };
+
+  const allMembers = getAllMembers();
+
+  const filteredAllMembers = allMembers.filter((memberData: any) => {
+    if (!searchTerm.trim()) return true;
+    const fullName = `${memberData.user.firstName} ${memberData.user.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase());
+  });
+
   return (
     <>
       <Box
         sx={{
+          width: "100%",
           display: "flex",
-          justifyContent: "space-between",
+          flexWrap: "wrap",
           alignItems: "center",
-          mb: 4,
+          justifyContent: "space-between",
+          mb: 3,
         }}
       >
         <Typography variant="h4" fontWeight="bold">
-          Members
+          Members work with
         </Typography>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{
-            backgroundColor: "#484c7f",
-            color: "white",
-            textTransform: "none",
-          }}
-          onClick={handleOpenAddMemberModal}
-        >
-          Add Member
-        </Button>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <Button
+            variant="contained"
+            size="medium"
+            startIcon={<AddIcon />}
+            onClick={handleOpenAddMemberModal}
+            sx={{
+              backgroundColor: "#484c7f",
+              color: "white",
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            Add Members
+          </Button>
+        </Box>
       </Box>
-
       {loading ? (
         <Box
           sx={{
@@ -143,95 +187,81 @@ function MemberList() {
         >
           <CircularProgress />
         </Box>
-      ) : filteredMembers.length === 0 ? (
-        <Typography fontStyle="italic" >No members available!</Typography>
+      ) : userProjects.length === 0 ? (
+        <Typography fontStyle="italic">You haven't joined any projects yet!</Typography>
       ) : (
-        <Grid container spacing={3}>
-          {filteredMembers.map((member: any) => {
-            const taskCount = getTaskCount(member.userId);
-
-            return (
-             <Grid key={member.id}>
-                <Card sx={{ boxShadow: 2, "&:hover": { boxShadow: 4 } }}>
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: "flex", gap: 3 }}>
-                      {/* Avatar */}
-                      <Box>
-                        <Avatar
-                          sx={{
-                            width: 90,
-                            height: 90,
-                            fontSize: 36,
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          {member.firstName[0]}
-                          {member.lastName[0]}
-                        </Avatar>
-
-                        <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                          <TotalTaskIcon />
-                          <Typography variant="body2">
-                            {taskCount} Tasks
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      {/* Info */}
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" fontWeight="bold">
-                          {member.firstName} {member.lastName}
-                        </Typography>
-
-                        <Chip
-                          label={member.role}
-                          size="small"
-                          sx={{ bgcolor: "#E1BEE7", color: "#6A1B9A", mb: 2 }}
-                        />
-
-                        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-                          <CalendarToday sx={{ fontSize: 14 }} />
-                          <Typography variant="caption">
-                            {new Date(member.joinDate).toLocaleDateString(
-                              "en-GB",
-                              { day: "2-digit", month: "short" }
-                            )}
-                          </Typography>
-                        </Box>
-
-                        <Box sx={{ display: "flex", gap: 2 }}>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            onClick={handleAddTask}
-                            sx={{ textTransform: "none" }}
-                          >
-                            Add Task
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            startIcon={<People />}
-                            sx={{ textTransform: "none" }}
-                            onClick={() => handleViewProfile(member)}
-                          >
-                            Profile
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
+        <Grid container spacing={2}>
+          {filteredAllMembers.map((memberData: any) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={memberData.user.id}>
+              <Card
+                elevation={0}
+                sx={{
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  textAlign: "center",
+                  p: 3,
+                  transition: "all 0.2s",
+                  "&:hover": { bgcolor: 'action.hover' },
+                  cursor: "pointer",
+                }}
+                onClick={() => handleViewProfile(memberData.user)}
+              >
+                <Avatar
+                  src={memberData.user.avatar}
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    fontSize: 32,
+                    bgcolor: memberData.isOwner ? "#FF9800" : "#E0E0E0",
+                    color: memberData.isOwner ? "white" : "#424242",
+                    fontWeight: 600,
+                    margin: "0 auto",
+                    mb: 2,
+                    textTransform: "uppercase"
+                  }}
+                >
+                  {memberData.user.firstName?.[0]}
+                  {memberData.user.lastName?.[0]}
+                </Avatar>
+                <Typography sx={{ fontSize: "14px", fontWeight: 600, mb: 0.5, textTransform: "capitalize" }}>
+                  {memberData.user.firstName} {memberData.user.lastName}
+                </Typography>
+                {memberData.isOwner ? (
+                  <Chip
+                    label="Leader"
+                    size="small"
+                    sx={{
+                      bgcolor: "#FFF3E0",
+                      color: "#E65100",
+                      fontSize: "11px",
+                      height: "22px",
+                    }}
+                  />
+                ) : (
+                  <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>
+                    <Chip
+                      label="member"
+                      size="small"
+                      sx={{
+                        fontSize: "11px",
+                        height: "22px",
+                      }}
+                    />
+                  </Typography>
+                )}
+              </Card>
+            </Grid>
+          ))}
         </Grid>
       )}
+
       <AddMemberModal
         open={open}
         onClose={handleCloseModal}
         onSave={handleAddMember}
-        memberList={members}
+        selectedProject={selectedProject}
+        allUsers={users}
+        allProjects={projects}
       />
     </>
   );

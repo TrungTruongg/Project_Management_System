@@ -148,8 +148,11 @@ function ResourceManagement() {
                         gap: 3,
                     }}
                 >
-                    {attachments.map((attachment) => (
-                        <Card
+                    {attachments.map((attachment) => {
+
+                        console.log('attachment:', attachment.task);
+                        return(
+                            <Card
                             key={attachment.id}
                             elevation={0}
                             sx={{
@@ -210,14 +213,13 @@ function ResourceManagement() {
 
                                         }}
                                     >
-                                        {attachment.task.title}
+                                        {attachment?.task?.title}
                                     </Box>
                                 </Typography>
                             </CardContent>
                         </Card>
-                    )
-
-                    )}
+                        )
+                    })}
                 </Box>
             )}
         </>

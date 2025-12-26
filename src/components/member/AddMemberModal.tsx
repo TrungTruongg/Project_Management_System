@@ -5,12 +5,15 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
-  MenuItem,
   Modal,
-  Select,
   TextField,
   Typography,
+  Paper,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemAvatar,
+  ListItemText,
 } from "@mui/material";
 import axios from "axios";
 
@@ -20,34 +23,61 @@ function AddMemberModal({
   open,
   onClose,
   onSave,
-  memberList = [],
-  projectId = 1,
+  selectedProject = null,
+  allUsers = [],
+  allProjects = [],
 }: any) {
-  const [selectedUserId, setSelectedUserId] = useState<number | string>("");
-  const [role, setRole] = useState("");
-  const [joinDate, setJoinDate] = useState("");
+  const [email, setEmail] = useState("");
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get(
-        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
+  const getAvailableUsers = () => {
+    return allUsers.filter((user: any) => {
+      if (selectedProject?.members?.includes(user.id)) return false;
+      if (user.id === selectedProject?.ownerId) return false;
+
+      const hasProject = allProjects.some((project: any) => 
+        project.ownerId === user.id || project.members?.includes(user.id)
       );
-      setUsers(response.data.data.data);
-    } catch (err) {
-      console.error("Error fetching users:", err);
+
+      return !hasProject; 
+    });
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+
+    if (!value.trim()) {
+      setSuggestions([]);
+      setSelectedUser(null);
+      return;
     }
+
+    const filtered = allUsers.filter(
+      (u: any) =>
+        !selectedProject?.members?.includes(u.id) &&
+        u.id !== selectedProject?.ownerId &&
+        (u.firstName.toLowerCase().includes(value.toLowerCase()) ||
+          u.lastName.toLowerCase().includes(value.toLowerCase()) ||
+          u.email.toLowerCase().includes(value.toLowerCase()))
+    );
+
+    setSuggestions(filtered.slice(0, 5));
+  };
+
+  const handleSelectUser = (user: any) => {
+    setSelectedUser(user);
+    setEmail(`${user.firstName} ${user.lastName}`);
+    setSuggestions([]);
   };
 
   useEffect(() => {
     if (open) {
-      fetchUsers();
-      // Reset form
-      setSelectedUserId("");
-      setRole("");
-      setJoinDate(new Date().toISOString().split("T")[0]); // Default today
+      setEmail("");
+      setSelectedUser(null);
+      setSuggestions([]);
       setShowError(false);
       setLoading(false);
     }
@@ -55,65 +85,60 @@ function AddMemberModal({
 
   if (!open) return null;
 
-  const getAvailableUsers = () => {
-    const memberUserIds = memberList.map((m: any) => m.userId);
-    return users.filter((user) => !memberUserIds.includes(user.id));
-  };
-
-  const availableUsers = getAvailableUsers();
-
-  const selectedUser = users.find((u) => u.id === selectedUserId);
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedUserId || !role.trim()) {
+    if (!selectedUser) {
       setShowError(true);
+      return;
+    }
+
+    if (!selectedProject?._id) {
+      alert("Not found project info. try again!");
       return;
     }
 
     setLoading(true);
 
     try {
-      const maxId =
-        memberList.length > 0
-          ? Math.max(...memberList.map((p: any) => p.id))
-          : 0;
+      const updatedProject = {
+        ...selectedProject,
+        members: [...(selectedProject.members || []), selectedUser.id],
+      };
+
+      await axios.put(
+        `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=${API_KEY}`,
+        updatedProject
+      );
 
       const newMember = {
-        id: maxId + 1,
-        projectId: projectId,
-        userId: selectedUserId,
-        role: role,
-        joinDate: joinDate,
+        projectId: selectedProject.id,
+        userId: selectedUser.id,
+        role: "Member",
+        joinDate: new Date().toISOString().split("T")[0],
         status: "active",
       };
 
-      const response = await axios.post(
-        `https://mindx-mockup-server.vercel.app/api/resources/projectMembers?apiKey=${API_KEY}`,
-        newMember
-      );
-
-      onSave(response.data.data);
+      onSave(newMember);
       onClose();
     } catch (error) {
-      console.error(error);
+      console.error("Error adding member:", error);
+      alert("Có lỗi xảy ra. Vui lòng thử lại!");
     } finally {
       setLoading(false);
     }
   };
 
+  const availableCount = getAvailableUsers().length;
   return (
     <Modal
-      aria-labelledby="spring-modal-title"
-      aria-describedby="spring-modal-description"
       open={open}
       onClose={onClose}
       closeAfterTransition
       className="flex items-center justify-center"
     >
       <Box className="relative bg-white rounded-xl w-[500px] overflow-y-auto shadow-xl mx-auto p-6">
-        <Box className="flex items-center justify-between mb-8">
+        <Box className="flex items-center justify-between mb-6">
           <Typography
             sx={{
               fontSize: "18px",
@@ -121,7 +146,7 @@ function AddMemberModal({
               fontWeight: 600,
             }}
           >
-            Add Member
+            Add members
           </Typography>
           <Button
             onClick={onClose}
@@ -143,66 +168,123 @@ function AddMemberModal({
           </Button>
         </Box>
 
+
+        {availableCount === 0 ? (
+          <Box sx={{ textAlign: "center", py: 4 }}>
+            <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
+              Không có thành viên mới nào để thêm vào project này.
+              <br />
+              Tất cả user đã tham gia project.
+            </Typography>
+            <Button
+              variant="outlined"
+              onClick={onClose}
+              sx={{ mt: 3 }}
+            >
+              Đóng
+            </Button>
+          </Box>
+        ) : (    
         <Box component="form" className="space-y-4" onSubmit={handleSave}>
-          <Box className="gap-4">
+          {/* Email or Name Input */}
+          <Box>
+            <Typography
+                sx={{
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  mb: 1,
+                  color: "#374151",
+                }}
+              >
+                Tìm kiếm thành viên <span className="text-red-500">*</span>
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "12px",
+                  color: "#6b7280",
+                  mb: 1,
+                }}
+              >
+                Có {availableCount} thành viên mới chưa tham gia project nào
+              </Typography>
             <Typography
               sx={{
                 fontSize: "14px",
                 fontWeight: 500,
-                mb: 0.5,
+                mb: 1,
                 color: "#374151",
               }}
             >
-              Select User <span className="text-red-500">*</span>
+              Email <span className="text-red-500">*</span>
             </Typography>
-            <Select
+            <TextField
               fullWidth
-              displayEmpty
               size="small"
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(Number(e.target.value))}
+              placeholder="Example: trung@acb.com"
+              value={email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              error={showError && !selectedUser}
+              helperText={showError && !selectedUser ? "Choose at least one" : ""}
               sx={{
-                fontSize: "14px",
-                color: selectedUserId === "" ? "#9ca3af" : "#111827",
+                "& .MuiOutlinedInput-root": {
+                  fontSize: "14px",
+                },
               }}
-            >
-              <MenuItem value="" disabled>
-                Choose a user to add
-              </MenuItem>
-              {availableUsers.length === 0 ? (
-                <MenuItem value="" disabled>
-                  All users have been added 
-                </MenuItem>
-              ) : (
-                availableUsers.map((user) => (
-                  <MenuItem key={user.id} value={user.id}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                      <Avatar sx={{ width: 32, height: 32, fontSize: "14px" }}>
-                        {user.avatar}
-                      </Avatar>
-                      <Box>
-                        <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
-                          {user.name}
-                        </Typography>
-                        <Typography
-                          sx={{ fontSize: "12px", color: "text.secondary" }}
-                        >
-                          {user.email}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                ))
-              )}
-            </Select>
-            {showError && !selectedUserId && (
-              <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
-                Please select a user
-              </Typography>
+            />
+
+            {/* Suggestions Dropdown */}
+            {suggestions.length > 0 && (
+              <Paper
+                sx={{
+                  mt: 1,
+                  maxHeight: 300,
+                  overflow: "auto",
+                  border: "1px solid #e5e7eb",
+                }}
+              >
+                <List sx={{ p: 0 }}>
+                  {suggestions.map((user) => (
+                    <ListItem
+                      key={user.id}
+                      disablePadding
+                      sx={{
+                        "&:hover": { bgcolor: "#f3f4f6" },
+                      }}
+                    >
+                      <ListItemButton
+                        onClick={() => handleSelectUser(user)}
+                        sx={{ py: 1 }}
+                      >
+                        <ListItemAvatar sx={{ minWidth: 40 }}>
+                          <Avatar
+                            src={user.avatar}
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: "12px",
+                              bgcolor: "#E0E0E0",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {user.firstName?.[0]}
+                            {user.lastName?.[0]}
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={`${user.firstName} ${user.lastName}`}
+                          secondary={user.email}
+                          primaryTypographyProps={{ fontSize: "14px" }}
+                          secondaryTypographyProps={{ fontSize: "12px" }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
             )}
           </Box>
 
-          {/* Preview selected user */}
+          {/* Selected User Preview */}
           {selectedUser && (
             <Box
               sx={{
@@ -212,160 +294,48 @@ function AddMemberModal({
                 border: "1px solid #e5e7eb",
               }}
             >
-              <Typography sx={{ fontSize: "12px", color: "#6b7280", mb: 1 }}>
-                Selected User:
-              </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Avatar sx={{ width: 40, height: 40, fontSize: "18px" }}>
-                  {selectedUser.avatar}
+                <Avatar
+                  src={selectedUser.avatar}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    fontSize: "16px",
+                    bgcolor: "#E0E0E0",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {selectedUser.firstName?.[0]}
+                  {selectedUser.lastName?.[0]}
                 </Avatar>
                 <Box>
-                  <Typography sx={{ fontSize: "14px", fontWeight: 600 }}>
-                    {selectedUser.name}
+                  <Typography sx={{ fontSize: "14px", fontWeight: 600, textTransform: "capitalize" }}>
+                    {selectedUser.firstName} {selectedUser.lastName}
                   </Typography>
-                  <Typography
-                    sx={{ fontSize: "12px", color: "text.secondary" }}
-                  >
+                  <Typography sx={{ fontSize: "12px", color: "text.secondary" }}>
                     {selectedUser.email}
                   </Typography>
-                  <Chip
-                    label={selectedUser.role}
-                    size="small"
-                    sx={{
-                      mt: 0.5,
-                      height: 20,
-                      fontSize: "11px",
-                      bgcolor: "#E1BEE7",
-                      color: "#6A1B9A",
-                    }}
-                  />
                 </Box>
               </Box>
             </Box>
           )}
 
-          {/* Role in Project */}
-          <Box className="gap-4">
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-            >
-              Role in Project <span className="text-red-500">*</span>
-            </Typography>
-            <Select
-              fullWidth
-              displayEmpty
-              size="small"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              sx={{
-                fontSize: "14px",
-                color: role === "" ? "#9ca3af" : "#111827",
-              }}
-            >
-              <MenuItem value="" disabled>
-                Choose role
-              </MenuItem>
-              <MenuItem value="Project Manager">Project Manager</MenuItem>
-              <MenuItem value="Frontend Developer">Frontend Developer</MenuItem>
-              <MenuItem value="Backend Developer">Backend Developer</MenuItem>
-              <MenuItem value="Fullstack Developer">Fullstack Developer</MenuItem>
-              <MenuItem value="Mobile App Developer">Mobile App Developer</MenuItem>
-              <MenuItem value="Designer">Designer</MenuItem>
-              <MenuItem value="Tester">Tester</MenuItem>
-            </Select>
-            {showError && !role.trim() && (
-              <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
-                Please select a role
-              </Typography>
-            )}
-          </Box>
-
-          <Box className="gap-4">
-            <Typography
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-                mb: 0.5,
-                color: "#374151",
-              }}
-            >
-              Join Date
-            </Typography>
-            <TextField
-              fullWidth
-              type="date"
-              size="small"
-              value={joinDate}
-              onChange={(e) => setJoinDate(e.target.value)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  fontSize: "14px",
-                },
-              }}
-            />
-          </Box>
-
-          {/* Info message */}
-          <Box
-            sx={{
-              p: 2,
-              bgcolor: "#eff6ff",
-              borderRadius: 1,
-              border: "1px solid #bfdbfe",
-            }}
-          >
-            <Typography sx={{ fontSize: "12px", color: "#1e40af" }}>
-              ℹ️ <strong>Note:</strong> Only users who have already registered can be added as members. 
-              User information (name, email, avatar) will be automatically imported from their account.
-            </Typography>
-          </Box>
-
           <Box sx={{ display: "flex", gap: 1.5 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={onClose}
-              sx={{
-                textTransform: "none",
-                color: "#374151",
-                borderColor: "#d1d5db",
-                fontSize: "14px",
-                fontWeight: 500,
-                py: 1,
-                "&:hover": {
-                  borderColor: "#9ca3af",
-                  backgroundColor: "#f9fafb",
-                },
-              }}
-            >
+            <Button fullWidth variant="outlined" onClick={onClose}>
               Cancel
             </Button>
             <Button
               fullWidth
               variant="contained"
               type="submit"
-              loading={loading}
-              loadingPosition="end"
-              sx={{
-                textTransform: "none",
-                backgroundColor: "#9333ea",
-                fontSize: "14px",
-                fontWeight: 500,
-                py: 1,
-                "&:hover": {
-                  backgroundColor: "#7e22ce",
-                },
-              }}
+              disabled={loading || !selectedUser}
+              sx={{ bgcolor: "#9333ea", "&:hover": { bgcolor: "#7e22ce" } }}
             >
-              {loading ? "Adding..." : "Add Member"}
+              {loading ? "Adding..." : "Add"}
             </Button>
           </Box>
         </Box>
+        )}
       </Box>
     </Modal>
   );
