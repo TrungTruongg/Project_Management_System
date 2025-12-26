@@ -21,9 +21,7 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 function MemberList() {
   const [users, setUsers] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { searchTerm } = useSearch();
@@ -32,27 +30,23 @@ function MemberList() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [userRes, projectRes, taskRes] = await Promise.all([
+      const [userRes, projectRes] = await Promise.all([
         axios.get(
           `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
         ),
         axios.get(
           `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
-        ),
+        )
       ]);
 
       setUsers(userRes.data.data.data);
       setProjects(projectRes.data.data.data);
-      setTasks(taskRes.data.data.data);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (user) {
@@ -60,70 +54,35 @@ function MemberList() {
     }
   }, [user]);
 
-  // Get all members (owners and members) from current user's projects
+  // Lấy các project mà user hiện tại là OWNER
+  const getOwnerProjects = () => {
+    if (!user) return [];
+    return projects.filter((p) => p.ownerId === user.id);
+  };
+
+  // Lấy các project mà user tham gia (owner hoặc member)
   const getUserProjects = () => {
     if (!user) return [];
-    return projects.filter((p) => p.ownerId === user.id || p.members?.includes(user.id));
+    return projects.filter(
+      (p) => p.ownerId === user.id || p.members?.includes(user.id)
+    );
   };
 
+  const ownerProjects = getOwnerProjects();
   const userProjects = getUserProjects();
 
-  const getProjectMembers = () => {
-    const memberSet = new Set<number>();
-    userProjects.forEach((project) => {
-      memberSet.add(project.ownerId);
-      project.members?.forEach((m: number) => memberSet.add(m));
-    });
-    return Array.from(memberSet)
-      .map((id) => users.find((u) => u.id === id))
-      .filter(Boolean);
-  };
-
-  const projectMembers = getProjectMembers();
-
-  // const filteredMembers = projectMembers.filter((member: any) => {
-  //   if (!searchTerm.trim()) return true;
-  //   const fullName = `${member.firstName} ${member.lastName}`.toLowerCase();
-  //   return fullName.includes(searchTerm.toLowerCase());
-  // });
-
-  const handleAddMember = async (newMember: any) => {
-    await fetchAllData();
-  };
-
-  // const getTaskCount = (userId: number) => {
-  //   return tasks.filter((task: any) => {
-  //     if (Array.isArray(task.assignedTo)) {
-  //       return task.assignedTo.includes(userId);
-  //     }
-  //     return task.assignedTo === userId;
-  //   }).length;
-  // };
-
-  const handleOpenAddMemberModal = (project: any) => {
-    setSelectedProject(project);
-    setOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setOpen(false);
-    setSelectedProject(null);
-  };
-
-  const handleViewProfile = (member: any) => {
-    navigate("/member-profile", { state: { memberId: member.id } });
-  }
-
-  // Get all unique members from user's projects with owner/member distinction
+  // Lấy tất cả members từ các project của user
   const getAllMembers = () => {
     const membersMap = new Map<number, { user: any; isOwner: boolean }>();
 
     userProjects.forEach((project) => {
+      // Thêm owner
       const owner = users.find((u) => u.id === project.ownerId);
       if (owner) {
         membersMap.set(owner.id, { user: owner, isOwner: true });
       }
 
+      // Thêm members
       project.members?.forEach((memberId: number) => {
         const member = users.find((u) => u.id === memberId);
         if (member && !membersMap.has(memberId)) {
@@ -137,11 +96,28 @@ function MemberList() {
 
   const allMembers = getAllMembers();
 
-  const filteredAllMembers = allMembers.filter((memberData: any) => {
+  const filteredMembers = allMembers.filter((memberData: any) => {
     if (!searchTerm.trim()) return true;
-    const fullName = `${memberData.user.firstName} ${memberData.user.lastName}`.toLowerCase();
+    const fullName =
+      `${memberData.user.firstName} ${memberData.user.lastName}`.toLowerCase();
     return fullName.includes(searchTerm.toLowerCase());
   });
+
+  const handleAddMember = async () => {
+    await fetchAllData();
+  };
+
+  const handleOpenAddMemberModal = () => {
+    setOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpen(false);
+  };
+
+  const handleViewProfile = (member: any) => {
+    navigate("/member-profile", { state: { memberId: member.id } });
+  };
 
   return (
     <>
@@ -156,7 +132,7 @@ function MemberList() {
         }}
       >
         <Typography variant="h4" fontWeight="bold">
-          Members work with
+          Members
         </Typography>
 
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -165,6 +141,7 @@ function MemberList() {
             size="medium"
             startIcon={<AddIcon />}
             onClick={handleOpenAddMemberModal}
+            disabled={ownerProjects.length === 0}
             sx={{
               backgroundColor: "#484c7f",
               color: "white",
@@ -176,6 +153,7 @@ function MemberList() {
           </Button>
         </Box>
       </Box>
+
       {loading ? (
         <Box
           sx={{
@@ -188,10 +166,12 @@ function MemberList() {
           <CircularProgress />
         </Box>
       ) : userProjects.length === 0 ? (
-        <Typography fontStyle="italic">You haven't joined any projects yet!</Typography>
+        <Typography fontStyle="italic">
+          You are not part of any projects yet.
+        </Typography>
       ) : (
         <Grid container spacing={2}>
-          {filteredAllMembers.map((memberData: any) => (
+          {filteredMembers.map((memberData: any) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={memberData.user.id}>
               <Card
                 elevation={0}
@@ -201,7 +181,7 @@ function MemberList() {
                   textAlign: "center",
                   p: 3,
                   transition: "all 0.2s",
-                  "&:hover": { bgcolor: 'action.hover' },
+                  "&:hover": { bgcolor: "action.hover" },
                   cursor: "pointer",
                 }}
                 onClick={() => handleViewProfile(memberData.user)}
@@ -217,13 +197,20 @@ function MemberList() {
                     fontWeight: 600,
                     margin: "0 auto",
                     mb: 2,
-                    textTransform: "uppercase"
+                    textTransform: "uppercase",
                   }}
                 >
                   {memberData.user.firstName?.[0]}
                   {memberData.user.lastName?.[0]}
                 </Avatar>
-                <Typography sx={{ fontSize: "14px", fontWeight: 600, mb: 0.5, textTransform: "capitalize" }}>
+                <Typography
+                  sx={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                    textTransform: "capitalize",
+                  }}
+                >
                   {memberData.user.firstName} {memberData.user.lastName}
                 </Typography>
                 {memberData.isOwner ? (
@@ -238,16 +225,14 @@ function MemberList() {
                     }}
                   />
                 ) : (
-                  <Typography sx={{ fontSize: "12px", color: "#6b7280" }}>
-                    <Chip
-                      label="member"
-                      size="small"
-                      sx={{
-                        fontSize: "11px",
-                        height: "22px",
-                      }}
-                    />
-                  </Typography>
+                  <Chip
+                    label="Member"
+                    size="small"
+                    sx={{
+                      fontSize: "11px",
+                      height: "22px",
+                    }}
+                  />
                 )}
               </Card>
             </Grid>
@@ -259,7 +244,7 @@ function MemberList() {
         open={open}
         onClose={handleCloseModal}
         onSave={handleAddMember}
-        selectedProject={selectedProject}
+        ownerProjects={ownerProjects}
         allUsers={users}
         allProjects={projects}
       />

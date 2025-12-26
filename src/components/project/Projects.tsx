@@ -290,6 +290,7 @@ function Projects() {
                     <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
                       {projectOwner && (
                         <Avatar
+                          src={projectOwner.avatar}
                           key={`leader-${projectOwner.id}`}
                           sx={{
                             width: 32,

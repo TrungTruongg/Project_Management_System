@@ -10,13 +10,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import {
   Person as PersonIcon,
-  Label as PriorityIcon,
   Loop as StatusIcon,
-  CheckCircle as CheckCompleteIcon
+  CheckCircle as CheckCompleteIcon,
+  ArrowBack,
 } from "@mui/icons-material";
 import { useUser } from "../context/UserContext";
 
@@ -26,6 +26,7 @@ function SupportsDetail() {
   const [searchParams] = useSearchParams();
   const ticketId = searchParams.get("id");
   const { user } = useUser();
+  const navigate = useNavigate();
 
   const [ticket, setTicket] = useState<any>(null);
   const [assignedUser, setAssignedUser] = useState<any>(null);
@@ -54,18 +55,20 @@ function SupportsDetail() {
       const users = usersRes.data.data.data;
       const projects = projectsRes.data.data.data;
 
-      const foundTicket = tickets.find(
-        (t: any) => t.id === parseInt(ticketId)
-      );
+      const foundTicket = tickets.find((t: any) => t.id === parseInt(ticketId));
 
       if (foundTicket) {
         setTicket(foundTicket);
 
-        // Find user by assignedBy 
-        const ticketUser = users.find((u: any) => u.id === foundTicket.assignedBy);
+        // Find user by assignedBy
+        const ticketUser = users.find(
+          (u: any) => u.id === foundTicket.assignedBy
+        );
         setAssignedUser(ticketUser);
 
-        const foundProject = projects.find((p: any) => p.id === foundTicket.projectId);
+        const foundProject = projects.find(
+          (p: any) => p.id === foundTicket.projectId
+        );
         setProject(foundProject);
 
         if (foundProject && user) {
@@ -157,7 +160,7 @@ function SupportsDetail() {
   };
 
   return (
-    <Box>
+    <>
       <Box
         sx={{
           width: "100%",
@@ -168,9 +171,15 @@ function SupportsDetail() {
           mb: 3,
         }}
       >
-        <Typography variant="h4" fontWeight="700">
-          Support Tickets Detail
-        </Typography>
+        <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
+          <IconButton onClick={() => navigate("/supports-view")}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h4" fontWeight="700">
+            Support Tickets Detail
+          </Typography>
+        </Box>
+
         {isProjectOwner && ticket?.status !== "completed" && (
           // <IconButton
           //   size="small"
@@ -211,7 +220,9 @@ function SupportsDetail() {
           <CircularProgress />
         </Box>
       ) : !ticket ? (
-        <Typography fontStyle="italic" >No support tickets available!</Typography>
+        <Typography fontStyle="italic">
+          No support tickets available!
+        </Typography>
       ) : (
         <>
           <Box
@@ -253,7 +264,14 @@ function SupportsDetail() {
                     >
                       Status
                     </Typography>
-                    <Box sx={{ mt: 0.5, display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                      sx={{
+                        mt: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
                       {getStatusChip(ticket?.status)}
                     </Box>
                   </Box>
@@ -292,7 +310,14 @@ function SupportsDetail() {
                     >
                       User Assigned
                     </Typography>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mt: 0.5,
+                      }}
+                    >
                       <Avatar
                         src={assignedUser?.avatar}
                         sx={{
@@ -330,7 +355,6 @@ function SupportsDetail() {
             }}
           >
             <CardContent sx={{ p: 4 }}>
-
               <Box
                 sx={{
                   display: "flex",
@@ -367,10 +391,7 @@ function SupportsDetail() {
               </Box>
 
               {/* Title */}
-              <Typography
-                variant="h5"
-                fontWeight="700"
-              >
+              <Typography variant="h5" fontWeight="700">
                 {ticket.title}
               </Typography>
 
@@ -412,7 +433,7 @@ function SupportsDetail() {
           </Card>
         </>
       )}
-    </Box>
+    </>
   );
 }
 

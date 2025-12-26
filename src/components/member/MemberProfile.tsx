@@ -6,7 +6,7 @@ import {
   Edit,
   AccessTime,
   Delete,
-  ArrowBack
+  ArrowBack,
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -58,18 +58,17 @@ function MemberProfile() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [usersRes, projectsRes, tasksRes] =
-        await Promise.all([
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-          ),
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-          ),
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
-          )
-        ]);
+      const [usersRes, projectsRes, tasksRes] = await Promise.all([
+        axios.get(
+          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
+        ),
+        axios.get(
+          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
+        ),
+        axios.get(
+          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
+        ),
+      ]);
 
       // Process users
       const usersList = usersRes.data.data.data;
@@ -155,8 +154,7 @@ function MemberProfile() {
 
   const isOwner = projects.some(
     (project) =>
-      project.ownerId === user?.id &&
-      project.members.includes(memberId)
+      project.ownerId === user?.id && project.members.includes(memberId)
   );
 
   if (!profileUser && !loading) {
@@ -193,7 +191,9 @@ function MemberProfile() {
               sx={{
                 mb: 3,
                 border: (theme) =>
-                  `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
+                  `1px solid ${
+                    theme.palette.mode === "light" ? "#f0f0f0" : "#2a2a2a"
+                  }`,
                 borderRadius: 2,
                 transition: "all 0.3s",
               }}
@@ -210,7 +210,8 @@ function MemberProfile() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {profileUser?.firstName?.[0]}{profileUser?.lastName?.[0]}
+                    {profileUser?.firstName?.[0]}
+                    {profileUser?.lastName?.[0]}
                   </Avatar>
 
                   <Box sx={{ flex: 1 }}>
@@ -247,7 +248,6 @@ function MemberProfile() {
                           </IconButton>
                         </Box>
                       )}
-
                     </Box>
 
                     <Chip
@@ -261,7 +261,9 @@ function MemberProfile() {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <Phone sx={{ fontSize: 18, color: "text.secondary" }} />
+                          <Phone
+                            sx={{ fontSize: 18, color: "text.secondary" }}
+                          />
                           {profileUser?.phone ? (
                             <Typography variant="body2">
                               +84 {profileUser?.phone}
@@ -283,9 +285,13 @@ function MemberProfile() {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <Email sx={{ fontSize: 18, color: "text.secondary" }} />
+                          <Email
+                            sx={{ fontSize: 18, color: "text.secondary" }}
+                          />
                           {profileUser?.email ? (
-                            <Typography variant="body2">{profileUser?.email}</Typography>
+                            <Typography variant="body2">
+                              {profileUser?.email}
+                            </Typography>
                           ) : (
                             <Typography
                               variant="body2"
@@ -308,13 +314,12 @@ function MemberProfile() {
                           />
                           {profileUser?.joinDate ? (
                             <Typography variant="body2">
-                              {new Date(profileUser.joinDate).toLocaleDateString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                }
-                              )}
+                              {new Date(
+                                profileUser.joinDate
+                              ).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                              })}
                             </Typography>
                           ) : (
                             <Typography
@@ -368,12 +373,20 @@ function MemberProfile() {
                 </Typography>
                 {filteredProjects.length > 0 ? (
                   filteredProjects.map((project) => {
-                    const projectMembers = allUsers.filter((u: any) => project.members.includes(u?.id));
-                    const projectOwner = allUsers.find((u: any) => u.id === project.ownerId);
-                    const isOwner = project.ownerId === user?.id;
+                    const projectMembers = allUsers.filter((u: any) =>
+                      project.members.includes(u?.id)
+                    );
+                    const projectOwner = allUsers.find(
+                      (u: any) => u.id === project.ownerId
+                    );
+                    // const isOwner = project.ownerId === user?.id;
 
                     return (
-                      <Card key={project.id} sx={{ mb: 3 }}>
+                      <Card
+                        key={project.id}
+                        sx={{ mb: 3 }}
+                        onClick={() => navigate("/project")}
+                      >
                         <CardContent>
                           <Box
                             sx={{
@@ -390,32 +403,35 @@ function MemberProfile() {
                               {project.title}
                             </Typography>
 
-                            {isOwner && (
+                            {/* {isOwner && (
                               <Box sx={{ display: "flex", gap: 1 }}>
                                 <IconButton
                                   size="small"
                                   sx={{ color: "#4CAF50" }}
-                                //onClick={() => handleEditProject(project)}
+                                  //onClick={() => handleEditProject(project)}
                                 >
                                   <Edit fontSize="small" />
                                 </IconButton>
                                 <IconButton
                                   size="small"
                                   sx={{ color: "#EF5350" }}
-                                //onClick={() => handleOpenDeleteDialog(project)}
+                                  //onClick={() => handleOpenDeleteDialog(project)}
                                 >
                                   <Delete fontSize="small" />
                                 </IconButton>
                               </Box>
-                            )}
-
+                            )} */}
                           </Box>
 
                           <Box sx={{ mb: 2 }}>
-                            <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+                            <AvatarGroup
+                              max={5}
+                              sx={{ justifyContent: "flex-end" }}
+                            >
                               {projectOwner && (
                                 <Avatar
                                   key={`leader-${projectOwner.id}`}
+                                  src={projectOwner.avatar}
                                   sx={{
                                     width: 32,
                                     height: 32,
@@ -433,7 +449,7 @@ function MemberProfile() {
                                 </Avatar>
                               )}
 
-                              {projectMembers.length > 0 && (
+                              {projectMembers.length > 0 &&
                                 projectMembers.map((member: any) => (
                                   <Avatar
                                     key={member.id}
@@ -452,8 +468,7 @@ function MemberProfile() {
                                     {member.firstName?.[0]}
                                     {member.lastName?.[0]}
                                   </Avatar>
-                                ))
-                              )}
+                                ))}
                             </AvatarGroup>
                           </Box>
 
@@ -600,7 +615,7 @@ function MemberProfile() {
                           </Box>
                         </CardContent>
                       </Card>
-                    )
+                    );
                   })
                 ) : (
                   <Card
@@ -631,14 +646,18 @@ function MemberProfile() {
 
                 {tasks.length > 0 ? (
                   tasks.map((task) => {
-
                     return (
                       <Card
                         key={task.id}
+                        onClick={() => navigate("/task")}
                         sx={{
                           mb: 2,
                           border: (theme) =>
-                            `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
+                            `1px solid ${
+                              theme.palette.mode === "light"
+                                ? "#f0f0f0"
+                                : "#2a2a2a"
+                            }`,
                           borderRadius: 2,
                           transition: "all 0.3s",
                           "&:hover": {
@@ -667,14 +686,20 @@ function MemberProfile() {
                               }}
                             />
 
-                            <Box sx={{ display: "flex", gap: 1 }}>
-                              <IconButton size="small" sx={{ color: "#4CAF50" }}>
+                            {/* <Box sx={{ display: "flex", gap: 1 }}>
+                              <IconButton
+                                size="small"
+                                sx={{ color: "#4CAF50" }}
+                              >
                                 <Edit fontSize="small" />
                               </IconButton>
-                              <IconButton size="small" sx={{ color: "#EF5350" }}>
+                              <IconButton
+                                size="small"
+                                sx={{ color: "#EF5350" }}
+                              >
                                 <Delete fontSize="small" />
                               </IconButton>
-                            </Box>
+                            </Box> */}
                           </Box>
 
                           <Box sx={{ mb: 2 }}>
@@ -691,6 +716,7 @@ function MemberProfile() {
                                   bgcolor: "#E0E0E0",
                                   color: "#484c7f",
                                   fontWeight: 600,
+                                  textTransform: "uppercase"
                                 }}
                               >
                                 {profileUser?.firstName?.[0]}
@@ -712,7 +738,11 @@ function MemberProfile() {
                           )}
 
                           <Typography variant="caption" color="text.secondary">
-                            {new Date(task.startDate).toLocaleDateString("en-GB")} - {new Date(task.endDate).toLocaleDateString("en-GB")}
+                            {new Date(task.startDate).toLocaleDateString(
+                              "en-GB"
+                            )}{" "}
+                            -{" "}
+                            {new Date(task.endDate).toLocaleDateString("en-GB")}
                           </Typography>
                         </CardContent>
                       </Card>
