@@ -1,18 +1,16 @@
 import {
   Avatar,
-  AvatarGroup,
   Badge,
   Box,
   Button,
   IconButton,
   Menu,
   MenuItem,
-  Skeleton,
   Tooltip,
   Typography,
 } from "@mui/material";
 import SearchInput from "./SearchInput";
-import { Info, Notifications, Settings as SettingsIcon } from "@mui/icons-material";
+import { Notifications, Settings as SettingsIcon } from "@mui/icons-material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import { useUser } from "./context/UserContext";
@@ -26,25 +24,11 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 function Header() {
   const [open, setOpen] = useState(false);
   const { setUser, user } = useUser();
-  const [users, setUsers] = useState<any[]>([]);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [hasNotification, setHasNotification] = useState(false);
 
-  const fetchUser = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-      );
-      setUsers(response.data.data.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const checkHasNotification = async () => {
     if (!user || user.role !== "member") {
@@ -75,20 +59,11 @@ function Header() {
   };
 
   useEffect(() => {
-    fetchUser();
     checkHasNotification();
   }, []);
 
   useEffect(() => {
     if (!user) return;
-
-    setUsers((prevUsers) =>
-      prevUsers.map((u) =>
-        u.id === user.id
-          ? { ...u, avatar: user.avatar }
-          : u
-      )
-    );
   }, [user]);
 
   const handleLogout = async () => {
