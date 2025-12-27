@@ -11,14 +11,16 @@ import DashboardProjectInformation from "./DashboardProjectInformation"
 import { useEffect, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../context/UserContext";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 function DashboardContent() {
-  const [tasks, setTasks] = useState([]);
-  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useUser();
 
   const totalTask = tasks.length;
   const totalToDoTasks = tasks.filter((task: any) => task.status === "to-do").length;
@@ -54,6 +56,15 @@ function DashboardContent() {
     fetchAllDatas();
   }, []);
 
+  const getUserProjects = () => {
+        if (!user) return [];
+        return projects.filter(
+            (p) => p.ownerId === user.id || p.members?.includes(user.id)
+        );
+    };
+
+    const userProjects = getUserProjects();
+
   if (loading) {
     return (
       <Box
@@ -75,6 +86,7 @@ function DashboardContent() {
   const handleViewTasks = () => {
     navigate("/task");
   }
+  
 
   return (
     <>
@@ -130,7 +142,7 @@ function DashboardContent() {
                   Total Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {totalTask}
+                  {userProjects.length === 0 ? 0 : totalTask}
                 </Typography>
               </Box>
             </CardContent>
@@ -188,7 +200,7 @@ function DashboardContent() {
                   Total To Do Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {totalToDoTasks}
+                  {userProjects.length === 0 ? 0 : totalToDoTasks}
                 </Typography>
               </Box>
             </CardContent>
@@ -246,7 +258,7 @@ function DashboardContent() {
                   Total Completed Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {totalCompletedTasks}
+                  {userProjects.length === 0 ? 0 : totalCompletedTasks}
                 </Typography>
               </Box>
             </CardContent>
@@ -304,7 +316,7 @@ function DashboardContent() {
                   Total Progress Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {totalProgressTasks}
+                  {userProjects.length === 0 ? 0 : totalProgressTasks}
                 </Typography>
               </Box>
             </CardContent>
@@ -432,7 +444,7 @@ function DashboardContent() {
                   Total Projects
                 </Typography>
                 <Typography sx={{ marginBottom: 0 }}>
-                  {totalProjects}
+                  {userProjects.length === 0 ? 0 : totalProjects}
                 </Typography>
               </Box>
               <IconButton
@@ -503,7 +515,7 @@ function DashboardContent() {
                   Total Completed Projects
                 </Typography>
                 <Typography sx={{ marginBottom: 0 }}>
-                  {totalCompletedProjects}
+                  {userProjects.length === 0 ? 0 : totalCompletedProjects}
                 </Typography>
               </Box>
               <IconButton
@@ -575,7 +587,7 @@ function DashboardContent() {
                   Total Progress Projects
                 </Typography>
                 <Typography sx={{ marginBottom: 0 }}>
-                  {totalProgressProjects}
+                  {userProjects.length === 0 ? 0 : totalProgressProjects}
                 </Typography>
               </Box>
               <IconButton

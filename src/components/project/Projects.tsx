@@ -19,7 +19,7 @@ import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
 import { useSearch } from "../context/SearchContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -34,8 +34,15 @@ function Projects() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { searchTerm } = useSearch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { user } = useUser();
+
+  useEffect(() => {
+    if (location.state?.openCreateProjectModal) {
+      setOpen(true);
+    }
+  }, [location.state?.openCreateProjectModal]);
 
   const calculateDeadline = (dateStart: string, dateEnd: string) => {
     const startDate = new Date(dateStart);
@@ -78,15 +85,6 @@ function Projects() {
 
       let filteredProjects = allProjects;
 
-      // if (user) {
-      //   if (user.role === "member") {
-      //     filteredProjects = allProjects.filter(
-      //       (project: any) =>
-      //         project.member?.includes(user.id) || project.leaderId === user.id
-      //     );
-      //   }
-      // }
-
       setProjectList(filteredProjects);
       setUsers(responseUser.data.data.data);
       setTasks(responseTask.data.data.data);
@@ -111,6 +109,15 @@ function Projects() {
       fetchAllData();
     }
   }, [user]);
+
+  const getUserProjects = () => {
+    if (!user) return [];
+    return projectList.filter(
+      (p) => p.ownerId === user.id || p.members?.includes(user.id)
+    );
+  };
+
+  const userProjects = getUserProjects();
 
   const handleOpenModal = () => {
     setSelectedProject(null);
@@ -218,6 +225,10 @@ function Projects() {
         >
           <CircularProgress />
         </Box>
+      ) : userProjects.length === 0 ? (
+        <Typography fontStyle="italic">
+          You are not part of any projects yet. Start create your first project!
+        </Typography>
       ) : filteredProjects.length === 0 ? (
         <Typography fontStyle="italic" >No project available!</Typography>
       ) : (
@@ -229,7 +240,7 @@ function Projects() {
           }}
         >
           {filteredProjects.map((project: any) => {
-            const projectMembers = users.filter((user) => project.members.includes(user.id));          
+            const projectMembers = users.filter((user) => project.members.includes(user.id));
             const completion = calculateProjectCompletion(project.id);
             const projectOwner = users.find((user) => user.id === project.ownerId);
             const isOwner = project.ownerId === user?.id;

@@ -111,10 +111,18 @@ function Tasks() {
     ? projects.find(p => p.id === parseInt(projectId))
     : null;
 
-
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  const getUserProjects = () => {
+    if (!user) return [];
+    return projects.filter(
+      (p) => p.ownerId === user.id || p.members?.includes(user.id)
+    );
+  };
+
+  const userProjects = getUserProjects();
 
   const tasksByStatus = () => {
     return {
@@ -173,11 +181,11 @@ function Tasks() {
       const allTasks = tasksRes.data.data.data;
       const allProjects = projectsRes.data.data.data;
 
-      // Tìm project cần update
+      // Find project to update
       const projectToUpdate = allProjects.find((p: any) => p.id === projectId);
       if (!projectToUpdate) return;
 
-      // Tính completion mới
+      // Count new completion
       const projectTasks = allTasks.filter((t: any) => t.projectId === projectId);
       const completedTasks = projectTasks.filter(
         (t: any) => t.status === "completed"
@@ -188,7 +196,7 @@ function Tasks() {
           ? Math.round((completedTasks.length / projectTasks.length) * 100)
           : 0;
 
-      // Update project với completion mới
+      // Update project with new completion
       const updatedProject = {
         ...projectToUpdate,
         completion: newCompletion,
@@ -211,13 +219,13 @@ function Tasks() {
   const handleSaveTask = async (newTask: any) => {
     setTaskList([...taskList, newTask]);
 
-    // Update completion của project
+    // Update completion of project
     if (newTask.projectId) {
       await updateProjectCompletion(newTask.projectId);
     }
   };
 
-  // Khi update task (bao gồm thay đổi status)
+  // Update Task
   const handleUpdateTask = async (updatedTask: any) => {
     const oldTask = taskList.find(t => t.id === updatedTask.id);
 
@@ -232,12 +240,12 @@ function Tasks() {
       )
     );
 
-    // Update completion nếu status thay đổi HOẶC projectId thay đổi
+    // Update completion if status or projectId changed
     if (taskToUpdate.projectId) {
       await updateProjectCompletion(taskToUpdate.projectId);
     }
 
-    // Nếu task được chuyển sang project khác, cập nhật cả project cũ
+    // if task changed project, update old project's completion too
     if (oldTask?.projectId && oldTask.projectId !== taskToUpdate.projectId) {
       await updateProjectCompletion(oldTask.projectId);
     }
@@ -256,7 +264,7 @@ function Tasks() {
         `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`
       );
 
-      // XÓA TẤT CẢ ATTACHMENTS CỦA TASK NÀY
+      // Delete attachments related to the task
       const attachmentsRes = await axios.get(
         `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
       );
@@ -274,7 +282,7 @@ function Tasks() {
 
       setTaskList(taskList.filter((task: any) => task.id !== selectedTask.id));
 
-      // Update completion của project
+      // Update completion from project
       if (projectId) {
         await updateProjectCompletion(projectId);
       }
@@ -300,6 +308,10 @@ function Tasks() {
   const handleViewTask = (taskId: any) => {
     navigate(`/task-detail?id=${taskId}`)
   }
+
+  const handleOpenProjectModal = () => {
+    navigate("/project", { state: { openCreateProjectModal: true } });
+  };
 
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
@@ -412,7 +424,7 @@ function Tasks() {
             <AvatarGroup max={5}>
               {project?.ownerId && (
                 <Avatar
-                  key={`owner-${project.ownerId}`}
+                  key={`leader-${project.ownerId}`}
                   src={users.find((u) => u.id === project.ownerId)?.avatar}
                   sx={{
                     width: 24,
@@ -659,6 +671,15 @@ function Tasks() {
           >
             <CircularProgress />
           </Box>
+        ) : userProjects.length === 0 ? (
+          <Typography fontStyle="italic">
+            You are not part of any projects to create task.
+            Start {""}
+            <Typography fontStyle="normal" component="a"
+              sx={{ color: "#0052cc", textDecoration: "underline", cursor: "pointer" }}
+              onClick={handleOpenProjectModal}>create new project
+            </Typography>
+          </Typography>
         ) : taskList.length === 0 ? (
           <Typography fontStyle="italic">No tasks available!</Typography>
         ) : (

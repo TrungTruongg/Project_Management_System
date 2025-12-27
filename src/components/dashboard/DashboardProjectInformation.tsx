@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useUser } from "../context/UserContext";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -21,6 +22,7 @@ function DashboardProjectInformation() {
   const [users, setUsers] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useUser();
 
   const calculateDeadline = (dateStart: string, dateEnd: string) => {
     const startDate = new Date(dateStart);
@@ -56,6 +58,15 @@ function DashboardProjectInformation() {
   useEffect(() => {
     fetchAllDatas();
   }, []);
+
+  const getUserProjects = () => {
+    if (!user) return [];
+    return projects.filter(
+      (p) => p.ownerId === user.id || p.members?.includes(user.id)
+    );
+  };
+
+  const userProjects = getUserProjects();
 
   if (loading) {
     return (
@@ -151,176 +162,178 @@ function DashboardProjectInformation() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {projects.map((project: any, index) => {
-              const leader = users.find(user => user.id === project.ownerId);
-              const projectMembers = users.filter((user) => project.members.includes(user.id));      
-              const calculateDays = calculateDeadline(project.startDate, project.endDate);
+            {userProjects.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} sx={{ textAlign: "center", py: 4 }}>
+                  <Typography fontStyle="italic" color="text.secondary">
+                    No projects available!
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              projects.map((project: any, index) => {
+                const leader = users.find(user => user.id === project.ownerId);
+                const projectMembers = users.filter((user) => project.members.includes(user.id));
+                const calculateDays = calculateDeadline(project.startDate, project.endDate);
 
-              return (
-                <TableRow
-                  key={index}
-                  sx={{
-                    "&:hover": { bgcolor: 'action.hover' },
-                    "& td": {
-                      borderBottom: (theme) =>
-                        `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
-                    },
-                  }}
-                >
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="500">
-                      {project.title}
-                    </Typography>
-                    {project.description && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: "block", mt: 0.5 }}
-                      >
-                        {project.description}
+                return (
+                  <TableRow
+                    key={index}
+                    sx={{
+                      "&:hover": { bgcolor: 'action.hover' },
+                      "& td": {
+                        borderBottom: (theme) =>
+                          `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+                      },
+                    }}
+                  >
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="500">
+                        {project.title}
                       </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {project.startDate}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {calculateDays >= 1 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        {calculateDeadline(
-                          project.startDate,
-                          project.endDate
-                        )}{" "}
-                        Days
-                      </Typography>
-                    ) : (
-                      <Typography variant="body2" color="red">
-                        Expired
-                      </Typography>
-                    )}
-
-                  </TableCell>
-                  <TableCell>
-                    {leader ? (
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Avatar
-                          sx={{
-                            width: 32,
-                            height: 32,
-                            fontSize: "14px",
-                            bgcolor: "#E0E0E0",
-                            textTransform: "uppercase"
-                          }}
+                      {project.description && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block", mt: 0.5 }}
                         >
-                          {leader.firstName?.[0]}{leader.lastName?.[0]}
-                        </Avatar>
-                        <Typography variant="body2" sx={{ textTransform: "capitalize" }}>
-                          {leader.firstName} {leader.lastName}
+                          {project.description}
                         </Typography>
-                      </Box>
-                    ) : (
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        No leader
+                        {project.startDate}
                       </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {projectMembers.length > 0 ? (
-                      <AvatarGroup max={4}>
-                        {projectMembers.map((member: any) => {
+                    </TableCell>
+                    <TableCell>
+                      {calculateDays >= 1 ? (
+                        <Typography variant="body2" color="text.secondary">
+                          {calculateDeadline(
+                            project.startDate,
+                            project.endDate
+                          )}{" "}
+                          Days
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="red">
+                          Expired
+                        </Typography>
+                      )}
 
-                          return (
-                            <Avatar
-                              key={member.id}
-                              src={member.avatar}
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                fontSize: "14px",
-                                bgcolor: "#E0E0E0",
-                                textTransform: "uppercase"
-                              }}
-                              title={member ? `${member.firstName} ${member.lastName}` : "Unknown"}
-                            >
-                              {member?.firstName?.[0]}{member?.lastName?.[0]}
-                            </Avatar>
-                          );
-                        })}
-                      </AvatarGroup>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        No members
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        minWidth: 150,
-                      }}
-                    >
-                      <Box sx={{ flex: 1 }}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={project.completion}
-                          sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            bgcolor: "#E0E0E0",
-                            "& .MuiLinearProgress-bar": {
-                              bgcolor:
-                                project.completion >= 75
-                                  ? "#4CAF50"
-                                  : project.completion >= 50
-                                    ? "#5C6BC0"
-                                    : project.completion >= 25
-                                      ? "#FF9800"
-                                      : "#EF5350",
-                              borderRadius: 4,
-                            },
-                          }}
-                        />
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        fontWeight="600"
+                    </TableCell>
+                    <TableCell>
+                      {leader ? (
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: "14px",
+                              bgcolor: "#E0E0E0",
+                              textTransform: "uppercase"
+                            }}
+                          >
+                            {leader.firstName?.[0]}{leader.lastName?.[0]}
+                          </Avatar>
+                          <Typography variant="body2" sx={{ textTransform: "capitalize" }}>
+                            {leader.firstName} {leader.lastName}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          No leader
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {projectMembers.length > 0 ? (
+                        <AvatarGroup max={4}>
+                          {projectMembers.map((member: any) => {
+
+                            return (
+                              <Avatar
+                                key={member.id}
+                                src={member.avatar}
+                                sx={{
+                                  width: 32,
+                                  height: 32,
+                                  fontSize: "14px",
+                                  bgcolor: "#E0E0E0",
+                                  textTransform: "uppercase"
+                                }}
+                                title={member ? `${member.firstName} ${member.lastName}` : "Unknown"}
+                              >
+                                {member?.firstName?.[0]}{member?.lastName?.[0]}
+                              </Avatar>
+                            );
+                          })}
+                        </AvatarGroup>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          No members
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Box
                         sx={{
-                          minWidth: 35,
-                          color:
-                            project.completion >= 75
-                              ? "#4CAF50"
-                              : project.completion >= 50
-                                ? "#5C6BC0"
-                                : project.completion >= 25
-                                  ? "#FF9800"
-                                  : "#EF5350",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          minWidth: 150,
                         }}
                       >
-                        {project.completion}%
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                        <Box sx={{ flex: 1 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={project.completion}
+                            sx={{
+                              height: 8,
+                              borderRadius: 4,
+                              bgcolor: "#E0E0E0",
+                              "& .MuiLinearProgress-bar": {
+                                bgcolor:
+                                  project.completion >= 75
+                                    ? "#4CAF50"
+                                    : project.completion >= 50
+                                      ? "#5C6BC0"
+                                      : project.completion >= 25
+                                        ? "#FF9800"
+                                        : "#EF5350",
+                                borderRadius: 4,
+                              },
+                            }}
+                          />
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight="600"
+                          sx={{
+                            minWidth: 35,
+                            color:
+                              project.completion >= 75
+                                ? "#4CAF50"
+                                : project.completion >= 50
+                                  ? "#5C6BC0"
+                                  : project.completion >= 25
+                                    ? "#FF9800"
+                                    : "#EF5350",
+                          }}
+                        >
+                          {project.completion}%
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-
-      {projects.length === 0 && !loading && (
-        <Box sx={{ textAlign: "center", py: 4 }}>
-          <Typography fontStyle="italic" color="text.secondary">
-            No projects available!
-          </Typography>
-        </Box>
-      )}
     </Box>
 
   );

@@ -54,13 +54,13 @@ function MemberList() {
     }
   }, [user]);
 
-  // Lấy các project mà user hiện tại là OWNER
+  // Get projects where the user is the owner
   const getOwnerProjects = () => {
     if (!user) return [];
     return projects.filter((p) => p.ownerId === user.id);
   };
 
-  // Lấy các project mà user tham gia (owner hoặc member)
+  // Get projects where the user is a member or owner
   const getUserProjects = () => {
     if (!user) return [];
     return projects.filter(
@@ -71,12 +71,12 @@ function MemberList() {
   const ownerProjects = getOwnerProjects();
   const userProjects = getUserProjects();
 
-  // Lấy tất cả members từ các project của user
+  // Get all unique members from userProjects
   const getAllMembers = () => {
     const membersMap = new Map<number, { user: any; isOwner: boolean }>();
 
     userProjects.forEach((project) => {
-      // Thêm owner
+      // Add owner
       const owner = users.find((u) => u.id === project.ownerId);
       if (owner) {
         membersMap.set(owner.id, { user: owner, isOwner: true });

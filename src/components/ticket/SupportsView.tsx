@@ -52,6 +52,15 @@ function SupportsView() {
         fetchAllData();
     }, [])
 
+    const getUserProjects = () => {
+        if (!user) return [];
+        return projects.filter(
+            (p) => p.ownerId === user.id || p.members?.includes(user.id)
+        );
+    };
+
+    const userProjects = getUserProjects();
+
     const handleOpenModal = () => {
         setSelectedTicket(null);
         setOpen(true);
@@ -225,6 +234,10 @@ function SupportsView() {
                 >
                     <CircularProgress />
                 </Box>
+            ) : userProjects.length === 0 ? (
+                <Typography fontStyle="italic">
+                    You need in project to create support ticket.
+                </Typography>
             ) : supTickets.length === 0 ? (
                 <Typography fontStyle="italic" >No support tickets available!</Typography>
             ) : (
