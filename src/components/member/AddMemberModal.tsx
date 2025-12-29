@@ -78,7 +78,7 @@ function AddMemberModal({
     e.preventDefault();
 
     if (!selectedProjectId) {
-      alert("Vui lòng chọn project!");
+      alert("Please select project!");
       return;
     }
 
@@ -90,15 +90,15 @@ function AddMemberModal({
     setLoading(true);
 
     try {
-      // Tìm project đã chọn
+      // Find selected project
       const selectedProject = ownerProjects.find((p: any) => p.id === selectedProjectId);
       
       if (!selectedProject?._id) {
-        alert("Không tìm thấy project!");
+        alert("Project not found!");
         return;
       }
 
-      // Cập nhật project: thêm user vào mảng members
+      // Update projects, add users to array members
       const updatedProject = {
         ...selectedProject,
         members: [...(selectedProject.members || []), selectedUser.id],
@@ -112,8 +112,8 @@ function AddMemberModal({
       onSave();
       onClose();
     } catch (error) {
-      console.error("Lỗi khi thêm member:", error);
-      alert("Có lỗi xảy ra. Vui lòng thử lại!");
+      console.error("Error when adding members:", error);
+      alert("Error occurs. Please try again!");
     } finally {
       setLoading(false);
     }
@@ -187,7 +187,7 @@ function AddMemberModal({
           </Box>
         ) : (
           <Box component="form" className="space-y-4" onSubmit={handleSave}>
-            {/* Chọn Project */}
+            {/* Choose Project */}
             {ownerProjects.length > 1 && (
               <Box>
                 <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
@@ -217,11 +217,11 @@ function AddMemberModal({
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Nhập tên hoặc email..."
+                placeholder="Input email..."
                 value={emailOrName}
                 onChange={(e) => handleEmailOrNameChange(e.target.value)}
                 error={showError && !selectedUser}
-                helperText={showError && !selectedUser ? "Vui lòng chọn thành viên" : ""}
+                helperText={showError && !selectedUser ? "Please choose members" : ""}
               />
 
               {/* Suggestions */}
@@ -248,8 +248,14 @@ function AddMemberModal({
                           <ListItemText
                             primary={`${user.firstName} ${user.lastName}`}
                             secondary={user.email}
-                            primaryTypographyProps={{ fontSize: "14px" }}
-                            secondaryTypographyProps={{ fontSize: "12px" }}
+                            slotProps={{
+                              primary: {
+                                fontSize: "14px"
+                              },
+                              secondary: {
+                                fontSize: "12px"
+                              }
+                            }}
                           />
                         </ListItemButton>
                       </ListItem>

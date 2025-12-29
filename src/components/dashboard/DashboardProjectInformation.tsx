@@ -34,7 +34,6 @@ function DashboardProjectInformation() {
     return diffDays;
   };
 
-
   const fetchAllDatas = async () => {
     setLoading(true);
     try {

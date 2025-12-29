@@ -1,4 +1,5 @@
-import { Box, Card, CardContent, CircularProgress, Typography } from "@mui/material";
+import { Box, Card, CardContent, CircularProgress, IconButton, Typography } from "@mui/material";
+import { Refresh as RefreshIcon } from "@mui/icons-material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -133,10 +134,19 @@ function ResourceManagement() {
                     mb: 3,
                 }}
             >
-                <Typography variant="h4" fontWeight="700">
-                    Resources
-                </Typography>
-
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                    <Typography variant="h4" fontWeight="700">
+                        Resources
+                    </Typography>
+                    <IconButton
+                        onClick={fetchAllData}
+                        disabled={loading}
+                        sx={{ color: "text.secondary" }}
+                        title="Refresh resources"
+                    >
+                        <RefreshIcon />
+                    </IconButton>
+                </Box>
             </Box>
 
             {/* Resource Grid */}

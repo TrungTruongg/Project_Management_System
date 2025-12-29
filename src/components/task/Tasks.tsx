@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
-import { CalendarToday, Delete, Edit, CheckCircle as CheckStatusIcon } from "@mui/icons-material";
+import { CalendarToday, Delete, Edit, CheckCircle as CheckStatusIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateTaskModal from "./CreateTaskModal";
 import axios from "axios";
@@ -50,6 +50,14 @@ function Tasks() {
     return diffDays;
   };
 
+  const isTaskExpired = (dateEnd: string) => {
+    const endDate = new Date(dateEnd);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    return endDate < today;
+  };
+
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -73,17 +81,15 @@ function Tasks() {
 
       let filteredTasks = allTasks;
 
+      // Filter tasks based on user's project access
       if (user) {
-        if (user.role === "member") {
+        const userProjectIds = allProjects
+          .filter((p: any) => p.ownerId === user.id || p.members?.includes(user.id))
+          .map((p: any) => p.id);
 
-          const userProjectIds = allProjects
-            .filter((p: any) => p.member?.includes(user.id))
-            .map((p: any) => p.id);
-
-          filteredTasks = allTasks.filter((task: any) =>
-            userProjectIds.includes(task.projectId)
-          );
-        }
+        filteredTasks = allTasks.filter((task: any) =>
+          userProjectIds.includes(task.projectId)
+        );
       }
 
       setTaskList(filteredTasks);
@@ -154,18 +160,6 @@ function Tasks() {
     setSelectedTask(task);
     setOpenCreateTaskModal(true);
   };
-
-  // const calculateTaskCompletion = (taskId: number) => {
-  //   const task = taskList.filter((task) => task.projectId === taskId);
-
-  //   if (task.length === 0) return 0;
-
-  //   const completedTasks = task.filter(
-  //     (task: any) => task.status === "completed"
-  //   );
-
-  //   return Math.round((completedTasks.length / task.length) * 100);
-  // };
 
   const updateProjectCompletion = async (projectId: number) => {
     try {
@@ -259,7 +253,6 @@ function Tasks() {
 
     try {
       const projectId = selectedTask.projectId;
-      console.log(selectedTask._id)
       await axios.delete(
         `https://mindx-mockup-server.vercel.app/api/resources/tasks/${selectedTask._id}?apiKey=${API_KEY}`
       );
@@ -273,7 +266,7 @@ function Tasks() {
         (att: any) => att.taskId === selectedTask.id
       );
 
-      // Xóa từng attachment
+      // Delete every attachment
       for (const attachment of taskAttachments) {
         await axios.delete(
           `https://mindx-mockup-server.vercel.app/api/resources/attachments/${attachment._id}?apiKey=${API_KEY}`
@@ -332,7 +325,6 @@ function Tasks() {
       .filter(Boolean);
 
     const calculateDays = calculateDeadline(task.startDate, task.endDate)
-    const completion = task.completion;
 
     const handleStatusUpdate = () => {
       setSelectedTask(task);
@@ -388,15 +380,6 @@ function Tasks() {
                   </IconButton>
                 </>
               ) : isTaskAssignedToMe ? (
-                // <Button
-                //   size="small"
-                //   variant="outlined"
-                //   sx={{ textTransform: "none", fontSize: "12px" }}
-                //   onClick={handleStatusUpdate}
-                // >
-                //   Update Status
-                // </Button>
-
                 <IconButton
                   size="small"
                   sx={{ color: "#4CAF50" }}
@@ -565,14 +548,22 @@ function Tasks() {
                 Progress
               </Typography>
               <Chip
-                label={`${calculateDeadline(
-                  task.startDate,
-                  task.endDate
-                )} Days Left`}
+                label={
+                  isTaskExpired(task.endDate)
+                    ? "Expired"
+                    : `${calculateDeadline(
+                      task.startDate,
+                      task.endDate
+                    )} Days Left`
+                }
                 size="small"
                 sx={{
-                  bgcolor: "#FFEBEE",
-                  color: "#C62828",
+                  bgcolor: isTaskExpired(task.endDate)
+                    ? "#FFCDD2"
+                    : "#FFEBEE",
+                  color: isTaskExpired(task.endDate)
+                    ? "#B71C1C"
+                    : "#C62828",
                   height: 20,
                   fontSize: "0.7rem",
                   fontWeight: 600,
@@ -587,7 +578,7 @@ function Tasks() {
                     flex: 1,
                     height: 8,
                     bgcolor:
-                      i <= Math.floor(completion / 25)
+                      i <= Math.floor(task.completion / 25)
                         ? "#FF9800"
                         : "#E0E0E0",
                     borderRadius: 1,
@@ -603,7 +594,7 @@ function Tasks() {
                 display: "block",
               }}
             >
-              {completion}% Complete
+              {task.completion}% Complete
             </Typography>
           </Box>
         </CardContent>
@@ -624,36 +615,52 @@ function Tasks() {
             mb: 3,
           }}
         >
-          {currentProject ? (
-            <Typography variant="h5" fontWeight="600">
-              <>
-                Tasks in
-                <Box component="span" sx={{ color: "#C62828", px: 1, borderRadius: 1, textTransform: "capitalize" }}>
-                  {currentProject.title}
-                </Box>
-              </>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            {currentProject ? (
+              <Typography variant="h5" fontWeight="600">
+                <>
+                  Tasks in
+                  <Box component="span" sx={{ color: "#C62828", px: 1, borderRadius: 1, textTransform: "capitalize" }}>
+                    {currentProject.title}
+                  </Box>
+                </>
 
-            </Typography>
-          ) : (
-            <Typography variant="h4" fontWeight="600">
-              Tasks Management
-            </Typography>
-          )}
+              </Typography>
+            ) : (
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <Typography variant="h4" fontWeight="700">
+                  Tasks Management
+                </Typography>
+              </Box>
+            )}
 
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<AddTaskIcon />}
-            onClick={handleOpenModal}
-            sx={{
-              backgroundColor: "#484c7f",
-              color: "white",
-              textTransform: "none",
-              px: 3,
-            }}
-          >
-            Create Task
-          </Button>
+            <IconButton
+              onClick={fetchAllData}
+              disabled={loading}
+              sx={{ color: "text.secondary" }}
+              title="Refresh tasks"
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<AddTaskIcon />}
+              onClick={handleOpenModal}
+              disabled={userProjects.length === 0}
+              sx={{
+                backgroundColor: "#484c7f",
+                color: "white",
+                textTransform: "none",
+                px: 3,
+              }}
+            >
+              Create Task
+            </Button>
+          </Box>
 
         </Box>
 

@@ -28,20 +28,18 @@ const GeminiChatBox = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
 
-  // Thay bằng API key của bạn (khuyến cáo dùng .env)
   const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-  // Khởi tạo chat session để giữ lịch sử cuộc trò chuyện
   const chat = model.startChat({
     history: [
       {
         role: "user",
         parts: [
           {
-            text: `Bạn là một nhân viên lập trình Web Fullstack chuyên nghiệp, hãy nói chào người dùng với email là: ${user?.lastName}. Ví dụ: Xin chào anh/chị, example@gmail.com`,
+            text: `Bạn là một nhân viên lập trình Web Fullstack chuyên nghiệp, hãy nói chào người dùng với email là: ${user?.email}. Ví dụ: Xin chào anh/chị, example@gmail.com`,
           },
         ],
       },
@@ -63,7 +61,6 @@ const GeminiChatBox = () => {
       const result = await chat.sendMessage(prompt);
       const responseText = result.response.text();
 
-      // Thêm phản hồi từ model vào lịch sử
       setMessages([...newMessages, { role: "model", content: responseText }]);
     } catch (err) {
       setError("Lỗi kết nối Gemini. Kiểm tra API key hoặc mạng.");

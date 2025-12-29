@@ -277,9 +277,8 @@ function NotificationModal({ open, onClose, currentUser }: any) {
               {notifications.map((notification, index) => {
                 const assignedBy = users.find(u => u.id === notification.createdBy);
                 return (
-                  <>
+                  <Box key={notification.id}>
                     <ListItem
-                      key={notification.id}
                       onClick={notification.type === "project"
                         ? () => navigate("/project")
                         : notification.type === "task"
@@ -347,21 +346,18 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                           </Box>
                         }
                         secondary={
-                          <Box sx={{ mt: 0.5 }}>
-                            <Typography
-                              variant="body2"
-                              color="text.primary"
-                              sx={{ mb: 1 }}
-                            >
-                              {assignedBy?.firstName} {assignedBy?.lastName} {notification?.description}
-                            </Typography>
-
-                          </Box>
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            sx={{ mt: 0.5 }}
+                          >
+                            {assignedBy?.firstName} {assignedBy?.lastName} {notification?.description}
+                          </Typography>
                         }
                       />
                     </ListItem>
                     {index < notifications.length - 1 && <Divider />}
-                  </>
+                  </Box>
                 )
               })}
             </List>

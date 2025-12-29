@@ -6,9 +6,11 @@ import {
   Chip,
   CircularProgress,
   Grid,
+  IconButton,
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddIcon } from "react-icons/go";
+import { Refresh as RefreshIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -82,7 +84,7 @@ function MemberList() {
         membersMap.set(owner.id, { user: owner, isOwner: true });
       }
 
-      // Thêm members
+      // Add members
       project.members?.forEach((memberId: number) => {
         const member = users.find((u) => u.id === memberId);
         if (member && !membersMap.has(memberId)) {
@@ -131,11 +133,21 @@ function MemberList() {
           mb: 3,
         }}
       >
-        <Typography variant="h4" fontWeight="bold">
-          Members
-        </Typography>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <Typography variant="h4" fontWeight="700">
+            Members
+          </Typography>
+          <IconButton
+            onClick={fetchAllData}
+            disabled={loading}
+            sx={{ color: "text.secondary" }}
+            title="Refresh members"
+          >
+            <RefreshIcon />
+          </IconButton>
+        </Box>
 
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <Button
             variant="contained"
             size="medium"

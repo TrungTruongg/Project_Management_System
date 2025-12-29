@@ -8,7 +8,6 @@ import {
   Grid,
   IconButton,
   InputAdornment,
-  Link,
   Snackbar,
   TextField,
   Typography,
@@ -83,7 +82,7 @@ const ProfileSettings = () => {
       return;
     }
 
-    // Nếu muốn đổi password, kiểm tra các trường
+    // If any password field is filled, validate passwords
     if (form.currentPassword || form.newPassword || form.confirmPassword) {
       if (!form.currentPassword) {
         setSnackbar({
@@ -112,7 +111,7 @@ const ProfileSettings = () => {
         return;
       }
 
-      // Kiểm tra current password có đúng không
+      // Check correct current password
       if (form.currentPassword !== user?.password) {
         setSnackbar({
           open: true,
@@ -215,9 +214,9 @@ const ProfileSettings = () => {
                 disabled
               />
 
-              <Link href="#" underline="hover" sx={{ mt: 2 }}>
+              {/* <Link href="#" underline="hover" sx={{ mt: 2 }}>
                 <Typography>Change Email Address</Typography>
-              </Link>
+              </Link> */}
             </Box>
           </CardContent>
         </Card>
@@ -270,7 +269,7 @@ const ProfileSettings = () => {
                 );
               }
             )}
-        
+
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
                 First name
@@ -280,6 +279,7 @@ const ProfileSettings = () => {
                 size="small"
                 value={form.firstName}
                 onChange={(e) => handleChange("firstName", e.target.value)}
+                sx={{ "& .MuiInputBase-input": { textTransform: "capitalize" } }}
               />
             </Box>
 
@@ -292,6 +292,7 @@ const ProfileSettings = () => {
                 size="small"
                 value={form.lastName}
                 onChange={(e) => handleChange("lastName", e.target.value)}
+                sx={{ "& .MuiInputBase-input": { textTransform: "capitalize" } }}
               />
             </Box>
 
@@ -335,8 +336,9 @@ const ProfileSettings = () => {
       </Grid>
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={3000}
+        autoHideDuration={5000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={() => setSnackbar({ ...snackbar, open: false })}

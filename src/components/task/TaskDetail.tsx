@@ -75,8 +75,8 @@ function TaskDetail() {
         const assignedUserIds = Array.isArray(foundTask.assignedTo)
           ? foundTask.assignedTo
           : foundTask.assignedTo
-          ? [foundTask.assignedTo]
-          : [];
+            ? [foundTask.assignedTo]
+            : [];
 
         const assigned = users.filter((u: any) =>
           assignedUserIds.includes(u.id)
@@ -447,13 +447,13 @@ function TaskDetail() {
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{
-                        border: "1px solid #e0e0e0",
+                        border: (theme) =>
+                          `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
                         borderRadius: 1,
                         mb: 1,
-                        bgcolor: "white",
                         textDecoration: "none",
                         "&:hover": {
-                          bgcolor: "#f5f5f5",
+                          bgcolor: "action.hover",
                         },
                       }}
                     >

@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddProjectIcon } from "react-icons/go";
-import { AccessTime, Delete, Edit } from "@mui/icons-material";
+import { AccessTime, Delete, Edit, Refresh as RefreshIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import CreateProjectModal from "./CreateProjectModal";
 import axios from "axios";
@@ -52,6 +52,14 @@ function Projects() {
     const diffDays = Math.ceil(Math.abs(diffTime) / (1000 * 60 * 60 * 24));
 
     return diffDays;
+  };
+
+  const isProjectExpired = (dateEnd: string) => {
+    const endDate = new Date(dateEnd);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    return endDate < today;
   };
 
   const calculateProjectCompletion = (projectId: number) => {
@@ -95,15 +103,6 @@ function Projects() {
     }
   };
 
-  const filteredProjects = projectList.filter((project: any) => {
-    if (!searchTerm.trim()) return true;
-
-    return (
-      project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
   useEffect(() => {
     if (user) {
       fetchAllData();
@@ -118,6 +117,15 @@ function Projects() {
   };
 
   const userProjects = getUserProjects();
+
+  const filteredProjects = userProjects.filter((project: any) => {
+    if (!searchTerm.trim()) return true;
+
+    return (
+      project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const handleOpenModal = () => {
     setSelectedProject(null);
@@ -191,24 +199,37 @@ function Projects() {
           mb: 3,
         }}
       >
-        <Typography variant="h4" fontWeight="700">
-          Projects
-        </Typography>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <Typography variant="h4" fontWeight="700">
+            Projects
+          </Typography>
+          <IconButton
+            onClick={fetchAllData}
+            disabled={loading}
+            sx={{ color: "text.secondary" }}
+            title="Refresh projects"
+          >
+            <RefreshIcon />
+          </IconButton>
+        </Box>
 
-        <Button
-          variant="contained"
-          size="large"
-          startIcon={<AddProjectIcon />}
-          onClick={handleOpenModal}
-          sx={{
-            backgroundColor: "#484c7f",
-            color: "white",
-            textTransform: "none",
-            px: 3,
-          }}
-        >
-          Create Project
-        </Button>
+
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<AddProjectIcon />}
+            onClick={handleOpenModal}
+            sx={{
+              backgroundColor: "#484c7f",
+              color: "white",
+              textTransform: "none",
+              px: 3,
+            }}
+          >
+            Create Project
+          </Button>
+        </Box>
       </Box>
 
       {/* Projects Grid */}
@@ -455,14 +476,22 @@ function Projects() {
                         Progress
                       </Typography>
                       <Chip
-                        label={`${calculateDeadline(
-                          project.startDate,
-                          project.endDate
-                        )} Days Left`}
+                        label={
+                          isProjectExpired(project.endDate)
+                            ? "Expired"
+                            : `${calculateDeadline(
+                              project.startDate,
+                              project.endDate
+                            )} Days Left`
+                        }
                         size="small"
                         sx={{
-                          bgcolor: "#FFEBEE",
-                          color: "#C62828",
+                          bgcolor: isProjectExpired(project.endDate)
+                            ? "#FFCDD2"
+                            : "#FFEBEE",
+                          color: isProjectExpired(project.endDate)
+                            ? "#B71C1C"
+                            : "#C62828",
                           height: 20,
                           fontSize: "0.7rem",
                           fontWeight: 600,

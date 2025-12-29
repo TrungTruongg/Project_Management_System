@@ -105,11 +105,13 @@ function MemberProfile() {
     );
   });
 
-  const calculateDaysLeft = (endDate: string) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diffTime = end.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const calculateDeadline = (dateStart: string, dateEnd: string) => {
+    const startDate = new Date(dateStart);
+    const endDate = new Date(dateEnd);
+
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(Math.abs(diffTime) / (1000 * 60 * 60 * 24));
+
     return diffDays;
   };
 
@@ -191,13 +193,13 @@ function MemberProfile() {
               sx={{
                 mb: 3,
                 border: (theme) =>
-                  `1px solid ${
-                    theme.palette.mode === "light" ? "#f0f0f0" : "#2a2a2a"
-                  }`,
+                  `1px solid ${theme.palette.mode === "light"
+                    ? "#f0f0f0"
+                    : "#2a2a2a"
+                }`,
                 borderRadius: 2,
                 transition: "all 0.3s",
               }}
-              elevation={0}
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", gap: 4 }}>
@@ -369,7 +371,7 @@ function MemberProfile() {
               {/* Projects */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                  Current Work Project
+                  Current Projects
                 </Typography>
                 {filteredProjects.length > 0 ? (
                   filteredProjects.map((project) => {
@@ -380,11 +382,25 @@ function MemberProfile() {
                       (u: any) => u.id === project.ownerId
                     );
                     // const isOwner = project.ownerId === user?.id;
+                    const calculateProjectDays = calculateDeadline(project.startDate, project.endDate);
 
                     return (
                       <Card
                         key={project.id}
-                        sx={{ mb: 3 }}
+                        sx={{
+                          mb: 3,
+                          border: (theme) =>
+                            `1px solid ${theme.palette.mode === "light"
+                              ? "#f0f0f0"
+                              : "#2a2a2a"
+                            }`,
+                          borderRadius: 2,
+                          transition: "all 0.3s",
+                          "&:hover": {
+                            boxShadow: 3,
+                            transform: "translateY(-4px)",
+                          },
+                        }}
                         onClick={() => navigate("/project")}
                       >
                         <CardContent>
@@ -583,9 +599,10 @@ function MemberProfile() {
                                 Progress
                               </Typography>
                               <Chip
-                                label={`${calculateDaysLeft(
+                                label={calculateProjectDays >= 1 ? `${calculateDeadline(
+                                  project.startDate,
                                   project.endDate
-                                )} Days Left`}
+                                )} Days Left` : "Expired"}
                                 size="small"
                                 sx={{
                                   bgcolor: "#FFEBEE",
@@ -638,14 +655,16 @@ function MemberProfile() {
                 )}
               </Grid>
 
-              {/* Right Column - Tasks */}
+              {/* Tasks */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                  Current Task
+                  Current Tasks
                 </Typography>
 
                 {tasks.length > 0 ? (
                   tasks.map((task) => {
+
+                    const calculateTaskDays = calculateDeadline(task.startDate, task.endDate);
                     return (
                       <Card
                         key={task.id}
@@ -653,10 +672,9 @@ function MemberProfile() {
                         sx={{
                           mb: 2,
                           border: (theme) =>
-                            `1px solid ${
-                              theme.palette.mode === "light"
-                                ? "#f0f0f0"
-                                : "#2a2a2a"
+                            `1px solid ${theme.palette.mode === "light"
+                              ? "#f0f0f0"
+                              : "#2a2a2a"
                             }`,
                           borderRadius: 2,
                           transition: "all 0.3s",
@@ -665,7 +683,6 @@ function MemberProfile() {
                             transform: "translateY(-4px)",
                           },
                         }}
-                        elevation={0}
                       >
                         <CardContent>
                           <Box
@@ -744,6 +761,61 @@ function MemberProfile() {
                             -{" "}
                             {new Date(task.endDate).toLocaleDateString("en-GB")}
                           </Typography>
+
+                          {/* Progress */}
+                          <Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                mb: 1,
+                              }}
+                            >
+                              <Typography variant="caption" fontWeight="600">
+                                Progress
+                              </Typography>
+                              <Chip
+                                label={calculateTaskDays >= 1 ? `${calculateDeadline(
+                                  task.startDate,
+                                  task.endDate
+                                )} Days Left` : "Expired"}
+                                size="small"
+                                sx={{
+                                  bgcolor: "#FFEBEE",
+                                  color: "#C62828",
+                                  height: 20,
+                                  fontSize: "0.7rem",
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </Box>
+                            <Box sx={{ display: "flex", gap: 0.5 }}>
+                              {[1, 2, 3, 4].map((i) => (
+                                <Box
+                                  key={i}
+                                  sx={{
+                                    flex: 1,
+                                    height: 8,
+                                    bgcolor:
+                                      i <= Math.floor(task.completion / 25)
+                                        ? "#FF9800"
+                                        : "#E0E0E0",
+                                    borderRadius: 1,
+                                  }}
+                                />
+                              ))}
+                            </Box>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "text.secondary",
+                                mt: 0.5,
+                                display: "block",
+                              }}
+                            >
+                              {task.completion}% Complete
+                            </Typography>
+                          </Box>
                         </CardContent>
                       </Card>
                     );

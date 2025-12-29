@@ -1,6 +1,6 @@
 import { Avatar, Box, Button, Chip, CircularProgress, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from "@mui/material"
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
-import { Delete, Edit, CheckCircle as CheckCompleteIcon } from "@mui/icons-material";
+import { Delete, Edit, CheckCircle as CheckCompleteIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
@@ -52,6 +52,12 @@ function SupportsView() {
         fetchAllData();
     }, [])
 
+    // Get projects where the user is the owner
+    const getOwnerProjects = () => {
+        if (!user) return [];
+        return projects.filter((p) => p.ownerId === user.id);
+    };
+
     const getUserProjects = () => {
         if (!user) return [];
         return projects.filter(
@@ -60,6 +66,7 @@ function SupportsView() {
     };
 
     const userProjects = getUserProjects();
+    const ownerProjects = getOwnerProjects();
 
     const handleOpenModal = () => {
         setSelectedTicket(null);
@@ -203,15 +210,26 @@ function SupportsView() {
                     mb: 3,
                 }}
             >
-                <Typography variant="h4" fontWeight="700">
-                    Support Tickets
-                </Typography>
-                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                    <Typography variant="h4" fontWeight="700">
+                        Support Tickets
+                    </Typography>
+                    <IconButton
+                        onClick={fetchAllData}
+                        disabled={loading}
+                        sx={{ color: "text.secondary" }}
+                        title="Refresh tickets"
+                    >
+                        <RefreshIcon />
+                    </IconButton>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                     <Button
                         variant="contained"
                         size="medium"
                         startIcon={<AddTaskIcon />}
                         onClick={handleOpenModal}
+                        disabled={ownerProjects.length === 0}
                         sx={{
                             backgroundColor: "#484c7f",
                             color: "white",

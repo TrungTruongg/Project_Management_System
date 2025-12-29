@@ -5,6 +5,7 @@ import {
   IconButton,
   TextField,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { useState } from "react";
 import { Delete as DeleteIcon, Reply as ReplyIcon } from "@mui/icons-material";
@@ -23,6 +24,7 @@ function CommentItem({
   const [replyContent, setReplyContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { user } = useUser();
+  const theme = useTheme();
 
   const commentUser = getUserById(comment.userId);
 
@@ -63,7 +65,9 @@ function CommentItem({
         {/* Comment Content */}
         <Box
           sx={{
-            bgcolor: isReply ? "#fafafa" : "#f5f5f5",
+            bgcolor: isReply 
+              ? theme.palette.mode === "dark" ? "#2a2a2a" : "#fafafa"
+              : theme.palette.mode === "dark" ? "#2a2a2a" : "#f5f5f5",
             p: 2,
             borderRadius: 2,
           }}

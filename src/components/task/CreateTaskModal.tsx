@@ -155,10 +155,6 @@ function CreateTaskModal({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('selectedTask:', selectedTask);
-    console.log('selectedTask._id:', selectedTask?._id);
-    console.log('isUpdate:', isUpdate);
-
     if (!title.trim()) {
       setShowError(true);
       return;
@@ -181,7 +177,7 @@ function CreateTaskModal({
         : 0;
 
 
-      // Tính completion dựa vào status
+      // Count completion based on status
       let completion = 0;
       if (status === "to-do") {
         completion = 0;
@@ -221,7 +217,7 @@ function CreateTaskModal({
           taskData
         );
 
-        // Delete old attachments tuần tự
+        // Delete old attachments 
         try {
           const attachmentsRes = await axios.get(
             `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
@@ -230,13 +226,13 @@ function CreateTaskModal({
             (att: any) => att.taskId === selectedTask.id
           );
 
-          // Xóa từng attachment một
+          // Delete attachments one by one with delay
           for (const att of oldAttachments) {
             try {
               await axios.delete(
                 `https://mindx-mockup-server.vercel.app/api/resources/attachments/${att._id}?apiKey=${API_KEY}`
               );
-              // Delay 100ms giữa các request
+              // Delay 100ms between requests
               await new Promise(resolve => setTimeout(resolve, 100));
             } catch (error) {
               console.error(`Error deleting attachment ${att._id}:`, error);
@@ -472,7 +468,7 @@ function CreateTaskModal({
                 />
               </Box>
 
-              {/* Attachments Section */}
+              {/* Attachments */}
               <Box>
                 <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
                   Attachments
@@ -510,7 +506,6 @@ function CreateTaskModal({
                     {attachments.map((url, i) => (
                       <Chip
                         key={i}
-                        // icon={<Typography>{getDomainIcon(url)}</Typography>}
                         label={getShortenedUrl(url)}
                         onClick={() => window.open(url, '_blank')}
                         onDelete={() => handleRemoveAttachment(i)}
@@ -651,7 +646,7 @@ function CreateTaskModal({
             </>
           )}
 
-          {/* Status - Always visible */}
+          {/* Status */}
           <Box>
             <Typography
               sx={{

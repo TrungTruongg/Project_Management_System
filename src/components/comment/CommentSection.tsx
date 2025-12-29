@@ -45,10 +45,11 @@ function CommentSection({
       };
 
       const response = await axios.post(
-        `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=69205e8dbf3939eacf2e89f2`,
+        `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=${API_KEY}`,
         comment
       );
 
+      console.log("Comment response:", response.data);
       onSubmit(response.data.data);
       setNewComment("");
     } catch (error) {
@@ -91,7 +92,7 @@ function CommentSection({
   ) => {
     try {
       await axios.delete(
-        `https://mindx-mockup-server.vercel.app/api/resources/comments/${commentDbId}?apiKey=69205e8dbf3939eacf2e89f2`
+        `https://mindx-mockup-server.vercel.app/api/resources/comments/${commentDbId}?apiKey=${API_KEY}`
       );
 
       onDelete(commentId);
