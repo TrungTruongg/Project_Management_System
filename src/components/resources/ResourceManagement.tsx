@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PreviewActionButtons from "./PreviewActionButtons";
 import { useUser } from "../context/UserContext";
+import { useSearch } from "../context/SearchContext";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -53,6 +54,7 @@ function ResourceManagement() {
     const [projects, setProjects] = useState<any[]>([]);
     const navigate = useNavigate();
     const { user } = useUser();
+    const { searchTerm } = useSearch();
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -70,16 +72,32 @@ function ResourceManagement() {
             ]);
 
             const allAttachments = attachmentsRes.data.data.data;
-
             const allTasks = tasksRes.data.data.data;
+            const allProjects = projectRes.data.data.data;
 
-            const attachmentsWithTask = allAttachments.map((att: any) => ({
-                ...att,
-                task: allTasks.find((t: any) => t.id === att.taskId),
-            }));
+            setProjects(allProjects);
 
-            setAttachments(attachmentsWithTask);
-            setProjects(projectRes.data.data.data);
+            // Filter attachments based on user's project access
+            if (user) {
+                const userProjectIds = allProjects
+                    .filter((p: any) => p.ownerId === user.id || p.members?.includes(user.id))
+                    .map((p: any) => p.id);
+
+                const userTasks = allTasks.filter((t: any) =>
+                    userProjectIds.includes(t.projectId)
+                );
+
+                const attachmentsWithTask = allAttachments
+                    .filter((att: any) => userTasks.some((t: any) => t.id === att.taskId))
+                    .map((att: any) => ({
+                        ...att,
+                        task: userTasks.find((t: any) => t.id === att.taskId),
+                    }));
+
+                setAttachments(attachmentsWithTask);
+            } else {
+                setAttachments([]);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -99,6 +117,16 @@ function ResourceManagement() {
     };
 
     const userProjects = getUserProjects();
+
+    const filteredAttachments = attachments.filter((attachment: any) => {
+        if (!searchTerm.trim()) return true;
+
+        const searchLower = searchTerm.toLowerCase();
+        return (
+            attachment.name?.toLowerCase().includes(searchLower) ||
+            attachment.task?.title?.toLowerCase().includes(searchLower)
+        );
+    });
 
     const handleViewTask = (taskId: number, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -169,6 +197,8 @@ function ResourceManagement() {
                 </Typography>
             ) : attachments.length === 0 ? (
                 <Typography fontStyle="italic" >No attachments available!</Typography>
+            ) : filteredAttachments.length === 0 ? (
+                <Typography fontStyle="italic" >No attachments match your search!</Typography>
             ) : (
                 <Box
                     sx={{
@@ -177,7 +207,7 @@ function ResourceManagement() {
                         gap: 3,
                     }}
                 >
-                    {attachments.map((attachment) => {
+                    {filteredAttachments.map((attachment) => {
                         return (
                             <Card
                                 key={attachment.id}

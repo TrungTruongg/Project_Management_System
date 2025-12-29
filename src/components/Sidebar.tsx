@@ -15,7 +15,6 @@ import TaskIcon from "./icons/TaskIcon";
 import { ArrowBack, ArrowForward, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { menuItems } from "../constants/constants";
-import { useUser } from "./context/UserContext";
 import { useState } from "react";
 
 const routeMapping: Record<string, string> = {
@@ -28,19 +27,15 @@ const routeMapping: Record<string, string> = {
   "Supports View": "/supports-view",
   "Supports Detail": "/supports-detail",
   Resources: "/resources",
-  "Locked Users": "/view-locked-users",
+  // "Locked Users": "/view-locked-users",
 };
 
 function Sidebar({ openMenus, toggleMenu }: any) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [popoverMenuId, setPopoverMenuId] = useState<null | string>(null);
-
-  const isLeader = user?.role === "leader";
-  const leaderOnlyMenus = ["Locked Users"];
 
   const { mode, setMode } = useColorScheme();
   if (!mode) {
@@ -50,51 +45,6 @@ function Sidebar({ openMenus, toggleMenu }: any) {
   const handleModeToggle = () => {
     setMode(mode === 'light' ? 'dark' : 'light');
   }
-
-  const hasAccess = (menuText: string): boolean => {
-    if (isLeader) {
-      if (leaderOnlyMenus.includes(menuText)) {
-        return true;
-      }
-      return true;
-    }
-
-    if (leaderOnlyMenus.includes(menuText)) {
-      return false;
-    }
-
-    return true;
-  };
-
-  // Lọc submenu dựa trên quyền
-  const filterMenuItems = (items: any[]): any[] => {
-    return items
-      .map((item) => {
-        if (item.submenu) {
-          const filteredSubmenu = item.submenu.filter((subitem: string) =>
-            hasAccess(subitem)
-          );
-
-          if (filteredSubmenu.length === 0) {
-            return null;
-          }
-
-          return {
-            ...item,
-            submenu: filteredSubmenu,
-          };
-        }
-
-        if (!hasAccess(item.text)) {
-          return null;
-        }
-
-        return item;
-      })
-      .filter((item) => item !== null);
-  };
-
-  const filteredMenuItems = filterMenuItems(menuItems);
 
   const isMenuActive = (item: any) => {
     if (!item.submenu) {
@@ -195,7 +145,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
             }}
           >
             <List sx={{ py: 2, flexGrow: 1 }}>
-              {filteredMenuItems.map((item: any) => {
+              {menuItems.map((item: any) => {
                 const isActive = isMenuActive(item);
 
                 return (
@@ -370,9 +320,9 @@ function Sidebar({ openMenus, toggleMenu }: any) {
         }}
       >
         <Box sx={{ bgcolor: "#484c7f", p: 1, borderRadius: 1 }}>
-          {popoverMenuId && filteredMenuItems.find(item => item.id === popoverMenuId)?.submenu && (
+          {popoverMenuId && menuItems.find(item => item.id === popoverMenuId)?.submenu && (
             <List>
-              {filteredMenuItems.find(item => item.id === popoverMenuId)?.submenu.map((subitem: string, idx: number) => {
+              {menuItems.find(item => item.id === popoverMenuId)?.submenu?.map((subitem: string, idx: number) => {
                 const subRoute = routeMapping[subitem];
                 const isSubActive = location.pathname === subRoute;
                 return (
