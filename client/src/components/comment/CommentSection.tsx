@@ -10,10 +10,8 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useUser } from "../context/UserContext";
-import axios from "axios";
 import CommentItem from "./CommentItem";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function CommentSection({
   taskId,
@@ -30,27 +28,19 @@ function CommentSection({
     if (!newComment.trim() || !user) return;
 
     setSubmitting(true);
-    try {
-      const maxId =
-        comments.length > 0
-          ? Math.max(...comments.map((comment: any) => comment.id))
-          : 0;
-
+    try {   
       const comment = {
-        id: maxId + 1,
         taskId: taskId,
-        userId: user.id,
+        userId: user._id,
         content: newComment,
         createdAt: new Date().toISOString(),
       };
 
-      const response = await axios.post(
-        `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=${API_KEY}`,
-        comment
-      );
+      const response = await api.post("/comments/create", comment);
 
-      console.log("Comment response:", response.data);
-      onSubmit(response.data.data);
+      console.log(response)
+
+      onSubmit(response.data);
       setNewComment("");
     } catch (error) {
       console.error("Error posting comment:", error);
@@ -59,41 +49,30 @@ function CommentSection({
     }
   };
 
-  const handleReply = async (parentId: number, content: string) => {
+  const handleReply = async (commentId: string, content: string) => {
     if (!content.trim() || !user) return;
 
-    try {
-      const maxId =
-        comments.length > 0 ? Math.max(...comments.map((comment: any) => comment.id)) : 0;
-
+    try { 
       const reply = {
-        id: maxId + 1,
         taskId: taskId,
-        userId: user.id,
+        userId: user._id,
+        commentId: commentId,
         content: content,
         createdAt: new Date().toISOString(),
-        parentId: parentId,
+        // parentId: parentId,
       };
 
-      const response = await axios.post(
-        `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=${API_KEY}`,
-        reply
-      );
+      const response = await api.post("/replies/create", reply);
 
-      onSubmit(response.data.data);
+      onSubmit(response.data);
     } catch (error) {
       console.error("Error posting reply:", error);
     }
   };
 
-  const handleDeleteComment = async (
-    commentId: number,
-    commentDbId: string
-  ) => {
+  const handleDeleteComment = async (commentId: string) => {
     try {
-      await axios.delete(
-        `https://mindx-mockup-server.vercel.app/api/resources/comments/${commentDbId}?apiKey=${API_KEY}`
-      );
+      await api.delete(`/comments/delete/${commentId}`);
 
       onDelete(commentId);
     } catch (error) {
@@ -120,12 +99,12 @@ function CommentSection({
     return `${diffInDays}d ago`;
   };
 
-  const getUserById = (userId: number) => {
-    return assignedUsers.find((u: any) => u.id === userId) || user;
+  const getUserById = (userId: string) => {
+    return assignedUsers.find((u: any) => u._id === userId) || user;
   };
 
   const parentComments = comments.filter((comment: any) => !comment.parentId);
-  const getReplies = (commentId: number) => {
+  const getReplies = (commentId: string) => {
     return comments.filter((comment: any) => comment.parentId === commentId);
   };
 
@@ -208,13 +187,13 @@ function CommentSection({
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {parentComments.map((comment: any) => (
               <CommentItem
-                key={comment.id}
+                key={comment._id}
                 comment={comment}
                 onDelete={handleDeleteComment}
                 onReply={handleReply}
                 getUserById={getUserById}
                 getTimeAgo={getTimeAgo}
-                replies={getReplies(comment.id)}
+                replies={getReplies(comment._id)}
                 isReply={false}
               />
             ))}

@@ -13,15 +13,14 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
+
 import {
   Person as PersonIcon,
   Loop as StatusIcon,
   AttachFile as AttachmentIcon,
 } from "@mui/icons-material";
 import CommentSection from "../comment/CommentSection";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function TaskDetail() {
   const [searchParams] = useSearchParams();
@@ -42,32 +41,24 @@ function TaskDetail() {
     try {
       const [tasksRes, usersRes, projectsRes, commentsRes, attachmentsRes] =
         await Promise.all([
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
-          ),
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-          ),
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-          ),
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/comments?apiKey=${API_KEY}`
-          ),
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/attachments?apiKey=${API_KEY}`
-          ),
+          api.get("/tasks"),
+          api.get("/users"),
+          api.get("/projects"),
+          api.get("/comments"),
+          api.get("/attachments"),
         ]);
 
-      const tasks = tasksRes.data.data.data;
-      const users = usersRes.data.data.data;
-      const projects = projectsRes.data.data.data;
-      const allComments = commentsRes.data.data.data || [];
-      const attachments = attachmentsRes.data.data.data;
+      const tasks = tasksRes.data;
+      const users = usersRes.data;
+      const projects = projectsRes.data;
+      const allComments = commentsRes.data || [];
+      const attachments = attachmentsRes.data;
 
       setAllUsers(users);
 
-      const foundTask = tasks.find((task: any) => task.id === parseInt(taskId));
+      const foundTask = tasks.find((task: any) => task._id === taskId);
+
+      console.log(tasks, foundTask)
 
       if (foundTask) {
         setTask(foundTask);
@@ -79,22 +70,22 @@ function TaskDetail() {
             : [];
 
         const assigned = users.filter((u: any) =>
-          assignedUserIds.includes(u.id)
+          assignedUserIds.includes(u._id)
         );
         setAssignedUsers(assigned);
 
         const taskProject = projects.find(
-          (p: any) => p.id === foundTask.projectId
+          (p: any) => p._id === foundTask.projectId
         );
         setProject(taskProject);
 
         const taskComments = allComments.filter(
-          (c: any) => c.taskId === foundTask.id
+          (c: any) => c.taskId === foundTask._id
         );
         setComments(taskComments);
 
         setAttachments(
-          attachments.filter((att: any) => att.taskId === foundTask.id)
+          attachments.filter((att: any) => att.taskId === foundTask._id)
         );
       }
     } catch (error) {
@@ -108,31 +99,30 @@ function TaskDetail() {
     fetchTaskDetail();
   }, [taskId]);
 
-  const getShortenedUrl = (url: string) => {
-    try {
-      const urlObj = new URL(url);
-      const hostname = urlObj.hostname.replace("www.", "");
-      const pathname = urlObj.pathname;
+  // const getShortenedUrl = (url: string) => {
+  //   try {
+  //     const urlObj = new URL(url);
+  //     const hostname = urlObj.hostname.replace("www.", "");
+  //     const pathname = urlObj.pathname;
 
-      // Lấy tên file hoặc path cuối
-      const fileName = pathname.split("/").filter(Boolean).pop() || hostname;
+  //     const fileName = pathname.split("/").filter(Boolean).pop() || hostname;
 
-      if (fileName.length > 40) {
-        return fileName.substring(0, 37) + "...";
-      }
+  //     if (fileName.length > 40) {
+  //       return fileName.substring(0, 37) + "...";
+  //     }
 
-      return fileName;
-    } catch {
-      return url.length > 40 ? url.substring(0, 37) + "..." : url;
-    }
-  };
+  //     return fileName;
+  //   } catch {
+  //     return url.length > 40 ? url.substring(0, 37) + "..." : url;
+  //   }
+  // };
 
   const handleSubmitComment = (newComment: any) => {
     setComments([...comments, newComment]);
   };
 
   const handleDeleteComment = (commentId: number) => {
-    setComments(comments.filter((c) => c.id !== commentId));
+    setComments(comments.filter((c) => c._id !== commentId));
   };
 
   const getStatusChip = (status: string) => {
@@ -303,7 +293,7 @@ function TaskDetail() {
                   {assignedUsers.length > 0 ? (
                     assignedUsers.map((assignedUser) => (
                       <Box
-                        key={assignedUser.id}
+                        key={assignedUser._id}
                         sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                       >
                         <Avatar
@@ -358,7 +348,7 @@ function TaskDetail() {
             <Box>
               {project && (
                 <Chip
-                  label={project.title}
+                  label={project.name}
                   size="small"
                   sx={{
                     bgcolor: "#F3E5F5",
@@ -369,23 +359,32 @@ function TaskDetail() {
                   }}
                 />
               )}
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: "0.85rem" }}
-              >
-                {new Date(task.startDate).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}{" "}
-                -{" "}
-                {new Date(task.endDate).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </Typography>
+              {
+                task.startDate && task.endDate ?
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: "0.85rem" }}
+                  >
+                    {new Date(task.startDate).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}{" "}
+                    -{" "}
+                    {new Date(task.endDate).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </Typography>
+                  : <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: "0.85rem" }}
+                  >No deadline</Typography>
+              }
+
             </Box>
           </Box>
 
@@ -438,7 +437,7 @@ function TaskDetail() {
               </Typography>
               <List>
                 {attachments.map((att: any, index: number) => {
-                  const shortUrl = getShortenedUrl(att.url);
+                  // const shortUrl = getShortenedUrl(att.url);
                   return (
                     <ListItem
                       key={att._id || index}
@@ -468,7 +467,7 @@ function TaskDetail() {
                               wordBreak: "break-all",
                             }}
                           >
-                            {shortUrl}
+                            {att.url}
                           </Typography>
                         }
                         secondary={
@@ -489,7 +488,7 @@ function TaskDetail() {
 
       {/* Comments Section */}
       <CommentSection
-        taskId={task.id}
+        taskId={task._id}
         comments={comments}
         onSubmit={handleSubmitComment}
         onDelete={handleDeleteComment}

@@ -32,7 +32,7 @@ function CommentItem({
     if (!replyContent.trim()) return;
 
     setSubmitting(true);
-    await onReply(comment.id, replyContent);
+    await onReply(comment._id, replyContent);
     setReplyContent("");
     setReplyingTo(false);
     setSubmitting(false);
@@ -94,10 +94,10 @@ function CommentItem({
                 {getTimeAgo(comment.createdAt)}
               </Typography>
             </Box>
-            {user && comment.userId === user.id && (
+            {user && comment.userId === user._id && (
               <IconButton
                 size="small"
-                onClick={() => onDelete(comment.id, comment._id)}
+                onClick={() => onDelete(comment._id)}
                 sx={{ color: "#EF5350" }}
               >
                 <DeleteIcon fontSize="small" />

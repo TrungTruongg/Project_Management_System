@@ -1,0 +1,815 @@
+# 🎯 BÀI TẬP REACT CƠ BẢN - 30 BÀI
+
+> **Hướng dẫn:** Làm từng bài theo thứ tự, code trong VS Code và test để xem kết quả. Không Google, tự suy nghĩ trước!
+
+---
+
+## 📦 PHẦN 1: COMPONENTS & PROPS (Bài 1-8)
+
+### Bài 1: Component Đơn Giản ⭐
+**Yêu cầu:** Tạo component `Welcome` hiển thị "Chào mừng đến với React!"
+
+```javascript
+// Code của bạn ở đây
+function Welcome() {
+  return(
+  <div>
+	<h1>Chào mừng đến với React!</h1>
+	</div>
+	)
+}
+
+// Sử dụng
+function App() {
+  return <Welcome />;
+}
+```
+
+**Kết quả mong đợi:**
+```
+Chào mừng đến với React!
+```
+
+---
+
+### Bài 2: Props Cơ Bản ⭐
+**Yêu cầu:** Tạo component `Greeting` nhận props `name` và hiển thị "Xin chào, [name]!"
+
+```javascript
+function Greeting({name}) {
+  return(
+	<div>
+		<h1>Xin chào {name}</h1>
+	</div>
+	)
+}
+
+// Sử dụng
+<Greeting name="An" />
+<Greeting name="Bình" />
+```
+
+**Kết quả mong đợi:**
+```
+Xin chào, An!
+Xin chào, Bình!
+```
+
+---
+
+### Bài 3: Multiple Props ⭐
+**Yêu cầu:** Tạo component `UserCard` nhận `name`, `age`, `email` và hiển thị thông tin.
+
+```javascript
+function UserCard({name, age, email}) {
+  return(
+  <div>
+	<h1>Tên: {name}</h1>
+	<h1>Tuổi: {age}</h1>
+	<h1>Email: {email}</h1>
+	</div>
+	)
+}
+
+// Sử dụng
+<UserCard name="Nguyễn Văn An" age={25} email="an@example.com" />
+```
+
+**Kết quả mong đợi:**
+```
+Tên: Nguyễn Văn An
+Tuổi: 25
+Email: an@example.com
+```
+
+---
+
+### Bài 4: Props Destructuring ⭐⭐
+**Yêu cầu:** Viết lại component `UserCard` ở Bài 3 sử dụng destructuring trong parameters.
+
+```javascript
+function UserCard({ props }) {
+  const {name, age, email} = props;
+  return(
+  <div>
+	<h1>Tên: {name}</h1>
+	<h1>Tuổi: {age}</h1>
+	<h1>Email: {email}</h1>
+	</div>
+	)
+}
+```
+
+---
+
+### Bài 5: Default Props ⭐⭐
+**Yêu cầu:** Tạo component `Button` với props `text` và `color`. Nếu không truyền `color`, mặc định là "blue".
+
+```javascript
+function Button({ text, color }) {
+  // Code của bạn - set default color = "blue"
+  return(
+	<Button sx={color: "blue"} />
+}
+
+// Sử dụng
+<Button text="Click me" />  // màu blue
+<Button text="Delete" color="red" />  // màu red
+```
+
+---
+
+### Bài 6: Children Props ⭐⭐
+**Yêu cầu:** Tạo component `Card` nhận `children` và hiển thị nội dung bên trong border.
+
+```javascript
+function Card({ children }) {
+  // Code của bạn - thêm border, padding
+  return(
+	<div style={{ border: "1px solid black", padding: "2px" }}>
+		{children}
+	</div>
+	)
+}
+
+// Sử dụng
+<Card>
+  <h2>Tiêu đề</h2>
+  <p>Nội dung bên trong card</p>
+</Card>
+```
+
+---
+
+### Bài 7: Nested Components ⭐⭐
+**Yêu cầu:** Tạo 2 components:
+- `BlogPost`: Nhận `title`, `author`, `content`
+- `BlogList`: Render nhiều `BlogPost`
+
+```javascript
+function BlogPost({ title, author, content }) {
+  // Code của bạn
+  return(
+	<div>
+		<h1>{title}</h1>
+		<h2>{author}</h2>
+		<h3>{content}</h3>
+	</div>
+)
+}
+
+function BlogList() {
+  const posts = [
+    { id: 1, title: "React Basics", author: "An", content: "..." },
+    { id: 2, title: "Props Tutorial", author: "Bình", content: "..." }
+  ];
+  
+  // Render list posts ở đây
+  return(
+	<div>
+		{posts.map(post => (
+			<BlogPost key={post.id} title={post.title} author={post.author} content={post.content} />
+		))}
+	</div>
+}
+```
+
+---
+
+### Bài 8: Props Validation ⭐⭐⭐
+**Yêu cầu:** Tạo component `Price` hiển thị giá tiền. Nếu `price` không phải số, hiển thị "Invalid price".
+
+```javascript
+function Price({ price }) {
+  // Kiểm tra price có phải số không
+  // Nếu đúng: hiển thị $price
+  // Nếu sai: hiển thị "Invalid price"
+  return(
+	<div>{typeof price === "number" ? price : "Invalid price"}</div>
+	)
+}
+
+// Test
+<Price price={100} />  // $100
+<Price price="abc" />  // Invalid price
+```
+
+---
+
+## 🎭 PHẦN 2: STATE & EVENTS (Bài 9-16)
+
+### Bài 9: Counter Cơ Bản ⭐
+**Yêu cầu:** Tạo counter với button tăng giá trị.
+
+```javascript
+function Counter() {
+  // Dùng useState
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>+1</button>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 10: Counter Đầy Đủ ⭐⭐
+**Yêu cầu:** Thêm 3 buttons: +1, -1, Reset
+
+```javascript
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>+1</button>
+      <button onClick={() => setCount(count - 1)}>-1</button>
+      <button onClick={() => setCount(0)}>Reset</button>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 11: Toggle Show/Hide ⭐⭐
+**Yêu cầu:** Button toggle hiển thị/ẩn đoạn text.
+
+```javascript
+function Toggle() {
+  // State để lưu show/hide
+	const [show, setShow] = useState(false);
+  
+  return (
+    <div>
+      <button onClick={() => setShow(true)}>Toggle</button>
+      {/* Hiển thị text nếu show = true */}
+	  {show &&
+      <p>Nội dung có thể ẩn/hiện</p>
+	  }
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 12: Input Controlled ⭐⭐
+**Yêu cầu:** Input hiển thị giá trị đang nhập theo real-time.
+
+```javascript
+function InputDisplay() {
+  // State để lưu giá trị input
+  const [input, setInput] = useState("");
+  
+  return (
+    <div>
+      <input type="text" value={input} onChange={(e) => setInput(e.target.value}/>
+      <p>Bạn đang nhập: {input}</p>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 13: Form Đơn Giản ⭐⭐⭐
+**Yêu cầu:** Form nhập `name` và `email`, khi submit hiển thị thông tin.
+
+```javascript
+function SimpleForm() {
+  // State cho name và email
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Hiển thị thông tin (console.log hoặc alert)
+	console.log(`Name: {name}, Email: {email}`);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+---
+
+### Bài 14: Color Picker ⭐⭐
+**Yêu cầu:** Buttons chọn màu, thay đổi background của div.
+
+```javascript
+function ColorPicker() {
+  // State để lưu màu được chọn
+  const [color, setColor] = useState("");
+  
+  return (
+    <div>
+      <button onClick={() => setColor('red')>Red</button>
+      <button onClick={() => setColor('green')>Green</button>
+      <button onClick={() => setColor('blue')>Blue</button>
+      
+      <div style={{ 
+        width: '200px', 
+        height: '200px', 
+        backgroundColor: color 
+      }}>
+        Color Box
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 15: Character Counter ⭐⭐
+**Yêu cầu:** Textarea hiển thị số ký tự đã nhập (giới hạn 100 ký tự).
+
+```javascript
+function CharCounter() {
+  // State cho text
+  const [text, setText] = useState("")
+  
+  return (
+    <div>
+      <textarea maxLength={100} onChange={(e) => setText(e.target.value} value={text} />
+      <p>{text.length}/100 characters</p>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 16: Simple Calculator ⭐⭐⭐
+**Yêu cầu:** 2 inputs nhập số, buttons +, -, *, /, hiển thị kết quả.
+
+```javascript
+function Calculator() {
+  // State cho num1, num2, result
+  const [num1, setNum1] = useState(0);
+  const [num2, setNum2] = useState(0);
+  const [result, setResult] = useState("");
+ 
+  
+  return (
+    <div>
+      <input type="number" placeholder="Number 1" value={num1} onChange={(e) => setNum1(e.target.value)}  />
+      <input type="number" placeholder="Number 2" value={num2} onChange={(e) => setNum1(e.target.value)} />
+      
+      <button onClick={() => setResult(num1 + num2)}>+</button>
+      <button onClick={() => setResult(num1 - num2)}>-</button>
+      <button onClick={() => setResult(num1 * num2)}>*</button>
+      <button onClick={() => setResult(num1 / num2)}>/</button>
+      
+      <p>Result: {result}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## 📋 PHẦN 3: LISTS & CONDITIONAL RENDERING (Bài 17-24)
+
+### Bài 17: Simple List ⭐
+**Yêu cầu:** Render danh sách tên từ array.
+
+```javascript
+function NameList() {
+  const names = ["An", "Bình", "Chi", "Dũng"];
+  
+  return (
+    <ul>
+      {/* Map qua names và render <li> */}
+	  {names.map((name, index) => (
+	  <li key={index}>{name}</li>
+	  ))}
+    </ul>
+  );
+}
+```
+
+---
+
+### Bài 18: Object List ⭐⭐
+**Yêu cầu:** Render danh sách users (id, name, age).
+
+```javascript
+function UserList() {
+  const users = [
+    { id: 1, name: "An", age: 25 },
+    { id: 2, name: "Bình", age: 30 },
+    { id: 3, name: "Chi", age: 22 }
+  ];
+  
+  return (
+    <div>
+      {/* Render từng user */}
+	  {users.map(user => {
+		return(
+		<div>	
+			<div key={user.id}>{user.name}</div>
+			<div key={user.id}>{user.age}</div>
+		</div>
+		)
+		})}
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 19: Conditional Rendering - Login Status ⭐⭐
+**Yêu cầu:** Hiển thị "Welcome back!" nếu đã login, "Please login" nếu chưa.
+
+```javascript
+function LoginStatus({ isLoggedIn }) {
+  // Dùng ternary operator hoặc if/else
+  
+  return (
+    <div>
+      {/* Conditional rendering ở đây */}
+	  {isLoggedIn ? "Welcome back!" : "Please login"}
+    </div>
+  );
+}
+
+// Test
+<LoginStatus isLoggedIn={true} />
+<LoginStatus isLoggedIn={false} />
+```
+
+---
+
+### Bài 20: Todo List ⭐⭐⭐
+**Yêu cầu:** Todo list có thể thêm mới.
+
+```javascript
+function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState("");
+  
+  const addTodo = () => {
+    // Thêm todo mới vào array
+	setTodos(todos.push({ todo: "" })
+  };
+  
+  return (
+    <div>
+      <input 
+        value={input} 
+        onChange={() => setInput(e.target.value)}
+        placeholder="Enter todo"
+      />
+      <button onClick={addTodo}>Add</button>
+      
+      <ul>
+        {/* Render todos */}
+		{todos}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 21: Filter List ⭐⭐⭐
+**Yêu cầu:** Search box lọc danh sách theo tên.
+
+```javascript
+function SearchList() {
+  const [search, setSearch] = useState("");
+  
+  const items = [
+    "Apple", "Banana", "Cherry", 
+    "Date", "Elderberry", "Fig"
+  ];
+  
+  // Filter items dựa vào search
+  const filteredItems = items.filter((item) => {
+            if (item.toLowerCase()
+                .includes(search.toLowerCase())) { return item; }
+        })
+  
+  return (
+    <div>
+      <input 
+        placeholder="Search..." 
+        value={search}
+        onChange={e => setSearch(e.target.value)}}
+      />
+      <ul>
+        {filteredItems}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 22: Todo với Delete ⭐⭐⭐
+**Yêu cầu:** Mở rộng Bài 20, thêm button xóa từng todo.
+
+```javascript
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "Learn React" },
+    { id: 2, text: "Build projects" }
+  ]);
+  
+  const deleteTodo = (id) => {
+    // Xóa todo có id tương ứng
+	setTodos(todos.filter(item => item.id === id))
+  };
+  
+  return (
+    <div>
+      {/* Input thêm todo */}
+      
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            {todo.text}
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 23: Todo với Complete ⭐⭐⭐⭐
+**Yêu cầu:** Thêm checkbox đánh dấu hoàn thành, gạch ngang text khi complete.
+
+```javascript
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "Learn React", completed: false },
+    { id: 2, text: "Build projects", completed: false }
+  ]);
+  
+  const toggleComplete = (id) => {
+    // Toggle completed status
+  };
+  
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          <input 
+            type="checkbox" 
+            checked={todo.completed}
+            onChange={() => toggleComplete(todo.id)}
+          />
+          <span style={{ 
+            textDecoration: todo.completed ? 'line-through' : 'none' 
+          }}>
+            {todo.text}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+### Bài 24: Shopping Cart ⭐⭐⭐⭐
+**Yêu cầu:** Danh sách sản phẩm, button "Add to Cart", hiển thị tổng giá.
+
+```javascript
+function ShoppingCart() {
+  const products = [
+    { id: 1, name: "iPhone", price: 999 },
+    { id: 2, name: "iPad", price: 599 },
+    { id: 3, name: "MacBook", price: 1299 }
+  ];
+  
+  const [cart, setCart] = useState([]);
+  
+  const addToCart = (product) => {
+    // Thêm product vào cart
+  };
+  
+  // Tính total
+  const total = /* tính tổng giá */;
+  
+  return (
+    <div>
+      <h2>Products</h2>
+      {products.map(product => (
+        <div key={product.id}>
+          {product.name} - ${product.price}
+          <button onClick={() => addToCart(product)}>Add</button>
+        </div>
+      ))}
+      
+      <h2>Cart</h2>
+      {/* Hiển thị items trong cart */}
+      
+      <h3>Total: ${total}</h3>
+    </div>
+  );
+}
+```
+
+---
+
+## 🔄 PHẦN 4: useEffect & SIDE EFFECTS (Bài 25-30)
+
+### Bài 25: Document Title ⭐⭐
+**Yêu cầu:** Thay đổi title của tab theo input.
+
+```javascript
+import { useState, useEffect } from 'react';
+
+function TitleChanger() {
+  const [title, setTitle] = useState("");
+  
+  useEffect(() => {
+    // Thay đổi document.title
+  }, [/* dependencies */]);
+  
+  return (
+    <input 
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      placeholder="Enter title"
+    />
+  );
+}
+```
+
+---
+
+### Bài 26: Auto Counter ⭐⭐
+**Yêu cầu:** Counter tự động tăng mỗi giây. Button Start/Stop.
+
+```javascript
+function AutoCounter() {
+  const [count, setCount] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  
+  useEffect(() => {
+    // Dùng setInterval nếu isRunning = true
+    // Nhớ cleanup với clearInterval
+  }, [isRunning]);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setIsRunning(!isRunning)}>
+        {isRunning ? 'Stop' : 'Start'}
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 27: Window Resize ⭐⭐⭐
+**Yêu cầu:** Hiển thị kích thước window (width x height) khi resize.
+
+```javascript
+function WindowSize() {
+  const [size, setSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+  
+  useEffect(() => {
+    // Add event listener cho window resize
+    // Nhớ cleanup (remove listener)
+  }, []);
+  
+  return (
+    <div>
+      Window size: {size.width} x {size.height}
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 28: Fetch Data from API ⭐⭐⭐
+**Yêu cầu:** Fetch danh sách users từ API khi component mount.
+
+```javascript
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Fetch từ: https://jsonplaceholder.typicode.com/users
+    // Set loading = false khi xong
+  }, []);
+  
+  if (loading) return <p>Loading...</p>;
+  
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+### Bài 29: Search API with Debounce ⭐⭐⭐⭐
+**Yêu cầu:** Search box, sau 500ms không g타 mới gọi API.
+
+```javascript
+function SearchAPI() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  
+  useEffect(() => {
+    if (query.length === 0) return;
+    
+    // Set timeout 500ms
+    const timer = setTimeout(() => {
+      // Fetch API với query
+      // https://jsonplaceholder.typicode.com/users?q=${query}
+    }, 500);
+    
+    // Cleanup: clear timeout
+    return () => clearTimeout(timer);
+  }, [query]);
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search users..."
+      />
+      <ul>
+        {results.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 30: Dark Mode Toggle ⭐⭐⭐⭐
+**Yêu cầu:** Toggle dark/light mode, lưu vào localStorage.
+
+```javascript
+function DarkModeApp() {
+  // Lấy theme từ localStorage (default: 'light')
+  const [theme, setTheme] = useState(
+    localStorage.getItem('theme') || 'light'
+  );
+  
+  useEffect(() => {
+    // Lưu theme vào localStorage
+    // Thay đổi CSS của document.body
+  }, [theme]);
+  
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+  
+  return (
+    <div style={{
+      backgroundColor: theme === 'light' ? '#fff' : '#333',
+      color: theme === 'light' ? '#000' : '#fff',
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
+      <h1>Dark Mode Demo</h1>
+      <button onClick={toggleTheme}>
+        Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
+      </button>
+      
+      <p>Current theme: {theme}</p>
+    </div>
+  );
+}

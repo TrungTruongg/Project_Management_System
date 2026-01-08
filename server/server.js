@@ -12,6 +12,8 @@ import projectRoutes from "./src/routes/projectRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import notificationRoutes from "./src/routes/notificationRoutes.js";
 import attachmentRoutes from "./src/routes/attachmentRoutes.js";
+import commentRoutes from "./src/routes/commentRoutes.js";
+import replyRoutes from "./src/routes/replyRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +45,8 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/attachments", attachmentRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/api/comments", commentRoutes);
+app.use("/api/replies", replyRoutes);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
