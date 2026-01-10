@@ -39,12 +39,13 @@ function TaskDetail() {
 
     setLoading(true);
     try {
-      const [tasksRes, usersRes, projectsRes, commentsRes, attachmentsRes] =
+      const [tasksRes, usersRes, projectsRes, commentsRes, repliesRes, attachmentsRes] =
         await Promise.all([
           api.get("/tasks"),
           api.get("/users"),
           api.get("/projects"),
           api.get("/comments"),
+          api.get("/replies"),
           api.get("/attachments"),
         ]);
 
@@ -52,13 +53,12 @@ function TaskDetail() {
       const users = usersRes.data;
       const projects = projectsRes.data;
       const allComments = commentsRes.data || [];
+      const allReplies = repliesRes.data || [];
       const attachments = attachmentsRes.data;
 
       setAllUsers(users);
 
       const foundTask = tasks.find((task: any) => task._id === taskId);
-
-      console.log(tasks, foundTask)
 
       if (foundTask) {
         setTask(foundTask);
@@ -82,7 +82,16 @@ function TaskDetail() {
         const taskComments = allComments.filter(
           (c: any) => c.taskId === foundTask._id
         );
-        setComments(taskComments);
+
+        const taskReplies = allReplies.filter(
+          (r: any) => r.taskId === foundTask._id
+        );
+      
+        const mergedComments = [
+          ...taskComments,
+          ...taskReplies
+        ];
+        setComments(mergedComments);
 
         setAttachments(
           attachments.filter((att: any) => att.taskId === foundTask._id)
@@ -99,26 +108,16 @@ function TaskDetail() {
     fetchTaskDetail();
   }, [taskId]);
 
-  // const getShortenedUrl = (url: string) => {
-  //   try {
-  //     const urlObj = new URL(url);
-  //     const hostname = urlObj.hostname.replace("www.", "");
-  //     const pathname = urlObj.pathname;
-
-  //     const fileName = pathname.split("/").filter(Boolean).pop() || hostname;
-
-  //     if (fileName.length > 40) {
-  //       return fileName.substring(0, 37) + "...";
-  //     }
-
-  //     return fileName;
-  //   } catch {
-  //     return url.length > 40 ? url.substring(0, 37) + "..." : url;
-  //   }
-  // };
-
   const handleSubmitComment = (newComment: any) => {
     setComments([...comments, newComment]);
+  };
+
+  const handleUpdateComment = (commentId: string, newContent: string) => {
+    setComments(comments.map((c: any) => 
+      c._id === commentId 
+        ? { ...c, content: newContent, updatedAt: new Date().toISOString() } 
+        : c
+    ));
   };
 
   const handleDeleteComment = (commentId: number) => {
@@ -390,7 +389,7 @@ function TaskDetail() {
 
           {/* Title */}
           <Typography variant="h5" fontWeight="700">
-            {task.title}
+            {task.name.toUpperCase()}
           </Typography>
 
           {/* Description */}
@@ -432,17 +431,22 @@ function TaskDetail() {
 
           {attachments && attachments.length > 0 && (
             <Box sx={{ mt: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
+              <Typography fontSize="12">
                 Attachments
               </Typography>
               <List>
                 {attachments.map((att: any, index: number) => {
-                  // const shortUrl = getShortenedUrl(att.url);
+                  let processedUrl = att.url;
+                  if (processedUrl.startsWith('/uploads/')) {
+                    const baseURL = 'http://localhost:6969';
+                    processedUrl = baseURL + processedUrl;
+                  }
+                  
                   return (
                     <ListItem
                       key={att._id || index}
                       component="a"
-                      href={att.url}
+                      href={processedUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{
@@ -467,7 +471,7 @@ function TaskDetail() {
                               wordBreak: "break-all",
                             }}
                           >
-                            {att.url}
+                            {att.url.split("/").pop()}
                           </Typography>
                         }
                         secondary={
@@ -492,6 +496,7 @@ function TaskDetail() {
         comments={comments}
         onSubmit={handleSubmitComment}
         onDelete={handleDeleteComment}
+        onUpdate={handleUpdateComment}
         assignedUsers={allUsers}
       />
     </Box>

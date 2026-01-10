@@ -11,10 +11,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import axios from "axios";
 import { useUser } from "../context/UserContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function UpdateMemberProfileModal({
   open,
@@ -66,14 +64,12 @@ function UpdateMemberProfileModal({
 
     setLoading(true);
     try {
-      const usersResponse = await axios.get(
-        `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-      );
+      const usersResponse = await api.get("/users");
 
-      const existingUsers = usersResponse.data.data.data;
+      const existingUsers = usersResponse.data;
 
       const emailExists = existingUsers.some(
-        (user: any) => user.email === email && user.id !== selectedUser.id
+        (user: any) => user.email === email && user._id !== selectedUser._id
       );
 
       if (emailExists) {
@@ -83,7 +79,7 @@ function UpdateMemberProfileModal({
       }
 
       const updatedUser = {
-        id: selectedUser.id,
+        id: selectedUser._id,
         firstName: firstName,
         lastName: lastName,
         email: email,
@@ -94,17 +90,16 @@ function UpdateMemberProfileModal({
         role: selectedUser.role,
       };
 
-      const response = await axios.put(
-        `https://mindx-mockup-server.vercel.app/api/resources/users/${selectedUser._id}?apiKey=${API_KEY}`,
+      const response = await api.put(`/users/update/${selectedUser._id}`,
         updatedUser
       );
 
-      const updated = response.data.data;
+      const updated = response.data.user;
       onUpdate(updated);
 
       // Only replace the current logged-in user if we're updating that same user
-      const currentUserId = String(user?.id ?? user?._id ?? "");
-      const updatedUserId = String(updated?.id ?? updated?._id ?? "");
+      const currentUserId = String(user?._id ?? user?._id ?? "");
+      const updatedUserId = String(updated?._id ?? updated?._id ?? "");
       if (currentUserId && currentUserId === updatedUserId) {
         setUser(updated);
         localStorage.setItem("user", JSON.stringify(updated));
@@ -127,7 +122,7 @@ function UpdateMemberProfileModal({
       closeAfterTransition
       className="flex items-center justify-center"
     >
-      <Box className="relative bg-white rounded-xl w-[500px] overflow-y-auto shadow-xl mx-auto p-6">
+      <Box className="relative bg-white rounded-xl w-125 overflow-y-auto shadow-xl mx-auto p-6">
         <Box className="flex items-center justify-between mb-8">
           <Typography
             sx={{

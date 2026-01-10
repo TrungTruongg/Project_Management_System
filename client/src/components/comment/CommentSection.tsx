@@ -18,6 +18,7 @@ function CommentSection({
   comments,
   onSubmit,
   onDelete,
+  onUpdate,
   assignedUsers = [],
 }: any) {
   const [newComment, setNewComment] = useState("");
@@ -28,7 +29,7 @@ function CommentSection({
     if (!newComment.trim() || !user) return;
 
     setSubmitting(true);
-    try {   
+    try {
       const comment = {
         taskId: taskId,
         userId: user._id,
@@ -37,8 +38,6 @@ function CommentSection({
       };
 
       const response = await api.post("/comments/create", comment);
-
-      console.log(response)
 
       onSubmit(response.data);
       setNewComment("");
@@ -52,27 +51,59 @@ function CommentSection({
   const handleReply = async (commentId: string, content: string) => {
     if (!content.trim() || !user) return;
 
-    try { 
+    try {
       const reply = {
         taskId: taskId,
         userId: user._id,
         commentId: commentId,
         content: content,
         createdAt: new Date().toISOString(),
-        // parentId: parentId,
       };
 
       const response = await api.post("/replies/create", reply);
 
-      onSubmit(response.data);
+      const replyWithParent = {
+        ...response.data,
+        parentId: commentId,
+      };
+
+      onSubmit(replyWithParent);
     } catch (error) {
       console.error("Error posting reply:", error);
     }
   };
 
+  const handleEditComment = async (commentId: string, newContent: string, isReply: boolean) => {
+    try {
+      if (isReply) {
+        // Update reply
+        await api.put(`/replies/update/${commentId}`, {
+          content: newContent
+        });
+      } else {
+        // Update comment
+        await api.put(`/comments/update/${commentId}`, {
+          content: newContent
+        });
+      }
+
+      onUpdate(commentId, newContent);
+    } catch (error) {
+      console.error("Error updating:", error);
+    }
+  };
+
   const handleDeleteComment = async (commentId: string) => {
     try {
-      await api.delete(`/comments/delete/${commentId}`);
+      const item = comments.find((c: any) => c._id === commentId);
+
+      if (item?.commentId) {
+        // reply
+        await api.delete(`/replies/delete/${commentId}`);
+      } else {
+        // comment
+        await api.delete(`/comments/delete/${commentId}`);
+      }
 
       onDelete(commentId);
     } catch (error) {
@@ -103,9 +134,9 @@ function CommentSection({
     return assignedUsers.find((u: any) => u._id === userId) || user;
   };
 
-  const parentComments = comments.filter((comment: any) => !comment.parentId);
+  const parentComments = comments.filter((comment: any) => !comment.commentId);
   const getReplies = (commentId: string) => {
-    return comments.filter((comment: any) => comment.parentId === commentId);
+    return comments.filter((comment: any) => comment.commentId === commentId);
   };
 
   return (
@@ -117,7 +148,7 @@ function CommentSection({
     >
       <CardContent sx={{ p: 4 }}>
         <Typography variant="h6" fontWeight="700" sx={{ mb: 3 }}>
-          Comments ({comments.length})
+          Comments ({parentComments.length})
         </Typography>
 
         {/* Comment Input */}
@@ -131,6 +162,7 @@ function CommentSection({
                   height: 40,
                   bgcolor: "#E0E0E0",
                   textTransform: "uppercase",
+                  fontSize: "18px"
                 }}
               >
                 {user?.firstName?.[0]}
@@ -157,7 +189,7 @@ function CommentSection({
                   <Button
                     variant="contained"
                     onClick={handleSubmitComment}
-                    disabled={!newComment.trim() || submitting}
+                    disabled={!newComment?.trim() || submitting}
                     sx={{
                       textTransform: "none",
                       bgcolor: "#9333ea",
@@ -189,6 +221,7 @@ function CommentSection({
               <CommentItem
                 key={comment._id}
                 comment={comment}
+                onEdit={handleEditComment}
                 onDelete={handleDeleteComment}
                 onReply={handleReply}
                 getUserById={getUserById}

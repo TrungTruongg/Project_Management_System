@@ -78,7 +78,7 @@ function AttachmentPreview({ attachment, onDelete }: any) {
     const getFileIcon = (ext: string) => {
         switch (ext) {
             case 'xlsx':
-                return <BsFiletypeXls />;
+                return <BsFiletypeXlsx />;
             case 'xls':
                 return <BsFiletypeXls />;
             case 'docx':

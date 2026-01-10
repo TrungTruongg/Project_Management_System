@@ -149,7 +149,7 @@ function Tasks() {
   };
 
   const handleEditTask = (task: any) => {
-  
+
     setSelectedTask(task);
     setOpenCreateTaskModal(true);
   };
@@ -593,7 +593,7 @@ function Tasks() {
         >
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             {currentProject ? (
-              <Typography variant="h5" fontWeight="600">
+              <Typography fontSize="1.5rem" fontWeight="600">
                 <>
                   Tasks in
                   <Box component="span" sx={{ color: "#C62828", px: 1, borderRadius: 1, textTransform: "capitalize" }}>
@@ -604,23 +604,31 @@ function Tasks() {
               </Typography>
             ) : (
               <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Typography variant="h4" fontWeight="700">
+                <Typography fontSize="1.5rem" fontWeight="700">
                   Tasks Management
                 </Typography>
               </Box>
             )}
 
+            <Chip
+              label={filteredTasks.length}
+              size="small"
+              sx={{
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <IconButton
               onClick={fetchAllData}
               disabled={loading}
               sx={{ color: "text.secondary" }}
-              title="Refresh tasks"
+              title="Refresh members"
             >
               <RefreshIcon />
             </IconButton>
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Button
               variant="contained"
               size="large"

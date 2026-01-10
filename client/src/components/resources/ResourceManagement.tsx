@@ -115,7 +115,7 @@ function ResourceManagement() {
                 }}
             >
                 <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                    <Typography variant="h4" fontWeight="700">
+                    <Typography fontSize="1.5rem" fontWeight="700">
                         Resources
                     </Typography>
                     <IconButton

@@ -23,14 +23,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import UpdateMemberProfileModal from "./UpdateMemberProfileModal";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
 import { useSearch } from "../context/SearchContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function MemberProfile() {
   const location = useLocation();
@@ -59,25 +57,19 @@ function MemberProfile() {
     setLoading(true);
     try {
       const [usersRes, projectsRes, tasksRes] = await Promise.all([
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
-        ),
+        api.get("/users"),
+        api.get("/projects"),
+        api.get("/tasks"),
       ]);
 
       // Process users
-      const usersList = usersRes.data.data.data;
-      const foundUser = usersList.find((u: any) => u.id === memberId);
+      const usersList = usersRes.data;
+      const foundUser = usersList.find((u: any) => u._id === memberId);
       setProfileUser(foundUser);
       setAllUsers(usersList);
 
       // user projects
-      const userProjects = projectsRes.data.data.data;
+      const userProjects = projectsRes.data;
       setProjects(userProjects);
 
       // user tasks
@@ -100,7 +92,7 @@ function MemberProfile() {
     if (!searchTerm.trim()) return true;
 
     return (
-      project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
@@ -140,9 +132,7 @@ function MemberProfile() {
   const handleDeleteMember = async () => {
     setLoading(true);
     try {
-      await axios.delete(
-        `https://mindx-mockup-server.vercel.app/api/resources/users/${profileUser._id}?apiKey=${API_KEY}`
-      );
+      await api.delete(`/users/delete/${profileUser._id}`);
 
       handleCloseDeleteDialog();
 
@@ -154,9 +144,9 @@ function MemberProfile() {
     }
   };
 
-  const isOwner = projects.some(
+  const isLeader = projects.some(
     (project) =>
-      project.ownerId === user?.id && project.members.includes(memberId)
+      project.leaderId === user?._id && project.members.includes(memberId)
   );
 
   if (!profileUser && !loading) {
@@ -232,7 +222,7 @@ function MemberProfile() {
                       >
                         {profileUser?.firstName} {profileUser?.lastName}
                       </Typography>
-                      {isOwner && (
+                      {isLeader && (
                         <Box sx={{ display: "flex", gap: 1 }}>
                           <IconButton
                             size="small"
@@ -376,17 +366,17 @@ function MemberProfile() {
                 {filteredProjects.length > 0 ? (
                   filteredProjects.map((project) => {
                     const projectMembers = allUsers.filter((u: any) =>
-                      project.members.includes(u?.id)
+                      project.members.includes(u?._id)
                     );
-                    const projectOwner = allUsers.find(
-                      (u: any) => u.id === project.ownerId
+                    const projectLeader = allUsers.find(
+                      (u: any) => u._id === project.LeaderId
                     );
-                    // const isOwner = project.ownerId === user?.id;
+                    // const isLeader = project.LeaderId === user?._id;
                     const calculateProjectDays = calculateDeadline(project.startDate, project.endDate);
 
                     return (
                       <Card
-                        key={project.id}
+                        key={project._id}
                         sx={{
                           mb: 3,
                           border: (theme) =>
@@ -416,10 +406,10 @@ function MemberProfile() {
                               fontWeight="bold"
                               sx={{ textTransform: "capitalize" }}
                             >
-                              {project.title}
+                              {project.name}
                             </Typography>
 
-                            {/* {isOwner && (
+                            {/* {isLeader && (
                               <Box sx={{ display: "flex", gap: 1 }}>
                                 <IconButton
                                   size="small"
@@ -444,10 +434,10 @@ function MemberProfile() {
                               max={5}
                               sx={{ justifyContent: "flex-end" }}
                             >
-                              {projectOwner && (
+                              {projectLeader && (
                                 <Avatar
-                                  key={`leader-${projectOwner.id}`}
-                                  src={projectOwner.avatar}
+                                  key={`leader-${projectLeader._id}`}
+                                  src={projectLeader.avatar}
                                   sx={{
                                     width: 32,
                                     height: 32,
@@ -458,17 +448,17 @@ function MemberProfile() {
                                     textTransform: "uppercase",
                                     border: "2px solid #FFA726",
                                   }}
-                                  title={`Leader: ${projectOwner.firstName} ${projectOwner.lastName}`}
+                                  title={`Leader: ${projectLeader.firstName} ${projectLeader.lastName}`}
                                 >
-                                  {projectOwner.firstName?.[0]}
-                                  {projectOwner.lastName?.[0]}
+                                  {projectLeader.firstName?.[0]}
+                                  {projectLeader.lastName?.[0]}
                                 </Avatar>
                               )}
 
                               {projectMembers.length > 0 &&
                                 projectMembers.map((member: any) => (
                                   <Avatar
-                                    key={member.id}
+                                    key={member._id}
                                     src={member.avatar}
                                     sx={{
                                       width: 32,
@@ -667,7 +657,7 @@ function MemberProfile() {
                     const calculateTaskDays = calculateDeadline(task.startDate, task.endDate);
                     return (
                       <Card
-                        key={task.id}
+                        key={task._id}
                         onClick={() => navigate("/task")}
                         sx={{
                           mb: 2,
@@ -693,7 +683,7 @@ function MemberProfile() {
                             }}
                           >
                             <Chip
-                              label={task.title}
+                              label={task.name}
                               size="small"
                               sx={{
                                 bgcolor: "#E8F5E9",

@@ -5,20 +5,19 @@ import {
   Card,
   Chip,
   CircularProgress,
-  Grid,
   IconButton,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddIcon } from "react-icons/go";
 import { Refresh as RefreshIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import AddMemberModal from "./AddMemberModal";
 import { useSearch } from "../context/SearchContext";
 import { useUser } from "../context/UserContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function MemberList() {
   const [users, setUsers] = useState<any[]>([]);
@@ -26,23 +25,20 @@ function MemberList() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { searchTerm } = useSearch();
+  const { searchTerm, setSearchTerm } = useSearch();
   const { user } = useUser();
+  const [tabValue, setTabValue] = useState(0);
 
   const fetchAllData = async () => {
     setLoading(true);
     try {
       const [userRes, projectRes] = await Promise.all([
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-        )
+        api.get("/users"),
+        api.get("/projects")
       ]);
 
-      setUsers(userRes.data.data.data);
-      setProjects(projectRes.data.data.data);
+      setUsers(userRes.data);
+      setProjects(projectRes.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -56,54 +52,74 @@ function MemberList() {
     }
   }, [user]);
 
-  // Get projects where the user is the owner
-  const getOwnerProjects = () => {
+  // Get projects where the user is the leader
+  const getLeaderProjects = () => {
     if (!user) return [];
-    return projects.filter((p) => p.ownerId === user.id);
+    return projects.filter((p) => p.leaderId === user._id);
   };
 
-  // Get projects where the user is a member or owner
+  // Get projects where the user is a member or leader
   const getUserProjects = () => {
     if (!user) return [];
     return projects.filter(
-      (p) => p.ownerId === user.id || p.members?.includes(user.id)
+      (p) => p.leaderId === user._id || p.members?.includes(user._id)
     );
   };
 
-  const ownerProjects = getOwnerProjects();
+  const leaderProjects = getLeaderProjects();
   const userProjects = getUserProjects();
 
-  // Get all unique members from userProjects
-  const getAllMembers = () => {
-    const membersMap = new Map<number, { user: any; isOwner: boolean }>();
+  // Get workspace members (Leaders only)
+  const getWorkspaceMembers = () => {
+    const leadersSet = new Set<number>();
 
     userProjects.forEach((project) => {
-      // Add owner
-      const owner = users.find((u) => u.id === project.ownerId);
-      if (owner) {
-        membersMap.set(owner.id, { user: owner, isOwner: true });
-      }
+      leadersSet.add(project.leaderId);
+    });
 
-      // Add members
+    return Array.from(leadersSet).map((leaderId) => {
+      const leader = users.find((u) => u._id === leaderId);
+      return leader;
+    }).filter(Boolean);
+  };
+
+  // Get guests (Project members who are not leaders)
+  const getGuests = () => {
+    const leaderIds = new Set(userProjects.map((p) => p.leaderId));
+    const guestsMap = new Map<number, any>();
+
+    userProjects.forEach((project) => {
       project.members?.forEach((memberId: number) => {
-        const member = users.find((u) => u.id === memberId);
-        if (member && !membersMap.has(memberId)) {
-          membersMap.set(memberId, { user: member, isOwner: false });
+        if (!leaderIds.has(memberId) && !guestsMap.has(memberId)) {
+          const member = users.find((u) => u._id === memberId);
+          if (member) {
+            guestsMap.set(memberId, member);
+          }
         }
       });
     });
 
-    return Array.from(membersMap.values());
+    return Array.from(guestsMap.values());
   };
 
-  const allMembers = getAllMembers();
+  const workspaceMembers = getWorkspaceMembers();
+  const guests = getGuests();
 
-  const filteredMembers = allMembers.filter((memberData: any) => {
-    if (!searchTerm.trim()) return true;
-    const fullName =
-      `${memberData.user.firstName} ${memberData.user.lastName}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase());
-  });
+  const getFilteredMembers = () => {
+    const members = tabValue === 0 ? workspaceMembers : guests;
+
+    if (!searchTerm.trim()) return members;
+
+    return members.filter((member: any) => {
+      console.log(member)
+      const fullName = `${member.firstName} ${member.lastName}`.toLowerCase();
+      const username = member.username?.toLowerCase() || '';
+      return fullName.includes(searchTerm.toLowerCase()) ||
+        username.includes(searchTerm.toLowerCase());
+    });
+  };
+
+  const filteredMembers = getFilteredMembers();
 
   const handleAddMember = async () => {
     await fetchAllData();
@@ -118,52 +134,138 @@ function MemberList() {
   };
 
   const handleViewProfile = (member: any) => {
-    navigate("/member-profile", { state: { memberId: member.id } });
+    navigate("/member-profile", { state: { memberId: member._id } });
+  };
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+    setSearchTerm("");
+  };
+
+  const handleRemoveMember = async (memberId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      const memberProjects = userProjects.filter((project) =>
+        project.members?.includes(memberId)
+      );
+
+      // Remove member 
+      for (const project of memberProjects) {
+        const updatedMembers = project.members.filter((id: string) => id !== memberId);
+
+        await api.put(`/projects/update/${project._id}`, {
+          name: project.name,
+          description: project.description,
+          startDate: project.startDate,
+          endDate: project.endDate,
+          leaderId: project.leaderId,
+          members: updatedMembers,
+        });
+      }
+
+      // Refresh data
+      await fetchAllData();
+    } catch (err) {
+      console.error("Error removing member:", err);
+    }
   };
 
   return (
     <>
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 3,
-        }}
-      >
-        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-          <Typography variant="h4" fontWeight="700">
-            Members
-          </Typography>
-          <IconButton
-            onClick={fetchAllData}
-            disabled={loading}
-            sx={{ color: "text.secondary" }}
-            title="Refresh members"
-          >
-            <RefreshIcon />
-          </IconButton>
+      <Box sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Typography fontSize="1.5rem" fontWeight="700">
+              Members
+            </Typography>
+
+            <Chip
+              label={`${workspaceMembers.length + guests.length} / 10`}
+              size="small"
+              sx={{
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
+            />
+          </Box>
+
+
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <IconButton
+              onClick={fetchAllData}
+              disabled={loading}
+              sx={{ color: "text.secondary" }}
+              title="Refresh members"
+            >
+              <RefreshIcon />
+            </IconButton>
+
+            <Button
+              variant="contained"
+              size="medium"
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddMemberModal}
+              disabled={leaderProjects.length === 0}
+              sx={{
+                backgroundColor: "#484c7f",
+                color: "white",
+                textTransform: "none",
+                px: 3,
+              }}
+            >
+              Add Members
+            </Button>
+          </Box>
         </Box>
 
-        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-          <Button
-            variant="contained"
-            size="medium"
-            startIcon={<AddIcon />}
-            onClick={handleOpenAddMemberModal}
-            disabled={ownerProjects.length === 0}
-            sx={{
-              backgroundColor: "#484c7f",
-              color: "white",
-              textTransform: "none",
-              px: 3,
-            }}
-          >
-            Add Members
-          </Button>
+        {/* Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+          <Tabs value={tabValue} onChange={handleTabChange}>
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  Leader of project
+                  <Chip
+                    label={workspaceMembers.length}
+                    size="small"
+                    sx={{ height: 20, fontSize: '0.75rem' }}
+                  />
+                </Box>
+              }
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  Project Members
+                  <Chip
+                    label={guests.length}
+                    size="small"
+                    sx={{ height: 20, fontSize: '0.75rem' }}
+                  />
+                </Box>
+              }
+              sx={{ textTransform: "none", fontWeight: 600 }}
+            />
+          </Tabs>
         </Box>
+
+        {/* Description */}
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {tabValue === 0
+            ? "Leaders can view and participate in all visible projects and create new project."
+            : "Members can only view and edit projects they've been added to.."
+          }
+        </Typography>
+
       </Box>
 
       {loading ? (
@@ -182,81 +284,100 @@ function MemberList() {
           You are not part of any projects yet.
         </Typography>
       ) : (
-        <Grid container spacing={2}>
-          {filteredMembers.map((memberData: any) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={memberData.user.id}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {filteredMembers.map((member: any) => {
+
+            return (
               <Card
+                key={member._id}
                 elevation={0}
                 sx={{
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  textAlign: "center",
-                  p: 3,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  p: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
                   transition: "all 0.2s",
-                  "&:hover": { bgcolor: "action.hover" },
+                  "&:hover": {
+                    bgcolor: "action.hover",
+                    borderColor: "primary.main",
+                  },
                   cursor: "pointer",
                 }}
-                onClick={() => handleViewProfile(memberData.user)}
+                onClick={() => handleViewProfile(member)}
               >
                 <Avatar
-                  src={memberData.user.avatar}
+                  src={member.avatar}
                   sx={{
-                    width: 80,
-                    height: 80,
-                    fontSize: 32,
-                    bgcolor: memberData.isOwner ? "#FF9800" : "#E0E0E0",
-                    color: memberData.isOwner ? "white" : "#424242",
+                    width: 40,
+                    height: 40,
+                    fontSize: 16,
+                    bgcolor: tabValue === 0 ? "#0c66e4" : "#6b778c",
+                    color: "white",
                     fontWeight: 600,
-                    margin: "0 auto",
-                    mb: 2,
                     textTransform: "uppercase",
                   }}
                 >
-                  {memberData.user.firstName?.[0]}
-                  {memberData.user.lastName?.[0]}
+                  {member.firstName?.[0]}
+                  {member.lastName?.[0]}
                 </Avatar>
-                <Typography
-                  sx={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    mb: 0.5,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {memberData.user.firstName} {memberData.user.lastName}
-                </Typography>
-                {memberData.isOwner ? (
-                  <Chip
-                    label="Leader"
-                    size="small"
+
+                <Box sx={{ flex: 1 }}>
+                  <Typography
                     sx={{
-                      bgcolor: "#FFF3E0",
-                      color: "#E65100",
-                      fontSize: "11px",
-                      height: "22px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      textTransform: "capitalize",
                     }}
-                  />
-                ) : (
+                  >
+                    {member.firstName} {member.lastName}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    @{member.email?.split('@')[0]}
+                  </Typography>
+                </Box>
+
+                {tabValue === 0 && (
                   <Chip
-                    label="Member"
+                    label="Members workspace"
                     size="small"
                     sx={{
-                      fontSize: "11px",
-                      height: "22px",
+                      bgcolor: "#e3f2fd",
+                      color: "#0c66e4",
+                      fontSize: "12px",
+                      height: "24px",
+                      fontWeight: 500,
                     }}
                   />
                 )}
+
+                {tabValue === 1 && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    sx={{
+                      textTransform: "none",
+                      fontSize: "12px",
+                    }}
+                    onClick={(e) => handleRemoveMember(member._id, e)}
+                  >
+                    Remove
+                  </Button>
+                )}
               </Card>
-            </Grid>
-          ))}
-        </Grid>
+            )
+          })}
+        </Box>
       )}
 
       <AddMemberModal
         open={open}
         onClose={handleCloseModal}
         onSave={handleAddMember}
-        ownerProjects={ownerProjects}
+        leaderProjects={leaderProjects}
         allUsers={users}
         allProjects={projects}
       />

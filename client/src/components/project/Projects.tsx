@@ -115,8 +115,6 @@ function Projects() {
     );
   });
 
-  console.log(filteredProjects)
-
   const handleOpenModal = () => {
     setSelectedProject(null);
     setOpen(true);
@@ -186,21 +184,30 @@ function Projects() {
         }}
       >
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-          <Typography variant="h4" fontWeight="700">
+          <Typography fontSize="1.5rem" fontWeight="700">
             Projects
           </Typography>
-          <IconButton
-            onClick={fetchAllData}
-            disabled={loading}
-            sx={{ color: "text.secondary" }}
-            title="Refresh projects"
-          >
-            <RefreshIcon />
-          </IconButton>
+
+          <Chip
+            label={filteredProjects.length}
+            size="small"
+            sx={{
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+          />
         </Box>
 
 
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <IconButton
+            onClick={fetchAllData}
+            disabled={loading}
+            sx={{ color: "text.secondary" }}
+            title="Refresh members"
+          >
+            <RefreshIcon />
+          </IconButton>
           <Button
             variant="contained"
             size="large"
@@ -333,7 +340,6 @@ function Projects() {
                           <Avatar
                             key={member._id}
                             src={member.avatar}
-                            imgProps={{ loading: "lazy" }}
                             sx={{
                               width: 32,
                               height: 32,
@@ -540,7 +546,6 @@ function Projects() {
         onClose={handleClose}
         onSave={handleSaveProject}
         onUpdate={handleUpdateProject}
-        onDelete={handleDeleteProject}
         projectList={projectList}
         selectedProject={selectedProject}
       />

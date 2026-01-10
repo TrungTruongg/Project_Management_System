@@ -2,13 +2,11 @@ import { Avatar, Box, Button, Chip, CircularProgress, IconButton, Paper, Table, 
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
 import { Delete, Edit, CheckCircle as CheckCompleteIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useNavigate } from "react-router-dom";
 import CreateTicketModal from "./CreateTicketModal";
 import { useUser } from "../context/UserContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function SupportsView() {
     const [open, setOpen] = useState(false);
@@ -27,20 +25,14 @@ function SupportsView() {
         setLoading(true);
         try {
             const [ticketsRes, usersRes, projectsRes] = await Promise.all([
-                axios.get(
-                    `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`
-                ),
-                axios.get(
-                    `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-                ),
-                axios.get(
-                    `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-                ),
+                api.get("/tickets"),
+                api.get("/users"),
+                api.get("/projects"),
             ]);
 
-            setSupTickets(ticketsRes.data.data.data || []);
-            setUsers(usersRes.data.data.data || []);
-            setProjects(projectsRes.data.data.data || []);
+            setSupTickets(ticketsRes.data || []);
+            setUsers(usersRes.data || []);
+            setProjects(projectsRes.data || []);
         } catch (error) {
             console.error("Error fetching tickets:", error);
         } finally {
@@ -52,21 +44,21 @@ function SupportsView() {
         fetchAllData();
     }, [])
 
-    // Get projects where the user is the owner
-    const getOwnerProjects = () => {
+    // Get projects where the user is the leader
+    const getLeaderProjects = () => {
         if (!user) return [];
-        return projects.filter((p) => p.ownerId === user.id);
+        return projects.filter((p) => p.leaderId === user._id);
     };
 
     const getUserProjects = () => {
         if (!user) return [];
         return projects.filter(
-            (p) => p.ownerId === user.id || p.members?.includes(user.id)
+            (p) => p.leaderId === user._id || p.members?.includes(user._id)
         );
     };
 
     const userProjects = getUserProjects();
-    const ownerProjects = getOwnerProjects();
+    const leaderProjects = getLeaderProjects();
 
     const handleOpenModal = () => {
         setSelectedTicket(null);
@@ -90,7 +82,7 @@ function SupportsView() {
     const handleUpdateTicket = (updatedTicket: any) => {
         setSupTickets(
             supTickets.map((ticket: any) =>
-                ticket.id === updatedTicket.id ? updatedTicket : ticket
+                ticket._id === updatedTicket._id ? updatedTicket : ticket
             )
         );
     };
@@ -109,12 +101,10 @@ function SupportsView() {
         if (!selectedTicket) return;
         setLoading(true);
         try {
-            await axios.delete(
-                `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${selectedTicket._id}?apiKey=${API_KEY}`
-            );
+            await api.delete(`/tickets/delete/${selectedTicket._id}`);
 
             setSupTickets(
-                supTickets.filter((ticket: any) => ticket.id !== selectedTicket.id)
+                supTickets.filter((ticket: any) => ticket._id !== selectedTicket._id)
             );
             handleCloseDeleteDialog();
         } catch (error) {
@@ -142,14 +132,14 @@ function SupportsView() {
                 status: "completed"
             };
 
-            await axios.put(
-                `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${ticket._id}?apiKey=${API_KEY}`,
+            await api.put(
+                `/tickets/update/${ticket._id}`,
                 updatedTicket
             );
 
             setSupTickets(
                 supTickets.map((t: any) =>
-                    t.id === ticket.id ? updatedTicket : t
+                    t._id === ticket._id ? updatedTicket : t
                 )
             );
 
@@ -186,13 +176,13 @@ function SupportsView() {
     };
 
     const getAssignedUser = (userId: number) => {
-        return users.find((user) => user.id === userId);
+        return users.find((user) => user._id === userId);
     };
 
-    const isProjectOwnerForTicket = (ticket: any): boolean => {
+    const isProjectleaderForTicket = (ticket: any): boolean => {
         if (!ticket.projectId || !user) return false;
-        const project = projects.find((p: any) => p.id === ticket.projectId);
-        return project && project.ownerId === user.id;
+        const project = projects.find((p: any) => p._id === ticket.projectId);
+        return project && project.leaderId === user._id;
     };
 
     const handleRowClick = (ticketId: string) => {
@@ -211,9 +201,19 @@ function SupportsView() {
                 }}
             >
                 <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                    <Typography variant="h4" fontWeight="700">
+                    <Typography fontSize="1.5rem" fontWeight="700">
                         Support Tickets
                     </Typography>
+                    <Chip
+                        label={supTickets.length}
+                        size="small"
+                        sx={{
+                            fontSize: "14px",
+                            fontWeight: 500,
+                        }}
+                    />
+                </Box>
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                     <IconButton
                         onClick={fetchAllData}
                         disabled={loading}
@@ -222,14 +222,12 @@ function SupportsView() {
                     >
                         <RefreshIcon />
                     </IconButton>
-                </Box>
-                <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                     <Button
                         variant="contained"
                         size="medium"
                         startIcon={<AddTaskIcon />}
                         onClick={handleOpenModal}
-                        disabled={ownerProjects.length === 0}
+                        disabled={leaderProjects.length === 0}
                         sx={{
                             backgroundColor: "#484c7f",
                             color: "white",
@@ -270,7 +268,7 @@ function SupportsView() {
                         <TableHead>
                             <TableRow sx={{ bgcolor: (theme) => theme.palette.mode === 'light' ? "#f5f5f5" : "black" }}>
                                 <TableCell sx={{ fontWeight: 700 }}>TICKET ID</TableCell>
-                                <TableCell sx={{ fontWeight: 700 }}>TITLE</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>NAME</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>ASSIGNED BY</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>CREATE DATE</TableCell>
                                 <TableCell sx={{ fontWeight: 700 }}>STATUS</TableCell>
@@ -287,14 +285,14 @@ function SupportsView() {
 
                                     return (
                                         <TableRow
-                                            key={ticket.id}
+                                            key={ticket._id}
                                             sx={{
                                                 "&:hover": {
                                                     bgcolor: "action.hover",
                                                     cursor: "pointer",
                                                 },
                                             }}
-                                            onClick={() => handleRowClick(ticket.id)}
+                                            onClick={() => handleRowClick(ticket._id)}
                                         >
                                             <TableCell>
                                                 <Typography
@@ -305,10 +303,10 @@ function SupportsView() {
                                                         textAlign: "left"
                                                     }}
                                                 >
-                                                    {ticket.id}
+                                                    {ticket._id}
                                                 </Typography>
                                             </TableCell>
-                                            <TableCell>{ticket.title}</TableCell>
+                                            <TableCell>{ticket.name}</TableCell>
                                             <TableCell>
                                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                     <Avatar
@@ -343,7 +341,7 @@ function SupportsView() {
                                             </TableCell>
                                             <TableCell>{getStatusChip(ticket.status)}</TableCell>
                                             <TableCell align="center" onClick={(e) => e.stopPropagation()}>
-                                                {isProjectOwnerForTicket(ticket) && ticket.status !== "completed" &&
+                                                {isProjectleaderForTicket(ticket) && ticket.status !== "completed" &&
                                                     <IconButton
                                                         size="small"
                                                         sx={{ color: "#4CAF50" }}
@@ -356,7 +354,7 @@ function SupportsView() {
                                                         <CheckCompleteIcon fontSize="small" />
                                                     </IconButton>
                                                 }
-                                                {(user?.role === "leader" || ticket.assignedBy === user?.id) &&
+                                                {(user?.role === "leader" || ticket.assignedBy === user?._id) &&
                                                     (
                                                         <>
                                                             <IconButton

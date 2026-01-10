@@ -14,6 +14,7 @@ import notificationRoutes from "./src/routes/notificationRoutes.js";
 import attachmentRoutes from "./src/routes/attachmentRoutes.js";
 import commentRoutes from "./src/routes/commentRoutes.js";
 import replyRoutes from "./src/routes/replyRoutes.js";
+import ticketRoutes from "./src/routes/ticketRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +48,7 @@ app.use("/api/attachments", attachmentRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/comments", commentRoutes);
 app.use("/api/replies", replyRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

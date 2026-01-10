@@ -92,7 +92,7 @@ function CreateTaskModal({
     try {
       new URL(url);
     } catch (error) {
-      alert('Vui lòng nhập URL hợp lệ');
+      alert('Please enter valid URL');
       return;
     }
 
@@ -108,7 +108,7 @@ function CreateTaskModal({
     setAttachmentInput("");
   };
 
-  // Thêm file
+  // Add file
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -122,7 +122,7 @@ function CreateTaskModal({
 
     setAttachments([...attachments, ...newFiles]);
 
-    // Reset input để có thể chọn lại cùng file
+    // Reset input to choose same file
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -140,17 +140,6 @@ function CreateTaskModal({
     // Xóa khỏi state hiển thị
     setAttachments(attachments.filter((_, i) => i !== index));
   };
-
-  // const getShortenedUrl = (url: string) => {
-  //   try {
-  //     const urlObj = new URL(url);
-  //     const pathname = urlObj.pathname;
-  //     const fileName = pathname.split('/').filter(Boolean).pop() || urlObj.hostname.replace('www.', '');
-  //     return fileName.length > 40 ? fileName.substring(0, 37) + '...' : fileName;
-  //   } catch {
-  //     return url.length > 40 ? url.substring(0, 37) + '...' : url;
-  //   }
-  // };
 
   const getProjectMembers = () => {
     const selectedProjectId = currentProject?._id || projectId;

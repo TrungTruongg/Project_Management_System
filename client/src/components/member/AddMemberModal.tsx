@@ -18,15 +18,13 @@ import {
   MenuItem,
   FormControl,
 } from "@mui/material";
-import axios from "axios";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function AddMemberModal({
   open,
   onClose,
   onSave,
-  ownerProjects = [],
+  leaderProjects = [],
   allUsers = [],
   allProjects = [],
 }: any) {
@@ -41,7 +39,7 @@ function AddMemberModal({
   const getAvailableUsers = () => {
     return allUsers.filter((user: any) => {
       const hasProject = allProjects.some((project: any) => 
-        project.ownerId === user.id || project.members?.includes(user.id)
+        project.leaderId === user._id || project.members?.includes(user._id)
       );
       return !hasProject;
     });
@@ -91,7 +89,7 @@ function AddMemberModal({
 
     try {
       // Find selected project
-      const selectedProject = ownerProjects.find((p: any) => p.id === selectedProjectId);
+      const selectedProject = leaderProjects.find((p: any) => p._id === selectedProjectId);
       
       if (!selectedProject?._id) {
         alert("Project not found!");
@@ -101,11 +99,10 @@ function AddMemberModal({
       // Update projects, add users to array members
       const updatedProject = {
         ...selectedProject,
-        members: [...(selectedProject.members || []), selectedUser.id],
+        members: [...(selectedProject.members || []), selectedUser._id],
       };
 
-      await axios.put(
-        `https://mindx-mockup-server.vercel.app/api/resources/projects/${selectedProject._id}?apiKey=${API_KEY}`,
+      await api.put(`/projects/update/${selectedProject._id}`,
         updatedProject
       );
 
@@ -121,7 +118,7 @@ function AddMemberModal({
 
   useEffect(() => {
     if (open) {
-      setSelectedProjectId(ownerProjects.length === 1 ? ownerProjects[0].id : "");
+      setSelectedProjectId(leaderProjects.length === 1 ? leaderProjects[0]._id : "");
       setEmailOrName("");
       setSelectedUser(null);
       setSuggestions([]);
@@ -141,7 +138,7 @@ function AddMemberModal({
       closeAfterTransition
       className="flex items-center justify-center"
     >
-      <Box className="relative bg-white rounded-xl w-[500px] overflow-y-auto shadow-xl mx-auto p-6">
+      <Box className="relative bg-white rounded-xl w-125 overflow-y-auto shadow-xl mx-auto p-6">
         <Box className="flex items-center justify-between mb-6">
           <Typography sx={{ fontSize: "18px", fontWeight: 600 }}>
             Add Member To Project
@@ -165,7 +162,7 @@ function AddMemberModal({
           </Button>
         </Box>
 
-        {ownerProjects.length === 0 ? (
+        {leaderProjects.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 4 }}>
             <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
               You dont own any projects.
@@ -188,7 +185,7 @@ function AddMemberModal({
         ) : (
           <Box component="form" className="space-y-4" onSubmit={handleSave}>
             {/* Choose Project */}
-            {ownerProjects.length > 1 && (
+            {leaderProjects.length > 1 && (
               <Box>
                 <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
                   Choose Project <span className="text-red-500">*</span>
@@ -202,9 +199,9 @@ function AddMemberModal({
                     <MenuItem value="" disabled>
                       Choose a project
                     </MenuItem>
-                    {ownerProjects.map((project: any) => (
-                      <MenuItem key={project.id} value={project.id}>
-                        {project.title}
+                    {leaderProjects.map((project: any) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.name}
                       </MenuItem>
                     ))}
                   </Select>
@@ -217,7 +214,7 @@ function AddMemberModal({
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Input email..."
+                placeholder="Email address..."
                 value={emailOrName}
                 onChange={(e) => handleEmailOrNameChange(e.target.value)}
                 error={showError && !selectedUser}
@@ -229,7 +226,7 @@ function AddMemberModal({
                 <Paper sx={{ mt: 1, maxHeight: 300, overflow: "auto", border: "1px solid #e5e7eb" }}>
                   <List sx={{ p: 0 }}>
                     {suggestions.map((user) => (
-                      <ListItem key={user.id} disablePadding sx={{ "&:hover": { bgcolor: "#f3f4f6" } }}>
+                      <ListItem key={user._id} disablePadding sx={{ "&:hover": { bgcolor: "#f3f4f6" } }}>
                         <ListItemButton onClick={() => handleSelectUser(user)} sx={{ py: 1 }}>
                           <ListItemAvatar sx={{ minWidth: 40 }}>
                             <Avatar
