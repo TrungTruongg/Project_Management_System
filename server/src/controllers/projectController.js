@@ -51,7 +51,8 @@ export const updateProject = async (req, res) => {
       startDate,
       endDate,
       members,
-      priority
+      priority,
+      completion
     } = req.body;
 
     if (!name) {
@@ -66,6 +67,7 @@ export const updateProject = async (req, res) => {
       endDate,
       members: members,
       priority,
+      completion,
       updatedAt: new Date(),
     };
 

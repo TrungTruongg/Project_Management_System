@@ -5,7 +5,7 @@ import PreviewActionButtons from './PreviewActionButtons';
 import * as XLSX from 'xlsx';
 
 function AttachmentPreview({ attachment, onDelete }: any) {
-    const [mediaType, setMediaType] = useState<'image' | 'video' | 'document' | 'excel' | 'word' | 'none'>('none');
+    const [mediaType, setMediaType] = useState<'image' | 'video' | 'document' | 'excel' | 'word' | 'powerpoint' | 'none'>('none');
     const [showModal, setShowModal] = useState(false);
     const [fullUrl, setFullUrl] = useState('');
     const [loading, setLoading] = useState(false);
@@ -27,6 +27,7 @@ function AttachmentPreview({ attachment, onDelete }: any) {
         const docExts = ['txt', 'pdf'];
         const excelExts = ['xls', 'xlsx'];
         const wordExts = ['doc', 'docx'];
+        const powerpointExts = ['ppt', 'pptx'];
 
         if (imageExts.includes(ext || '')) {
             setMediaType('image');
@@ -38,6 +39,8 @@ function AttachmentPreview({ attachment, onDelete }: any) {
             setMediaType('excel');
         } else if (wordExts.includes(ext || '')) {
             setMediaType('word');
+        } else if (powerpointExts.includes(ext || '')) {
+            setMediaType('powerpoint');
         } else {
             setMediaType('none');
         }
@@ -196,10 +199,11 @@ function AttachmentPreview({ attachment, onDelete }: any) {
                             onError={() => setMediaType('none')}
                         />
                     </Box>
-                ) : ['document', 'excel', 'word'].includes(mediaType) ? (
+                ) : ['document', 'excel', 'word', 'powerpoint'].includes(mediaType) ? (
                     <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
                         {(() => {
                             const ext = attachment.name?.split('.').pop()?.toLowerCase();
+                            console.log(ext)
 
                             // For Office files, show icon 
                             if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext || '')) {
@@ -389,7 +393,6 @@ function AttachmentPreview({ attachment, onDelete }: any) {
                                         variant="contained"
                                         href={fullUrl}
                                         download
-                                        target="_blank"
                                     >
                                         Download
                                     </Button>

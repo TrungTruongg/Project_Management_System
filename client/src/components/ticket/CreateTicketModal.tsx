@@ -10,21 +10,18 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import axios from "axios";
 import { useUser } from "../context/UserContext";
 import { createNotification } from "../utils/createNotification";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function CreateTicketModal({
   open,
   onClose,
   onSave,
   onUpdate,
-  ticketList,
   selectedTicket,
 }: any) {
-  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("pending");
   const [priority, setPriority] = useState("medium");
@@ -40,7 +37,7 @@ function CreateTicketModal({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title.trim() || !description.trim() || !selectedProject) {
+    if (!name.trim() || !description.trim() || !selectedProject) {
       setShowError(true);
       return;
     }
@@ -51,54 +48,47 @@ function CreateTicketModal({
       if (isUpdate) {
         const updatedTicket = {
           ...selectedTicket,
-          title,
+          name,
           description,
-          projectId: selectedProject?.id,
+          projectId: selectedProject?._id,
           status,
           priority,
         };
 
-        const response = await axios.put(
-          `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${selectedTicket._id}?apiKey=${API_KEY}`,
+        const response = await api.put(
+          `/tickets/update/${selectedTicket._id}`,
           updatedTicket
         );
 
-        onUpdate(response.data.data);
+        onUpdate(response.data.ticket);
         onClose();
       } else {
-        const maxId =
-          ticketList.length > 0
-            ? Math.max(...ticketList.map((t: any) => t.id))
-            : 0;
-
         const newTicket = {
-          id: maxId + 1,
-          title,
+          name,
           description,
-          assignedBy: user?.id,
-          projectId: selectedProject?.id,
+          assignedBy: user?._id,
+          projectId: selectedProject?._id,
           status,
           priority,
           createdDate: new Date().toISOString().split("T")[0],
         };
 
-        const response = await axios.post(
-          `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`,
+        const response = await api.post("/tickets/create",
           newTicket
         );
 
-        //Send notify to project owner only
-        if (selectedProject?.ownerId) {
+        //Send notify to project leader only
+        if (selectedProject?.leaderId) {
           await createNotification({
-            userId: [selectedProject.ownerId],
+            userId: [selectedProject.leaderId],
             type: "support",
             title: `New Support Ticket`,
-            description: `created ticket ${title}`,
-            createdBy: user?.id,
+            description: `created ticket ${name}`,
+            createdBy: user?._id,
           });
         }
 
-        onSave(response.data.data);
+        onSave(response.data);
         onClose();
       }
     } catch (error) {
@@ -112,14 +102,12 @@ function CreateTicketModal({
     if (open) {
       const fetchProjects = async () => {
         try {
-          const projectsRes = await axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-          );
-          const allProjects = projectsRes.data.data.data;
+          const projectsRes = await api.get("/projects");
+          const allProjects = projectsRes.data;
 
-          // Filter projects where user is not the owner
+          // Filter projects where user is not the leader
           const availableProjects = allProjects.filter(
-            (p: any) => p.ownerId !== user?.id
+            (p: any) => p.leaderId !== user?._id
           );
           setProjects(availableProjects);
         } catch (error) {
@@ -130,15 +118,15 @@ function CreateTicketModal({
       fetchProjects();
 
       if (selectedTicket) {
-        setTitle(selectedTicket.title || "");
+        setName(selectedTicket.name || "");
         setDescription(selectedTicket.description || "");
         setStatus(selectedTicket.status || "pending");
         setPriority(selectedTicket.priority || "medium");
         setSelectedProject(
-          selectedTicket.projectId ? { id: selectedTicket.projectId } : null
+          selectedTicket.projectId ? { _id: selectedTicket.projectId } : null
         );
       } else {
-        setTitle("");
+        setName("");
         setDescription("");
         setStatus("pending");
         setPriority("medium");
@@ -147,7 +135,7 @@ function CreateTicketModal({
       setShowError(false);
       setLoading(false);
     }
-  }, [open, selectedTicket, user?.id]);
+  }, [open, selectedTicket, user?._id]);
 
   return (
     <Modal
@@ -155,7 +143,7 @@ function CreateTicketModal({
       onClose={onClose}
       className="flex items-center justify-center"
     >
-      <Box className="relative bg-white rounded-xl w-[500px] overflow-y-auto shadow-xl mx-auto p-6">
+      <Box className="relative bg-white rounded-xl w-125 overflow-y-auto shadow-xl mx-auto p-6">
         <Box className="flex items-center justify-between mb-8">
           <Typography sx={{ fontSize: "18px", fontWeight: 600 }}>
             {isUpdate ? "Update Ticket" : "Create New Ticket"}
@@ -182,20 +170,20 @@ function CreateTicketModal({
         <Box component="form" className="space-y-4" onSubmit={handleSave}>
           <Box>
             <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
-              Title <span className="text-red-500">*</span>
+              Name <span className="text-red-500">*</span>
             </Typography>
             <TextField
               fullWidth
               type="text"
               size="small"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter ticket title"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ticket name "
               sx={{ "& .MuiOutlinedInput-root": { fontSize: "14px" } }}
             />
-            {showError && !title.trim() && (
+            {showError && !name.trim() && (
               <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
-                Title is required
+                Name is required
               </Typography>
             )}
           </Box>
@@ -235,10 +223,10 @@ function CreateTicketModal({
               fullWidth
               displayEmpty
               size="small"
-              value={selectedProject?.id || ""}
+              value={selectedProject?._id || ""}
               onChange={(e) => {
                 const project = projects.find(
-                  (p: any) => p.id === Number(e.target.value)
+                  (p: any) => p._id === e.target.value
                 );
                 setSelectedProject(project);
               }}
@@ -249,11 +237,11 @@ function CreateTicketModal({
               </MenuItem>
               {projects.map((project) => (
                 <MenuItem
-                  key={project.id}
-                  value={project.id}
+                  key={project._id}
+                  value={project._id}
                   sx={{ textTransform: "capitalize" }}
                 >
-                  {project.title}
+                  {project.name}
                 </MenuItem>
               ))}
             </Select>

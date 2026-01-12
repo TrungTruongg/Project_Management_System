@@ -60,7 +60,7 @@ function Projects() {
     return endDate < today;
   };
 
-  const calculateProjectCompletion = (projectId: number) => {
+  const calculateProjectCompletion = (projectId: string) => {
     const projectTasks = tasks.filter((task) => task.projectId === projectId);
 
     if (projectTasks.length === 0) return 0;
@@ -157,7 +157,6 @@ function Projects() {
     try {
       await api.delete(`/projects/delete/${id}`);
 
-      //setProjectList(projectList.filter((project) => project?._id !== id));
       setProjectList((prev) => prev.filter((project) => project._id !== id));
       handleCloseDeleteDialog();
     } catch (error) {
@@ -316,7 +315,6 @@ function Projects() {
                       {projectLeader && (
                         <Avatar
                           src={projectLeader.avatar}
-                          imgProps={{ loading: "lazy" }}
                           key={`leader-${projectLeader._id}`}
                           sx={{
                             width: 32,
@@ -359,7 +357,7 @@ function Projects() {
                     </AvatarGroup>
                   </Box>
 
-                  {/* Stats */}
+                  {/* Dates */}
                   <Box
                     sx={{
                       display: "flex",
@@ -412,7 +410,7 @@ function Projects() {
                               variant="caption"
                               sx={{ color: "text.secondary", fontStyle: "italic" }}
                             >
-                              No assigned date
+                              No detail
                             </Typography>
                           }
                         </Typography>
@@ -461,7 +459,7 @@ function Projects() {
                               variant="caption"
                               sx={{ color: "text.secondary", fontStyle: "italic" }}
                             >
-                              No assigned date
+                              No detail
                             </Typography>
                           }
                         </Typography>

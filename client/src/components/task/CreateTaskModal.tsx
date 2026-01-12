@@ -27,7 +27,7 @@ function CreateTaskModal({
   // Check if this is a status-only update (member updating assigned task)
   const [isStatusOnly, setIsStatusOnly] = useState(false);
   const [name, setName] = useState("");
-  const [projectId, setProjectId] = useState<number | "">("");
+  const [projectId, setProjectId] = useState<string | "">("");
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<any[]>([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([]);
@@ -151,7 +151,7 @@ function CreateTaskModal({
     return users.filter((u) => project.members.includes(u._id));
   };
 
-  const handleProjectChange = (newProjectId: number) => {
+  const handleProjectChange = (newProjectId: string) => {
     setProjectId(newProjectId);
     setAssignedTo([]);
 

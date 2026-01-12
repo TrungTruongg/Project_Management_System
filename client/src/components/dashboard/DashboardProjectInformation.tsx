@@ -12,17 +12,17 @@ import {
   AvatarGroup,
   CircularProgress,
 } from "@mui/material";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
+import { useNavigate } from "react-router-dom";
 
 function DashboardProjectInformation() {
   const [users, setUsers] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useUser();
+  const navigate = useNavigate();
 
   const calculateDeadline = (dateStart: string, dateEnd: string) => {
     const startDate = new Date(dateStart);
@@ -38,15 +38,11 @@ function DashboardProjectInformation() {
     setLoading(true);
     try {
       const [projectsRes, usersRes] = await Promise.all([
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-        ),
+        api.get("/projects"),
+        api.get("/users"),
       ]);
-      setProjects(projectsRes.data.data.data);
-      setUsers(usersRes.data.data.data);
+      setProjects(projectsRes.data);
+      setUsers(usersRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -61,11 +57,15 @@ function DashboardProjectInformation() {
   const getUserProjects = () => {
     if (!user) return [];
     return projects.filter(
-      (p) => p.ownerId === user.id || p.members?.includes(user.id)
+      (p) => p.leaderId === user._id || p.members?.includes(user._id)
     );
   };
 
   const userProjects = getUserProjects();
+
+  const handleViewProject = (projectId: any) => {
+    navigate(`/task?id=${projectId}`);
+  }
 
   if (loading) {
     return (
@@ -170,14 +170,14 @@ function DashboardProjectInformation() {
                 </TableCell>
               </TableRow>
             ) : (
-              projects.map((project: any, index) => {
-                const leader = users.find(user => user.id === project.ownerId);
-                const projectMembers = users.filter((user) => project.members.includes(user.id));
+              projects.map((project: any) => {
+                const leader = users.find(user => user._id === project.leaderId);
+                const projectMembers = users.filter((user) => project.members.includes(user._id));
                 const calculateDays = calculateDeadline(project.startDate, project.endDate);
 
                 return (
                   <TableRow
-                    key={index}
+                    key={project._id}
                     sx={{
                       "&:hover": { bgcolor: 'action.hover' },
                       "& td": {
@@ -185,10 +185,11 @@ function DashboardProjectInformation() {
                           `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
                       },
                     }}
+                    onClick={() => handleViewProject(project._id)}
                   >
                     <TableCell>
                       <Typography variant="body2" fontWeight="500">
-                        {project.title}
+                        {project.name}
                       </Typography>
                       {project.description && (
                         <Typography
@@ -249,29 +250,32 @@ function DashboardProjectInformation() {
                     </TableCell>
                     <TableCell>
                       {projectMembers.length > 0 ? (
-                        <AvatarGroup max={4}>
-                          {projectMembers.map((member: any) => {
 
-                            return (
+                      <AvatarGroup max={5} sx={{ justifyContent: "flex-end" }}>
+                          {projectMembers.length > 0 && (
+                            projectMembers.map((member) => (
                               <Avatar
-                                key={member.id}
+                                key={member._id}
                                 src={member.avatar}
                                 sx={{
                                   width: 32,
                                   height: 32,
-                                  fontSize: "14px",
+                                  fontSize: "12px",
                                   bgcolor: "#E0E0E0",
-                                  textTransform: "uppercase"
+                                  color: "#484c7f",
+                                  fontWeight: 600,
+                                  textTransform: "uppercase",
                                 }}
-                                title={member ? `${member.firstName} ${member.lastName}` : "Unknown"}
+                                title={`${member.firstName} ${member.lastName}`}
                               >
-                                {member?.firstName?.[0]}{member?.lastName?.[0]}
+                                {member.firstName?.[0]}
+                                {member.lastName?.[0]}
                               </Avatar>
-                            );
-                          })}
+                            ))
+                          )}
                         </AvatarGroup>
                       ) : (
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" fontStyle="italic" color="text.secondary">
                           No members
                         </Typography>
                       )}

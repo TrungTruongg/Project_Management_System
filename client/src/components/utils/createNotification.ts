@@ -1,7 +1,7 @@
 import api from "../api/axiosConfig";
 
 export const createNotification = async (data: {
-  userId: number[];
+  userId: string[];
   type: string;
   title: string;
   description: string;

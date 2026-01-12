@@ -188,6 +188,7 @@ function SupportsView() {
     const handleRowClick = (ticketId: string) => {
         navigate(`/supports-detail?id=${ticketId}`);
     };
+
     return (
         <>
             <Box
@@ -280,7 +281,7 @@ function SupportsView() {
                         <TableBody>
                             {supTickets
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((ticket): any => {
+                                .map((ticket, index) => {
                                     const assignedUser = getAssignedUser(ticket.assignedBy);
 
                                     return (
@@ -303,7 +304,7 @@ function SupportsView() {
                                                         textAlign: "left"
                                                     }}
                                                 >
-                                                    {ticket._id}
+                                                    {index + 1}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>{ticket.name}</TableCell>
@@ -333,7 +334,7 @@ function SupportsView() {
                                                 </Box>
                                             </TableCell>
                                             <TableCell>
-                                                {new Date(ticket.createdDate).toLocaleDateString("en-GB", {
+                                                {new Date(ticket.createdAt).toLocaleDateString("en-GB", {
                                                     day: "2-digit",
                                                     month: "short",
                                                     year: "numeric",

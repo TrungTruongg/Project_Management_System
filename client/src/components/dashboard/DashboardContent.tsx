@@ -9,11 +9,9 @@ import { TbSubtask as ProgressProjectIcon } from "react-icons/tb";
 import WelcomeIcon from "../icons/WelcomeIcon"
 import DashboardProjectInformation from "./DashboardProjectInformation"
 import { useEffect, useState } from "react"
-import axios from "axios"
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function DashboardContent() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -37,15 +35,11 @@ function DashboardContent() {
     try {
       const [projectsRes, tasksRes] =
         await Promise.all([
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-          ),
-          axios.get(
-            `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
-          )
+          api.get("/projects"),
+          api.get("/tasks")
         ]);
-      setProjects(projectsRes.data.data.data);
-      setTasks(tasksRes.data.data.data);
+      setProjects(projectsRes.data);
+      setTasks(tasksRes.data);
     } catch (err) {
       console.error(err)
     }
@@ -59,7 +53,7 @@ function DashboardContent() {
   const getUserProjects = () => {
         if (!user) return [];
         return projects.filter(
-            (p) => p.ownerId === user.id || p.members?.includes(user.id)
+            (p) => p.leaderId === user._id || p.members?.includes(user._id)
         );
     };
 
@@ -139,7 +133,7 @@ function DashboardContent() {
                   color="text.secondary"
                   fontWeight="500"
                 >
-                  Total Tasks
+                  Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
                   {userProjects.length === 0 ? 0 : totalTask}
@@ -197,7 +191,7 @@ function DashboardContent() {
                   color="text.secondary"
                   fontWeight="500"
                 >
-                  Total To Do Tasks
+                  To Do Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
                   {userProjects.length === 0 ? 0 : totalToDoTasks}
@@ -255,7 +249,7 @@ function DashboardContent() {
                   color="text.secondary"
                   fontWeight="500"
                 >
-                  Total Completed Tasks
+                  Completed Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
                   {userProjects.length === 0 ? 0 : totalCompletedTasks}
@@ -313,7 +307,7 @@ function DashboardContent() {
                   color="text.secondary"
                   fontWeight="500"
                 >
-                  Total Progress Tasks
+                  Progress Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
                   {userProjects.length === 0 ? 0 : totalProgressTasks}

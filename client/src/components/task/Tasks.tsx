@@ -154,7 +154,7 @@ function Tasks() {
     setOpenCreateTaskModal(true);
   };
 
-  const updateProjectCompletion = async (projectId: number) => {
+  const updateProjectCompletion = async (projectId: string) => {
     try {
       const [tasksRes, projectsRes] = await Promise.all([
         api.get("/tasks"),
@@ -304,7 +304,7 @@ function Tasks() {
         : [];
 
     const assignedUsers = assignedUserIds
-      .map((userId: number) => users.find((u) => u._id === userId))
+      .map((userId: string) => users.find((u) => u._id === userId))
       .filter(Boolean);
 
     const calculateDays = calculateDeadline(task.startDate, task.endDate)

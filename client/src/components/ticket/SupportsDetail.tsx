@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import axios from "axios";
 import {
   Person as PersonIcon,
   Loop as StatusIcon,
@@ -19,8 +18,7 @@ import {
   ArrowBack,
 } from "@mui/icons-material";
 import { useUser } from "../context/UserContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "../api/axiosConfig";
 
 function SupportsDetail() {
   const [searchParams] = useSearchParams();
@@ -40,39 +38,33 @@ function SupportsDetail() {
     setLoading(true);
     try {
       const [ticketsRes, usersRes, projectsRes] = await Promise.all([
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/supportTickets?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/users?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-        ),
+        api.get("/tickets"),
+        api.get("/users"),
+        api.get("/projects"),
       ]);
 
-      const tickets = ticketsRes.data.data.data;
-      const users = usersRes.data.data.data;
-      const projects = projectsRes.data.data.data;
+      const tickets = ticketsRes.data;
+      const users = usersRes.data;
+      const projects = projectsRes.data;
 
-      const foundTicket = tickets.find((t: any) => t.id === parseInt(ticketId));
+      const foundTicket = tickets.find((t: any) => t._id === ticketId);
 
       if (foundTicket) {
         setTicket(foundTicket);
 
         // Find user by assignedBy
         const ticketUser = users.find(
-          (u: any) => u.id === foundTicket.assignedBy
+          (u: any) => u._id === foundTicket.assignedBy
         );
         setAssignedUser(ticketUser);
 
         const foundProject = projects.find(
-          (p: any) => p.id === foundTicket.projectId
+          (p: any) => p._id === foundTicket.projectId
         );
         setProject(foundProject);
 
         if (foundProject && user) {
-          const isOwner = foundProject.ownerId === user.id;
+          const isOwner = foundProject.leaderId === user._id;
           setIsProjectOwner(isOwner);
         } else {
           setIsProjectOwner(false);
@@ -148,8 +140,7 @@ function SupportsDetail() {
         status: "completed",
       };
 
-      await axios.put(
-        `https://mindx-mockup-server.vercel.app/api/resources/supportTickets/${ticket._id}?apiKey=${API_KEY}`,
+      await api.put(`tickets/update/${ticket._id}`,
         updatedTicket
       );
 
@@ -368,7 +359,7 @@ function SupportsDetail() {
                 <Box>
                   {project && (
                     <Chip
-                      label={project.title}
+                      label={project.name}
                       size="small"
                       sx={{
                         bgcolor: "#F3E5F5",
@@ -381,7 +372,7 @@ function SupportsDetail() {
                   )}
                   <Typography variant="body2" color="text.secondary">
                     Created:{" "}
-                    {new Date(ticket.createdDate).toLocaleDateString("en-GB", {
+                    {new Date(ticket.createdAt).toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
@@ -390,9 +381,9 @@ function SupportsDetail() {
                 </Box>
               </Box>
 
-              {/* Title */}
+              {/* Name */}
               <Typography variant="h5" fontWeight="700">
-                {ticket.title}
+                {ticket.name}
               </Typography>
 
               <Box>

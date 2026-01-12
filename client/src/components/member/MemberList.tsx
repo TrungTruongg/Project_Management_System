@@ -341,7 +341,7 @@ function MemberList() {
 
                 {tabValue === 0 && (
                   <Chip
-                    label="Members workspace"
+                    label="Leader"
                     size="small"
                     sx={{
                       bgcolor: "#e3f2fd",

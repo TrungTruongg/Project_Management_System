@@ -1,25 +1,25 @@
 import {
   Avatar,
+  AvatarGroup,
   Badge,
   Box,
   Button,
   IconButton,
   Menu,
   MenuItem,
+  Skeleton,
   Tooltip,
   Typography,
 } from "@mui/material";
 import SearchInput from "./SearchInput";
-import { Notifications, Settings as SettingsIcon } from "@mui/icons-material";
+import { Info, Notifications, Settings as SettingsIcon } from "@mui/icons-material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import { useUser } from "./context/UserContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import NotificationModal from "./NotificationModal";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "./api/axiosConfig";
 
 function Header() {
   const [open, setOpen] = useState(false);
@@ -27,30 +27,44 @@ function Header() {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const [hasNotification, setHasNotification] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [project, setProject] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const [responseProject, responseUser] = await Promise.all([
+        api.get("/projects"),
+        api.get("/users"),
+      ]);
 
+      setProject(responseProject.data);
+      setUsers(responseUser.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const checkHasNotification = async () => {
-    if (!user || user.role !== "member") {
+    if (!user) {
       setHasNotification(false);
       return;
     }
 
     try {
       const [projectsRes, tasksRes] = await Promise.all([
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/projects?apiKey=${API_KEY}`
-        ),
-        axios.get(
-          `https://mindx-mockup-server.vercel.app/api/resources/tasks?apiKey=${API_KEY}`
-        ),
+        api.get("/projects"),
+        api.get("/tasks"),
       ]);
 
-      const projects = projectsRes.data.data.data;
-      const tasks = tasksRes.data.data.data;
+      const projects = projectsRes.data;
+      const tasks = tasksRes.data;
 
-      const hasProject = projects.some((p: any) => p.member?.includes(user.id));
-      const hasTask = tasks.some((task: any) => task.assignedTo?.includes(user.id));
+      const hasProject = projects.some((p: any) => p.members?.includes(user._id));
+      const hasTask = tasks.some((task: any) => task.assignedTo?.includes(user._id));
 
       setHasNotification(hasProject || hasTask);
     } catch (error) {
@@ -63,7 +77,7 @@ function Header() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) fetchAllData();;
   }, [user]);
 
   const handleLogout = async () => {
@@ -112,7 +126,7 @@ function Header() {
       <SearchInput />
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {/* <IconButton sx={{ bgcolor: "white" }}>
+        <IconButton sx={{ bgcolor: "white" }}>
           <Info color="primary" />
         </IconButton>
         <AvatarGroup
@@ -138,18 +152,23 @@ function Header() {
               />
             ))
           ) : (
-            users.map((user) => (
-              <Avatar
-                key={user.id}
-                src={user.avatar || "/images/user_avatar.jpg"}
-                sx={{ textTransform: "uppercase", ml: user.id > 0 ? -1 : 0, }}
-              >
-                {user.firstName?.[0]}
-                {user.lastName?.[0]}
-              </Avatar>
-            ))
-          )}
-        </AvatarGroup> */}
+            project.map((project) => {
+              const projectMembers = users.filter((user) => project.members.includes(user._id));
+              return (
+
+                projectMembers.map((member) => (
+                  <Avatar
+                    key={member._id}
+                    src={member.avatar}
+                    sx={{ textTransform: "uppercase", ml: member._id > 0 ? -1 : 0, }}
+                  >
+                    {member.firstName?.[0]}
+                    {member.lastName?.[0]}
+                  </Avatar>
+                ))
+              )
+            }))}
+        </AvatarGroup>
         <IconButton onClick={handleOpenNotification}>
           <Badge
             variant="dot"
