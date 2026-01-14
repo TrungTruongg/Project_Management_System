@@ -7,7 +7,7 @@ import { useSearch } from "../context/SearchContext";
 import api from "../api/axiosConfig";
 import AttachmentPreview from "./AttachmentPreview";
 
-function ResourceManagement() {
+function AttachmentManagement() {
     const [loading, setLoading] = useState(false);
     const [attachments, setAttachments] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
@@ -116,7 +116,7 @@ function ResourceManagement() {
             >
                 <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                     <Typography fontSize="1.5rem" fontWeight="700">
-                        Resources
+                        Attachments
                     </Typography>
                     <IconButton
                         onClick={fetchAllData}
@@ -235,4 +235,4 @@ function ResourceManagement() {
     )
 }
 
-export default ResourceManagement
+export default AttachmentManagement

@@ -5,6 +5,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  IconButton,
   List,
   ListItem,
   ListItemIcon,
@@ -12,12 +13,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
   Person as PersonIcon,
   Loop as StatusIcon,
   AttachFile as AttachmentIcon,
+  ArrowBack,
 } from "@mui/icons-material";
 import CommentSection from "../comment/CommentSection";
 import api from "../api/axiosConfig";
@@ -33,6 +35,8 @@ function TaskDetail() {
   const [attachments, setAttachments] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+
+  const navigate = useNavigate();
 
   const fetchTaskDetail = async () => {
     if (!taskId) return;
@@ -86,7 +90,7 @@ function TaskDetail() {
         const taskReplies = allReplies.filter(
           (r: any) => r.taskId === foundTask._id
         );
-      
+
         const mergedComments = [
           ...taskComments,
           ...taskReplies
@@ -113,9 +117,9 @@ function TaskDetail() {
   };
 
   const handleUpdateComment = (commentId: string, newContent: string) => {
-    setComments(comments.map((c: any) => 
-      c._id === commentId 
-        ? { ...c, content: newContent, updatedAt: new Date().toISOString() } 
+    setComments(comments.map((c: any) =>
+      c._id === commentId
+        ? { ...c, content: newContent, updatedAt: new Date().toISOString() }
         : c
     ));
   };
@@ -201,9 +205,15 @@ function TaskDetail() {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight="700" sx={{ mb: 4 }}>
-        Task Detail
-      </Typography>
+      <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
+        <IconButton onClick={() => navigate(-1)}>
+          <ArrowBack />
+        </IconButton>
+        <Typography fontSize="1.5rem" fontWeight="700">
+          Task Detail
+        </Typography>
+      </Box>
+
 
       <Box
         sx={{
@@ -441,7 +451,7 @@ function TaskDetail() {
                     const baseURL = 'http://localhost:6969';
                     processedUrl = baseURL + processedUrl;
                   }
-                  
+
                   return (
                     <ListItem
                       key={att._id || index}

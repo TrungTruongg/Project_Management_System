@@ -1,5 +1,5 @@
 import { Box, Button, CircularProgress, IconButton, Typography } from '@mui/material';
-import { BsFiletypeXls, BsFiletypeXlsx, BsFiletypeDoc , BsFiletypeDocx, BsFiletypePpt, BsFiletypePptx  } from "react-icons/bs";
+import { BsFiletypeXls, BsFiletypeXlsx, BsFiletypeDoc, BsFiletypeDocx, BsFiletypePpt, BsFiletypePptx } from "react-icons/bs";
 import { useEffect, useState } from 'react'
 import PreviewActionButtons from './PreviewActionButtons';
 import * as XLSX from 'xlsx';
@@ -203,7 +203,6 @@ function AttachmentPreview({ attachment, onDelete }: any) {
                     <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
                         {(() => {
                             const ext = attachment.name?.split('.').pop()?.toLowerCase();
-                            console.log(ext)
 
                             // For Office files, show icon 
                             if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext || '')) {
@@ -384,15 +383,19 @@ function AttachmentPreview({ attachment, onDelete }: any) {
                                         justifyContent: 'center',
                                         height: '100%',
                                         gap: 2,
+                                        bgcolor: "#000000e6",
+                                        zIndex: 9999,
                                     }}
                                 >
-                                    <Typography color="text.secondary">
-                                        No support preview
+                                    <Typography color="white">
+                                        There is no preview available for this attachment.
                                     </Typography>
                                     <Button
                                         variant="contained"
+                                        size='small'
                                         href={fullUrl}
                                         download
+                                        sx={{ textTransform: "capitalize", fontWeight: 600 }}
                                     >
                                         Download
                                     </Button>

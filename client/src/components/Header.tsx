@@ -55,32 +55,30 @@ function Header() {
     }
 
     try {
-      const [projectsRes, tasksRes] = await Promise.all([
-        api.get("/projects"),
-        api.get("/tasks"),
-      ]);
+      const response = await api.get("/notifications");
+      const notifications = response.data;
 
-      const projects = projectsRes.data;
-      const tasks = tasksRes.data;
+      const hasUnread = notifications.some(
+        (notif: any) =>
+          notif.userId?.includes(user._id) &&
+          !notif.isRead &&
+          notif.createdBy !== user._id
+      );
 
-      const hasProject = projects.some((p: any) => p.members?.includes(user._id));
-      const hasTask = tasks.some((task: any) => task.assignedTo?.includes(user._id));
-
-      setHasNotification(hasProject || hasTask);
+      setHasNotification(hasUnread);
     } catch (error) {
       console.error("Error checking notification:", error);
     }
   };
 
   useEffect(() => {
-    checkHasNotification();
-  }, []);
-
-  useEffect(() => {
-    if (!user) fetchAllData();;
+    if (user) checkHasNotification();
+    else if (!user) fetchAllData();
+    else setHasNotification(false);
   }, [user]);
 
   const handleLogout = async () => {
+
     localStorage.removeItem("auth");
     localStorage.removeItem("user");
 

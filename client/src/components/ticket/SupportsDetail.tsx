@@ -163,7 +163,7 @@ function SupportsDetail() {
         }}
       >
         <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton onClick={() => navigate("/supports-view")}>
+          <IconButton onClick={() => navigate(-1)}>
             <ArrowBack />
           </IconButton>
           <Typography variant="h4" fontWeight="700">

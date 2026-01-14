@@ -26,7 +26,7 @@ const routeMapping: Record<string, string> = {
   "Members Profile": "/member-profile",
   "Supports View": "/supports-view",
   "Supports Detail": "/supports-detail",
-  Resources: "/resources",
+  Attachments: "/attachments",
   // "Locked Users": "/view-locked-users",
 };
 

@@ -4,8 +4,8 @@ import { FaRegTrashAlt as DeleteIcon } from "react-icons/fa";
 
 function PreviewActionButtons({ attachment, onDelete }: any) {
     const handleDownload = async (e: React.MouseEvent) => {
-        e.stopPropagation(); 
-        
+        e.stopPropagation();
+
         try {
             // Nếu là link external, mở trong tab mới
             if (attachment.type === 'link') {
@@ -62,7 +62,10 @@ function PreviewActionButtons({ attachment, onDelete }: any) {
 
             <IconButton
                 size="small"
-                onClick={() => onDelete(attachment)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(attachment);
+                }}
                 sx={{
                     width: 32,
                     height: 32,

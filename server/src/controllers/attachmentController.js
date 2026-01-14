@@ -87,7 +87,7 @@ export const createAttachment = async (req, res) => {
     const newAttachment = {
       url: url,
       name: name,
-      type: type, // 'file' hoặc 'link'
+      type: type, 
       taskId: taskId,
       uploadedAt: new Date()
     };

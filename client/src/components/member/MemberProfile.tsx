@@ -7,6 +7,7 @@ import {
   AccessTime,
   Delete,
   ArrowBack,
+  Refresh as RefreshIcon
 } from "@mui/icons-material";
 import {
   Avatar,
@@ -49,11 +50,11 @@ function MemberProfile() {
 
   useEffect(() => {
     if (memberId) {
-      loadAllData();
+      fetchAllData();
     }
   }, [memberId]);
 
-  const loadAllData = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
       const [usersRes, projectsRes, tasksRes] = await Promise.all([
@@ -162,13 +163,21 @@ function MemberProfile() {
 
   return (
     <>
-      <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
+      <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 1 }}>
         <IconButton onClick={() => navigate("/member")}>
           <ArrowBack />
         </IconButton>
-        <Typography variant="h4" fontWeight="bold">
+        <Typography fontSize="1.5rem" fontWeight="700">
           Member Profile
         </Typography>
+        <IconButton
+          onClick={fetchAllData}
+          disabled={loading}
+          sx={{ color: "text.secondary" }}
+          title="Refresh resources"
+        >
+          <RefreshIcon />
+        </IconButton>
       </Box>
 
       {loading ? (
@@ -186,7 +195,7 @@ function MemberProfile() {
                   `1px solid ${theme.palette.mode === "light"
                     ? "#f0f0f0"
                     : "#2a2a2a"
-                }`,
+                  }`,
                 borderRadius: 2,
                 transition: "all 0.3s",
               }}

@@ -527,10 +527,11 @@ function Tasks() {
                 label={
                   isTaskExpired(task.endDate)
                     ? "Expired"
-                    : `${calculateDeadline(
-                      task.startDate,
-                      task.endDate
-                    )} Days Left`
+                    : (task.endDate && task.startDate) === "" ? "No deadline"
+                      : `${calculateDeadline(
+                        task.startDate,
+                        task.endDate
+                      )} Days Left`
                 }
                 size="small"
                 sx={{

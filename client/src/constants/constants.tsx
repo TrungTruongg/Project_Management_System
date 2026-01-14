@@ -8,7 +8,7 @@ import { AiOutlineFundProjectionScreen as TotalProjectIcon } from "react-icons/a
 import { BiTask as CompleteProjectIcon } from "react-icons/bi";
 import { TbSubtask as ProgressProjectIcon } from "react-icons/tb";
 import { IoTicket as TicketIcon } from "react-icons/io5";
-import { TiAttachment as ResourceIcon } from "react-icons/ti";
+import { TiAttachment as AttachmentIcon } from "react-icons/ti";
 // import { MdSecurity as SecurityIcon } from "react-icons/md";
 
 export const menuItems = [
@@ -30,7 +30,7 @@ export const menuItems = [
     text: "Members",
     icon: <EmployeesIcon />,
   },
-  { id: "resources", text: "Resources", icon: <ResourceIcon /> },
+  { id: "attachments", text: "Attachments", icon: <AttachmentIcon /> },
   // { id: "locked-users", text: "Locked Users", icon: <SecurityIcon /> },
 ];
 

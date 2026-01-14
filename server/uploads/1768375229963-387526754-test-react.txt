@@ -1,0 +1,1312 @@
+PHẦN 2: REACT.JS CƠ BẢN (10 câu)
+Câu 11: Component Cơ Bản
+Câu hỏi: Viết một Function Component hiển thị "Hello World"
+Câu trả lời của bạn:
+
+const sayHelloWord = () => {
+	return "Hello World";
+}
+console.log(sayHelloWord());
+
+Câu 12: Props
+javascriptfunction Greeting(props) {
+  return <h1>Hello {props.name}</h1>;
+}
+Câu hỏi: Làm thế nào để truyền name="An" vào component này?
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+function Greeting(props) {
+    props = { name: "An" }
+  return <h1>Hello {props.name}</h1>;
+}
+console.log(Greeting())
+
+Câu 13: useState
+javascriptimport { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>+1</button>
+    </div>
+  );
+}
+Câu hỏi:
+a) Giá trị ban đầu của count là gì?
+b) Khi click button, điều gì xảy ra?
+Câu trả lời của bạn:
+a) 0
+b) count sẽ tăng 1 đơn vị mỗi lần click
+
+Câu 14: Event Handling
+Câu hỏi: Viết một button khi click sẽ console.log("Clicked!")
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+const handleClick = () => {
+console.log("Clicked!");
+}
+
+return (
+    <div>   
+      <button onClick={handleClick}>Click</button>
+    </div>
+  );
+
+Câu 15: Conditional Rendering
+Câu hỏi: Viết component hiển thị "Đã đăng nhập" nếu isLoggedIn = true, ngược lại hiển thị "Chưa đăng nhập"
+Câu trả lời của bạn:
+javascript
+
+function Status({ isLoggedIn }) {
+
+	return(
+		<div>
+		<h1>{isLoggedIn ? "Đã đăng nhập" : "Chưa đăng nhập" }</h1>
+		</div>
+		)
+  
+}
+
+Câu 16: List Rendering
+javascriptconst fruits = ["Táo", "Chuối", "Cam"];
+Câu hỏi: Viết code render danh sách này thành <ul><li> trong React
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+return(
+<div>
+{fruits.map((index, fruit) => 
+	return( 
+		<>
+			<ul>
+				<li>{fruit}</li>
+			</ul>
+		</>
+		)
+	)}
+</div>
+)
+
+Câu 17: useEffect
+javascriptuseEffect(() => {
+  console.log("Component mounted");
+}, []);
+Câu hỏi: Khi nào đoạn code trong useEffect này chạy?
+Câu trả lời của bạn:
+
+ A. Mỗi lần component re-render
+ B. Chỉ 1 lần khi component mount
+ C. Khi component unmount
+ D. Không biết
+ 
+ A
+
+
+Câu 18: Form Input
+Câu hỏi: Viết một input controlled component (giá trị được quản lý bởi state)
+Câu trả lời của bạn:
+javascriptfunction MyForm() {
+  // Code của bạn ở đây
+  const [input, setInput] = useState("");
+  const handleInputChange = (e) => {
+	setInput(e.target.value)
+  }
+  return(
+	<form>
+		<input type="text" value={input} onChange={handleInputChange} />
+	</form>
+	)
+}
+
+Câu 19: Props Destructuring
+javascriptfunction User(props) {
+  return <div>{props.name} - {props.age}</div>;
+}
+;
+Câu hỏi: Viết lại component trên sử dụng destructuring
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+	
+javascriptfunction User(props) {
+const {name,age} = props
+  return <div>{props.name} - {props.age}</div>;
+}
+
+
+Câu 20: Key Prop
+Câu hỏi: Tại sao phải thêm key prop khi render list trong React?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+để ko có phần tử nào bị trùng trong list
+
+PHẦN 3: REACT.JS TRUNG BÌNH (8 câu)
+Câu 21: useEffect Dependencies
+javascriptconst [count, setCount] = useState(0);
+
+useEffect(() => {
+  console.log(count);
+}, [count]);
+Câu hỏi: useEffect này chạy khi nào?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+Khi count được gọi
+
+Câu 22: React Router
+Câu hỏi: Làm thế nào để chuyển từ trang Home sang trang About bằng React Router?
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+const navigate = useNavigate();
+
+const handleAbout = () => {
+	navigate('/about');
+}
+
+Câu 23: Context API
+Câu hỏi: Context API dùng để làm gì? Khi nào nên dùng?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+dùng khi làm trang login hay register
+
+Câu 24: useRef
+Câu hỏi: useRef khác gì với useState?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+ko biết
+
+Câu 25: Fetch Data
+Câu hỏi: Viết code fetch data từ API khi component mount
+Câu trả lời của bạn:
+javascript
+
+useEffect(() => {
+	async function DataFetcher() {
+	  try{
+	  const response = await fetch("your_api");
+	  const data = await response.json();
+	  console.log(data);
+	  }catch(error){
+    console.error(error);
+  }
+	  
+	}
+}, [])
+
+Câu 26: Custom Hook
+Câu hỏi: Custom Hook là gì? Viết 1 ví dụ đơn giản
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+App.js:
+import { useFormInput } from './useFormInput.js';
+
+export default function Form() {
+  const firstNameProps = useFormInput('Mary');
+  const lastNameProps = useFormInput('Poppins');
+
+  return (
+    <>
+      <label>
+        First name:
+        <input {...firstNameProps} />
+      </label>
+      <label>
+        Last name:
+        <input {...lastNameProps} />
+      </label>
+      <p><b>Good morning, {firstNameProps.value} {lastNameProps.value}.</b></p>
+    </>
+  );
+}
+
+useFormInput.js
+import { useState } from 'react';
+
+export function useFormInput(initialValue) {
+  const [value, setValue] = useState(initialValue);
+
+  function handleChange(e) {
+    setValue(e.target.value);
+  }
+
+  const inputProps = {
+    value: value,
+    onChange: handleChange
+  };
+
+  return inputProps;
+}
+
+
+Câu 27: useCallback
+Câu hỏi: useCallback dùng để làm gì?
+Câu trả lời của bạn:
+
+ A. Lưu giá trị vào cache
+ B. Memorize function để tránh re-create
+ C. Gọi API
+ D. Không biết
+ 
+ B
+
+
+Câu 28: Error Handling
+Câu hỏi: Làm thế nào để handle error khi fetch data từ API?
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+sử dụng try{
+		//fetch(api)
+		}catch() {
+		//handle error
+		}
+
+PHẦN 4: NODE.JS CƠ BẢN (10 câu)
+Câu 29: Node.js là gì?
+Câu hỏi: Giải thích Node.js là gì bằng lời của bạn
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Nodejs là 1 thư viện javascript để chạy backend server
+
+Câu 30: Express Setup
+Câu hỏi: Viết code tạo một Express server đơn giản chạy ở port 3000
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+const app = express();
+const port = 3000;
+
+app.listen(port);
+
+
+Câu 31: Route Handler
+Câu hỏi: Viết một GET route /hello trả về "Hello World"
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+app.get("/hello", console.log("Hello Word"));
+
+Câu 32: POST Request
+Câu hỏi: Viết một POST route /user nhận name và age từ body
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+export const getUser = async (req,res) => {
+	try{
+		const {age, name } = req.body;
+		const user = {
+		  name,
+		  age
+		};
+		const result = await collection.insertOne(user);
+		res.json(result);
+	}catch(error){
+	res.status(500).json({ error: err.message });
+	}
+}
+
+app.post("/user", getUser)
+	
+
+Câu 33: Middleware
+Câu hỏi: Middleware trong Express là gì?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+tôi ít xài nên ko rõ
+
+Câu 34: Route Parameters
+javascript
+app.get('/user/:id', (req, res) => {
+  // ???
+  try {
+  const {id} = req.params;
+  const result = await collection.updateOne(
+      { _id: new ObjectId(id) }
+	  )
+	  res.json(result)
+	  }catch(err){
+	  res.status(500).json({ error: err.message });
+	  }
+	 
+});
+Câu hỏi: Làm thế nào để lấy giá trị id từ URL?
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+const urlId = req.params.id;
+const url = await collection.findOne({ _id: new ObjectId(urlId) });
+await collection.updateOne(
+      { _id: new ObjectId(urlId) },
+      { $inc: { views: 1 } }
+    );
+    res.json(url);
+
+Câu 35: Error Handling
+Câu hỏi: Viết code xử lý lỗi trong Express (try-catch)
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+Câu 36: JSON Response
+Câu hỏi: Làm thế nào để trả về JSON response trong Express?
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+app.use(express.json());
+
+Câu 37: CORS
+Câu hỏi: CORS là gì? Tại sao cần dùng CORS?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Câu 38: Environment Variables
+Câu hỏi: Làm thế nào để sử dụng environment variables trong Node.js?
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+tạo file .env để lưu những biến môi trường, vd user, password, port
+
+PHẦN 5: NODE.JS TRUNG BÌNH (8 câu)
+Câu 39: MongoDB Connection
+Câu hỏi: Viết code connect tới MongoDB sử dụng Mongoose
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+Câu 40: Mongoose Schema
+Câu hỏi: Tạo một User schema với các field: name, email, password, createdAt
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+Câu 41: CRUD - Create
+Câu hỏi: Viết code tạo một user mới trong database
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+Câu 42: CRUD - Read
+Câu hỏi: Viết code lấy tất cả users từ database
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+Câu 43: JWT Authentication
+Câu hỏi: JWT là gì? Nó hoạt động như thế nào?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Câu 44: Password Hashing
+Câu hỏi: Tại sao phải hash password? Dùng thư viện nào?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Câu 45: Authentication Middleware
+Câu hỏi: Viết một middleware kiểm tra JWT token
+Câu trả lời của bạn:
+javascript// Code của bạn ở đây
+
+Câu 46: File Upload
+Câu hỏi: Làm thế nào để upload file trong Node.js? Dùng thư viện nào?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+PHẦN 6: ADVANCED (6 câu)
+Câu 47: React Performance
+Câu hỏi: Liệt kê 3 cách optimize performance trong React
+Câu trả lời của bạn:
+1. 
+2. 
+3.
+
+Câu 48: TypeScript
+Câu hỏi: Bạn đã dùng TypeScript chưa? Nếu có, TypeScript có lợi ích gì?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Câu 49: Testing
+Câu hỏi: Bạn đã viết test cho React/Node.js chưa? Dùng tool nào?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Câu 50: WebSocket
+Câu hỏi: WebSocket dùng để làm gì? Khác gì với HTTP?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Câu 51: Docker
+Câu hỏi: Bạn đã dùng Docker chưa? Docker dùng để làm gì?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+Câu 52: Deployment
+Câu hỏi: Bạn đã deploy ứng dụng React/Node.js chưa? Deploy ở đâu?
+Câu trả lời của bạn:
+(Viết giải thích của bạn ở đây)
+
+📊 ĐÁNH GIÁ KẾT QUẢ
+Cách tính điểm:
+
+Phần 1 (JS Cơ bản): Mỗi câu đúng = 2 điểm (tổng 20 điểm)
+Phần 2 (React Cơ bản): Mỗi câu đúng = 2 điểm (tổng 20 điểm)
+Phần 3 (React Trung bình): Mỗi câu đúng = 3 điểm (tổng 24 điểm)
+Phần 4 (Node Cơ bản): Mỗi câu đúng = 2 điểm (tổng 20 điểm)
+Phần 5 (Node Trung bình): Mỗi câu đúng = 3 điểm (tổng 24 điểm)
+Phần 6 (Advanced): Mỗi câu đúng = 2 điểm (tổng 12 điểm)
+
+TỔNG ĐIỂM: 120 điểm
+
+🎯 XẾP HẠNG
+ĐiểmTrình độLộ trình học0-30BeginnerHọc từ JavaScript cơ bản31-50JuniorTập trung React cơ bản + Node cơ bản51-70IntermediateHọc React Router, Context, MongoDB, Auth71-90AdvancedHọc TypeScript, Testing, Performance91-120SeniorFocus vào Architecture, Scalability
+
+function ProductCard({ name, price, image }) {
+  return (
+    <div>
+      <img src={image} />
+      <h3>{name}</h3>
+      <p>${price}</p>
+    </div>
+  );
+}
+
+// Bài 2: List với key
+const products = [
+  { id: 1, name: "iPhone", price: 999 },
+  { id: 2, name: "iPad", price: 599 }
+];
+
+return(
+<div>
+	{products.map(product => {
+		return(
+			<ProductCard name={product.name} price={product.price} image={product.image} />
+		)
+	}
+)}
+</div>
+
+
+function ProductCard({ name, price, image }) {
+  const handleClick = () =>{
+	console.log(name);
+}
+
+return(
+	<div>	
+		<button onClick={handleClick}>Add to Cart</button>
+	</div>
+)
+	
+	
+	
+	# 🎯 BÀI TẬP REACT CƠ BẢN - 30 BÀI
+
+> **Hướng dẫn:** Làm từng bài theo thứ tự, code trong VS Code và test để xem kết quả. Không Google, tự suy nghĩ trước!
+
+---
+
+## 📦 PHẦN 1: COMPONENTS & PROPS (Bài 1-8)
+
+### Bài 1: Component Đơn Giản ⭐
+**Yêu cầu:** Tạo component `Welcome` hiển thị "Chào mừng đến với React!"
+
+```javascript
+// Code của bạn ở đây
+function Welcome() {
+  return(
+  <div>
+	<h1>Chào mừng đến với React!</h1>
+	</div>
+	)
+}
+
+// Sử dụng
+function App() {
+  return <Welcome />;
+}
+```
+
+**Kết quả mong đợi:**
+```
+Chào mừng đến với React!
+```
+
+---
+
+### Bài 2: Props Cơ Bản ⭐
+**Yêu cầu:** Tạo component `Greeting` nhận props `name` và hiển thị "Xin chào, [name]!"
+
+```javascript
+function Greeting(/* props ở đây */) {
+  // Code của bạn
+}
+
+// Sử dụng
+<Greeting name="An" />
+<Greeting name="Bình" />
+```
+
+**Kết quả mong đợi:**
+```
+Xin chào, An!
+Xin chào, Bình!
+```
+
+---
+
+### Bài 3: Multiple Props ⭐
+**Yêu cầu:** Tạo component `UserCard` nhận `name`, `age`, `email` và hiển thị thông tin.
+
+```javascript
+function UserCard(/* props */) {
+  // Code của bạn
+}
+
+// Sử dụng
+<UserCard name="Nguyễn Văn An" age={25} email="an@example.com" />
+```
+
+**Kết quả mong đợi:**
+```
+Tên: Nguyễn Văn An
+Tuổi: 25
+Email: an@example.com
+```
+
+---
+
+### Bài 4: Props Destructuring ⭐⭐
+**Yêu cầu:** Viết lại component `UserCard` ở Bài 3 sử dụng destructuring trong parameters.
+
+```javascript
+function UserCard({ /* destructure ở đây */ }) {
+  // Code của bạn
+}
+```
+
+---
+
+### Bài 5: Default Props ⭐⭐
+**Yêu cầu:** Tạo component `Button` với props `text` và `color`. Nếu không truyền `color`, mặc định là "blue".
+
+```javascript
+function Button({ text, color }) {
+  // Code của bạn - set default color = "blue"
+}
+
+// Sử dụng
+<Button text="Click me" />  // màu blue
+<Button text="Delete" color="red" />  // màu red
+```
+
+---
+
+### Bài 6: Children Props ⭐⭐
+**Yêu cầu:** Tạo component `Card` nhận `children` và hiển thị nội dung bên trong border.
+
+```javascript
+function Card({ children }) {
+  // Code của bạn - thêm border, padding
+}
+
+// Sử dụng
+<Card>
+  <h2>Tiêu đề</h2>
+  <p>Nội dung bên trong card</p>
+</Card>
+```
+
+---
+
+### Bài 7: Nested Components ⭐⭐
+**Yêu cầu:** Tạo 2 components:
+- `BlogPost`: Nhận `title`, `author`, `content`
+- `BlogList`: Render nhiều `BlogPost`
+
+```javascript
+function BlogPost({ title, author, content }) {
+  // Code của bạn
+}
+
+function BlogList() {
+  const posts = [
+    { id: 1, title: "React Basics", author: "An", content: "..." },
+    { id: 2, title: "Props Tutorial", author: "Bình", content: "..." }
+  ];
+  
+  // Render list posts ở đây
+}
+```
+
+---
+
+### Bài 8: Props Validation ⭐⭐⭐
+**Yêu cầu:** Tạo component `Price` hiển thị giá tiền. Nếu `price` không phải số, hiển thị "Invalid price".
+
+```javascript
+function Price({ price }) {
+  // Kiểm tra price có phải số không
+  // Nếu đúng: hiển thị $price
+  // Nếu sai: hiển thị "Invalid price"
+}
+
+// Test
+<Price price={100} />  // $100
+<Price price="abc" />  // Invalid price
+```
+
+---
+
+## 🎭 PHẦN 2: STATE & EVENTS (Bài 9-16)
+
+### Bài 9: Counter Cơ Bản ⭐
+**Yêu cầu:** Tạo counter với button tăng giá trị.
+
+```javascript
+function Counter() {
+  // Dùng useState
+  
+  return (
+    <div>
+      <p>Count: {/* hiển thị count */}</p>
+      <button onClick={/* tăng count */}>+1</button>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 10: Counter Đầy Đủ ⭐⭐
+**Yêu cầu:** Thêm 3 buttons: +1, -1, Reset
+
+```javascript
+function Counter() {
+  // Code của bạn
+  
+  return (
+    <div>
+      <p>Count: ?</p>
+      <button>+1</button>
+      <button>-1</button>
+      <button>Reset</button>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 11: Toggle Show/Hide ⭐⭐
+**Yêu cầu:** Button toggle hiển thị/ẩn đoạn text.
+
+```javascript
+function Toggle() {
+  // State để lưu show/hide
+  
+  return (
+    <div>
+      <button>Toggle</button>
+      {/* Hiển thị text nếu show = true */}
+      <p>Nội dung có thể ẩn/hiện</p>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 12: Input Controlled ⭐⭐
+**Yêu cầu:** Input hiển thị giá trị đang nhập theo real-time.
+
+```javascript
+function InputDisplay() {
+  // State để lưu giá trị input
+  
+  return (
+    <div>
+      <input type="text" />
+      <p>Bạn đang nhập: {/* giá trị input */}</p>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 13: Form Đơn Giản ⭐⭐⭐
+**Yêu cầu:** Form nhập `name` và `email`, khi submit hiển thị thông tin.
+
+```javascript
+function SimpleForm() {
+  // State cho name và email
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Hiển thị thông tin (console.log hoặc alert)
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" placeholder="Name" />
+      <input type="email" placeholder="Email" />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+---
+
+### Bài 14: Color Picker ⭐⭐
+**Yêu cầu:** Buttons chọn màu, thay đổi background của div.
+
+```javascript
+function ColorPicker() {
+  // State để lưu màu được chọn
+  
+  return (
+    <div>
+      <button>Red</button>
+      <button>Green</button>
+      <button>Blue</button>
+      
+      <div style={{ 
+        width: '200px', 
+        height: '200px', 
+        backgroundColor: /* màu được chọn */ 
+      }}>
+        Color Box
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 15: Character Counter ⭐⭐
+**Yêu cầu:** Textarea hiển thị số ký tự đã nhập (giới hạn 100 ký tự).
+
+```javascript
+function CharCounter() {
+  // State cho text
+  
+  return (
+    <div>
+      <textarea maxLength={100} />
+      <p>{/* số ký tự */}/100 characters</p>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 16: Simple Calculator ⭐⭐⭐
+**Yêu cầu:** 2 inputs nhập số, buttons +, -, *, /, hiển thị kết quả.
+
+```javascript
+function Calculator() {
+  // State cho num1, num2, result
+  
+  return (
+    <div>
+      <input type="number" placeholder="Number 1" />
+      <input type="number" placeholder="Number 2" />
+      
+      <button>+</button>
+      <button>-</button>
+      <button>*</button>
+      <button>/</button>
+      
+      <p>Result: {/* kết quả */}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## 📋 PHẦN 3: LISTS & CONDITIONAL RENDERING (Bài 17-24)
+
+### Bài 17: Simple List ⭐
+**Yêu cầu:** Render danh sách tên từ array.
+
+```javascript
+function NameList() {
+  const names = ["An", "Bình", "Chi", "Dũng"];
+  
+  return (
+    <ul>
+      {/* Map qua names và render <li> */}
+    </ul>
+  );
+}
+```
+
+---
+
+### Bài 18: Object List ⭐⭐
+**Yêu cầu:** Render danh sách users (id, name, age).
+
+```javascript
+function UserList() {
+  const users = [
+    { id: 1, name: "An", age: 25 },
+    { id: 2, name: "Bình", age: 30 },
+    { id: 3, name: "Chi", age: 22 }
+  ];
+  
+  return (
+    <div>
+      {/* Render từng user */}
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 19: Conditional Rendering - Login Status ⭐⭐
+**Yêu cầu:** Hiển thị "Welcome back!" nếu đã login, "Please login" nếu chưa.
+
+```javascript
+function LoginStatus({ isLoggedIn }) {
+  // Dùng ternary operator hoặc if/else
+  return (
+    <div>
+      {/* Conditional rendering ở đây */}
+    </div>
+  );
+}
+
+// Test
+<LoginStatus isLoggedIn={true} />
+<LoginStatus isLoggedIn={false} />
+```
+
+---
+
+### Bài 20: Todo List ⭐⭐⭐
+**Yêu cầu:** Todo list có thể thêm mới.
+
+```javascript
+function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState("");
+  
+  const addTodo = () => {
+    // Thêm todo mới vào array
+  };
+  
+  return (
+    <div>
+      <input 
+        value={input} 
+        onChange={/* ... */}
+        placeholder="Enter todo"
+      />
+      <button onClick={addTodo}>Add</button>
+      
+      <ul>
+        {/* Render todos */}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 21: Filter List ⭐⭐⭐
+**Yêu cầu:** Search box lọc danh sách theo tên.
+
+```javascript
+function SearchList() {
+  const [search, setSearch] = useState("");
+  
+  const items = [
+    "Apple", "Banana", "Cherry", 
+    "Date", "Elderberry", "Fig"
+  ];
+  
+  // Filter items dựa vào search
+  const filteredItems = /* code ở đây */;
+  
+  return (
+    <div>
+      <input 
+        placeholder="Search..." 
+        value={search}
+        onChange={/* ... */}
+      />
+      <ul>
+        {/* Render filteredItems */}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 22: Todo với Delete ⭐⭐⭐
+**Yêu cầu:** Mở rộng Bài 20, thêm button xóa từng todo.
+
+```javascript
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "Learn React" },
+    { id: 2, text: "Build projects" }
+  ]);
+  
+  const deleteTodo = (id) => {
+    // Xóa todo có id tương ứng
+  };
+  
+  return (
+    <div>
+      {/* Input thêm todo */}
+      
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            {todo.text}
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 23: Todo với Complete ⭐⭐⭐⭐
+**Yêu cầu:** Thêm checkbox đánh dấu hoàn thành, gạch ngang text khi complete.
+
+```javascript
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "Learn React", completed: false },
+    { id: 2, text: "Build projects", completed: false }
+  ]);
+  
+  const toggleComplete = (id) => {
+    // Toggle completed status
+  };
+  
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          <input 
+            type="checkbox" 
+            checked={todo.completed}
+            onChange={() => toggleComplete(todo.id)}
+          />
+          <span style={{ 
+            textDecoration: todo.completed ? 'line-through' : 'none' 
+          }}>
+            {todo.text}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+### Bài 24: Shopping Cart ⭐⭐⭐⭐
+**Yêu cầu:** Danh sách sản phẩm, button "Add to Cart", hiển thị tổng giá.
+
+```javascript
+function ShoppingCart() {
+  const products = [
+    { id: 1, name: "iPhone", price: 999 },
+    { id: 2, name: "iPad", price: 599 },
+    { id: 3, name: "MacBook", price: 1299 }
+  ];
+  
+  const [cart, setCart] = useState([]);
+  
+  const addToCart = (product) => {
+    // Thêm product vào cart
+  };
+  
+  // Tính total
+  const total = /* tính tổng giá */;
+  
+  return (
+    <div>
+      <h2>Products</h2>
+      {products.map(product => (
+        <div key={product.id}>
+          {product.name} - ${product.price}
+          <button onClick={() => addToCart(product)}>Add</button>
+        </div>
+      ))}
+      
+      <h2>Cart</h2>
+      {/* Hiển thị items trong cart */}
+      
+      <h3>Total: ${total}</h3>
+    </div>
+  );
+}
+```
+
+---
+
+## 🔄 PHẦN 4: useEffect & SIDE EFFECTS (Bài 25-30)
+
+### Bài 25: Document Title ⭐⭐
+**Yêu cầu:** Thay đổi title của tab theo input.
+
+```javascript
+import { useState, useEffect } from 'react';
+
+function TitleChanger() {
+  const [title, setTitle] = useState("");
+  
+  useEffect(() => {
+    // Thay đổi document.title
+  }, [/* dependencies */]);
+  
+  return (
+    <input 
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      placeholder="Enter title"
+    />
+  );
+}
+```
+
+---
+
+### Bài 26: Auto Counter ⭐⭐
+**Yêu cầu:** Counter tự động tăng mỗi giây. Button Start/Stop.
+
+```javascript
+function AutoCounter() {
+  const [count, setCount] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  
+  useEffect(() => {
+    // Dùng setInterval nếu isRunning = true
+    // Nhớ cleanup với clearInterval
+  }, [isRunning]);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setIsRunning(!isRunning)}>
+        {isRunning ? 'Stop' : 'Start'}
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 27: Window Resize ⭐⭐⭐
+**Yêu cầu:** Hiển thị kích thước window (width x height) khi resize.
+
+```javascript
+function WindowSize() {
+  const [size, setSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+  
+  useEffect(() => {
+    // Add event listener cho window resize
+    // Nhớ cleanup (remove listener)
+  }, []);
+  
+  return (
+    <div>
+      Window size: {size.width} x {size.height}
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 28: Fetch Data from API ⭐⭐⭐
+**Yêu cầu:** Fetch danh sách users từ API khi component mount.
+
+```javascript
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Fetch từ: https://jsonplaceholder.typicode.com/users
+    // Set loading = false khi xong
+  }, []);
+  
+  if (loading) return <p>Loading...</p>;
+  
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+### Bài 29: Search API with Debounce ⭐⭐⭐⭐
+**Yêu cầu:** Search box, sau 500ms không g타 mới gọi API.
+
+```javascript
+function SearchAPI() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  
+  useEffect(() => {
+    if (query.length === 0) return;
+    
+    // Set timeout 500ms
+    const timer = setTimeout(() => {
+      // Fetch API với query
+      // https://jsonplaceholder.typicode.com/users?q=${query}
+    }, 500);
+    
+    // Cleanup: clear timeout
+    return () => clearTimeout(timer);
+  }, [query]);
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search users..."
+      />
+      <ul>
+        {results.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+### Bài 30: Dark Mode Toggle ⭐⭐⭐⭐
+**Yêu cầu:** Toggle dark/light mode, lưu vào localStorage.
+
+```javascript
+function DarkModeApp() {
+  // Lấy theme từ localStorage (default: 'light')
+  const [theme, setTheme] = useState(
+    localStorage.getItem('theme') || 'light'
+  );
+  
+  useEffect(() => {
+    // Lưu theme vào localStorage
+    // Thay đổi CSS của document.body
+  }, [theme]);
+  
+  const toggleTheme = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+  
+  return (
+    <div style={{
+      backgroundColor: theme === 'light' ? '#fff' : '#333',
+      color: theme === 'light' ? '#000' : '#fff',
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
+      <h1>Dark Mode Demo</h1>
+      <button onClick={toggleTheme}>
+        Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
+      </button>
+      
+      <p>Current theme: {theme}</p>
+    </div>
+  );
+}
+```
+
+---
+
+## 🎯 HƯỚNG DẪN HỌC
+
+### 📅 Lịch trình đề xuất:
+- **Ngày 1-2:** Bài 1-8 (Components & Props)
+- **Ngày 3-4:** Bài 9-16 (State & Events)
+- **Ngày 5-6:** Bài 17-24 (Lists & Conditional)
+- **Ngày 7-8:** Bài 25-30 (useEffect)
+
+### 💡 Cách làm hiệu quả:
+1. **Đọc yêu cầu** kỹ càng
+2. **Tự làm trước** không nhìn đáp án
+3. **Chạy code** và test kỹ
+4. **Debug** nếu có lỗi
+5. **Refactor** code cho clean hơn
+6. **So sánh** với cách làm khác
+
+### 🔥 Tips quan trọng:
+- ✅ Luôn có `key` khi render list
+- ✅ `useState` cho mọi data cần re-render
+- ✅ `useEffect` cleanup để tránh memory leak
+- ✅ Destructure props cho code clean
+- ✅ Event handler đặt tên `handle...`
+
+### 📚 Resources bổ sung:
+- React Docs: https://react.dev
+- React Beta Docs: https://react.dev/learn
+- CodeSandbox: https://codesandbox.io (online coding)
+
+---
+
+## ✅ CHECKLIST HOÀN THÀNH
+
+Đánh dấu ✓ khi hoàn thành:
+
+**Components & Props:**
+- [ ] Bài 1-4: Components cơ bản
+- [ ] Bài 5-8: Props nâng cao
+
+**State & Events:**
+- [ ] Bài 9-12: State cơ bản
+- [ ] Bài 13-16: Forms & Events
+
+**Lists & Conditional:**
+- [ ] Bài 17-20: Lists & Filtering
+- [ ] Bài 21-24: Complex Lists
+
+**useEffect:**
+- [ ] Bài 25-27: Side effects cơ bản
+- [ ] Bài 28-30: API & Advanced
+
+---
+
+## 🎓 SAU KHI HOÀN THÀNH
+
+Khi làm xong 30 bài này, bạn sẽ:
+- ✅ Thành thạo Components & Props
+- ✅ Hiểu rõ State Management
+- ✅ Xử lý Events tốt
+- ✅ Render Lists và Conditional logic
+- ✅ Sử dụng useEffect đúng cách
+- ✅ Sẵn sàng học React Router & Context API
+
+**Good luck! 🚀 Bạn làm được!**

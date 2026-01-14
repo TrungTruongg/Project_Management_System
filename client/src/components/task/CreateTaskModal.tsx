@@ -35,7 +35,7 @@ function CreateTaskModal({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [priority, setPriority] = useState("");
-  const [assignedTo, setAssignedTo] = useState<number[]>([]);
+  const [assignedTo, setAssignedTo] = useState<string[]>([]);
   const [status, setStatus] = useState("in-process");
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,6 +47,41 @@ function CreateTaskModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isUpdate = selectedTask !== null;
+
+  const shortenFileName = (fileName: string, maxLength: number = 20) => {
+    if (!fileName || fileName.length <= maxLength) return fileName;
+
+    const ext = fileName.split('.').pop();
+    const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+    const availableLength = maxLength - (ext ? ext.length + 1 : 0) - 3; // -3 for "..."
+
+    if (availableLength <= 0) return fileName;
+
+    return `${nameWithoutExt.substring(0, availableLength)}...${ext ? '.' + ext : ''}`;
+  };
+
+  // Helper function to format upload date
+  const formatUploadDate = (dateString: string) => {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+
+    // Format: DD/MM/YYYY HH:mm
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -249,7 +284,7 @@ function CreateTaskModal({
         for (const attachmentId of deletedAttachmentIds) {
           try {
             await api.delete(`/attachments/delete/${attachmentId}`);
-            console.log(`Deleted attachment: ${attachmentId}`);
+
             await new Promise(resolve => setTimeout(resolve, 100));
           } catch (error) {
             console.error(`Error deleting attachment ${attachmentId}:`, error);
@@ -287,19 +322,6 @@ function CreateTaskModal({
         onSave(createdData);
       }
 
-      // Send notification
-      // if (assignedTo.length > 0) {
-      //   await createNotification({
-      //     userId: assignedTo,
-      //     type: "task",
-      //     title: isUpdate ? `Task Updated` : `New Task Assignment`,
-      //     description: isUpdate ? `updated task: ${name}` : `assigned you to task: ${name}`,
-      //     createdBy: user?._id,
-      //   });
-      // }
-
-      // isUpdate ? onUpdate(taskData) : onSave(taskData);
-
       for (const att of attachments) {
         if (att.isExisting) continue;
 
@@ -318,7 +340,7 @@ function CreateTaskModal({
         // Lưu attachment vào database
         try {
           await api.post("/attachments/create", {
-            taskId: selectedTask._id,
+            taskId: taskId,
             url: finalUrl,
             name: att.name,
             type: att.type,
@@ -388,7 +410,9 @@ function CreateTaskModal({
       closeAfterTransition
       className="flex items-center justify-center"
     >
-      <Box className="relative bg-white rounded-xl w-125 max-h-[90vh] overflow-y-auto no-scrollbar shadow-xl mx-auto p-6">
+      <Box className="relative bg-white rounded-xl w-2xl max-h-200 overflow-y-auto no-scrollbar shadow-xl mx-auto p-6">
+
+        {/* Header */}
         <Box className="flex items-center justify-between mb-6">
           <Typography
             sx={{
@@ -420,6 +444,7 @@ function CreateTaskModal({
           </Button>
         </Box>
 
+        {/* Content */}
         <Box component="form" className="space-y-4" onSubmit={handleSave}>
           {!isStatusOnly && (
             <>
@@ -583,61 +608,176 @@ function CreateTaskModal({
                 {attachments.length > 0 && (
                   <Box sx={{
                     display: "flex",
-                    flexDirection: "column",
                     gap: 1,
-                    maxHeight: "200px",
-                    overflowY: "auto",
-                    border: "1px solid #e5e7eb",
+                    overflowX: "auto",
+                    overflowY: "hidden",
+                    padding: "8px 4px",
                     borderRadius: "4px",
-                    padding: "8px"
+                    "&::-webkit-scrollbar": {
+                      height: "6px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                      backgroundColor: "#f3f4f6",
+                      borderRadius: "3px",
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                      backgroundColor: "#d1d5db",
+                      borderRadius: "3px",
+                      "&:hover": {
+                        backgroundColor: "#9ca3af",
+                      }
+                    }
                   }}>
-                    {attachments.map((att, i) => (
-                      <Box
-                        key={i}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "6px 10px",
-                          backgroundColor: "#f9fafb",
-                          borderRadius: "4px",
-                          "&:hover": {
-                            backgroundColor: "#f3f4f6"
-                          }
-                        }}
-                      >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1, minWidth: 0 }}>
-                          <MdAttachFile style={{ color: "#6b7280", flexShrink: 0 }} />
-                          <Typography
+                    {attachments.map((att, i) => {
+                      const ext = att.name?.split('.').pop()?.toLowerCase();
+
+                      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                      const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'];
+                      const docExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+
+                      const isImage = ext && imageExtensions.includes(ext);
+                      const isVideo = ext && videoExtensions.includes(ext);
+                      const isDoc = ext && docExtensions.includes(ext);
+
+                      let processedUrl = att.url || '';
+                      if (att.file && !processedUrl) {
+                        processedUrl = URL.createObjectURL(att.file);
+                      }
+
+                      // Nếu URL là relative path, thêm base URL
+                      if (processedUrl && processedUrl.startsWith('/uploads/')) {
+                        const baseURL = 'http://localhost:6969';
+                        processedUrl = baseURL + processedUrl;
+                      }
+
+                      console.log(att)
+
+                      return (
+                        <Box
+                          key={i}
+                          sx={{
+                            position: "relative",
+                            flexShrink: 0,
+                            width: "140px",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "6px",
+                            overflow: "hidden",
+                            backgroundColor: "#ffffff",
+                            transition: "all 0.2s",
+                            "&:hover": {
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              borderColor: "#9333ea",
+                            }
+                          }}
+                        >
+                          {/* Thumbnail/Preview */}
+                          <Box
                             sx={{
-                              fontSize: "13px",
-                              color: att.type === 'link' ? "#2563eb" : "#374151",
-                              cursor: att.type === 'link' ? "pointer" : "default",
+                              height: "90px",
+                              backgroundColor: "#f9fafb",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: att.type === 'link' || att.url ? "pointer" : "default",
                               overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              "&:hover": att.type === 'link' ? {
-                                textDecoration: "underline"
-                              } : {}
                             }}
                             onClick={() => {
-                              if (att.type === 'link' && att.url) {
-                                window.open(att.url, '_blank');
+                              if (processedUrl && att.isExisting) {
+                                window.open(processedUrl, '_blank');
                               }
                             }}
                           >
-                            {att.name}
-                          </Typography>
+                            {isImage && processedUrl ? (
+                              <img
+                                src={processedUrl}
+                                alt={att.name}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : isVideo && processedUrl ? (
+                              <video
+                                src={processedUrl}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : isDoc ? (
+                              <iframe
+                                src={processedUrl}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  border: 'none',
+                                  pointerEvents: 'none',
+                                }}
+                                title={att.name}
+                              />
+                            ) : (
+                              <Box sx={{ textAlign: "center", color: "#6b7280" }}>
+                                <MdAttachFile style={{ fontSize: "40px" }} />
+                                <Typography sx={{ fontSize: "10px", fontWeight: 600, mt: 0.5 }}>
+                                  {att.type === 'link' ? 'LINK' : 'FILE'}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+
+                          {/* File Info */}
+                          <Box sx={{ padding: "8px" }}>
+                            <Typography
+                              sx={{
+                                fontSize: "12px",
+                                fontWeight: 500,
+                                color: "#111827",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                lineHeight: "16px",
+                              }}
+                              title={att.name}
+                            >
+                              {shortenFileName(att.name, 18)}
+                            </Typography>
+
+                            {/* Upload date/time */}
+                            {att.uploadedAt && (
+                              <Typography
+                                sx={{
+                                  fontSize: "10px",
+                                  color: "#6b7280",
+                                  lineHeight: "14px",
+                                }}
+                              >
+                                {att.uploadedAt ? formatUploadDate(att.uploadedAt) : 'Uploaded'}
+                              </Typography>
+                            )}
+                          </Box>
+
+                          {/* Delete Button */}
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveAttachment(i)}
+                            sx={{
+                              position: "absolute",
+                              top: "4px",
+                              right: "4px",
+                              padding: "4px",
+                              backgroundColor: "rgba(255, 255, 255, 0.9)",
+                              "&:hover": {
+                                backgroundColor: "#fee2e2",
+                              }
+                            }}
+                          >
+                            <MdDelete style={{ fontSize: "16px", color: "#ef4444" }} />
+                          </IconButton>
                         </Box>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleRemoveAttachment(i)}
-                          sx={{ padding: "4px" }}
-                        >
-                          <MdDelete style={{ fontSize: "18px", color: "#ef4444" }} />
-                        </IconButton>
-                      </Box>
-                    ))}
+                      );
+                    })}
                   </Box>
                 )}
               </Box>
@@ -721,7 +861,7 @@ function CreateTaskModal({
                   displayEmpty
                   disabled={!projectId && !currentProject}
                   multiple
-                  onChange={(e) => setAssignedTo(e.target.value as number[])}
+                  onChange={(e) => setAssignedTo(e.target.value as [])}
                   value={assignedTo}
                   renderValue={(selected) =>
                     selected.length === 0
@@ -829,10 +969,15 @@ function CreateTaskModal({
               loadingPosition="end"
               sx={{ bgcolor: "#9333ea", color: "white" }}
             >
-             {isUpdate ? "Update" : "Save"}
+              {isUpdate ? "Update" : "Save"}
             </Button>
           </Box>
         </Box>
+
+
+        {/* <TaskDetail /> */}
+
+
       </Box>
     </Modal>
   );
