@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { IoMdClose as CloseIcon } from "react-icons/io";
 
 import {
+  Avatar,
   Box,
   Button,
   Chip,
@@ -399,18 +400,36 @@ function CreateProjectModal({
                   </Typography>
                 </MenuItem>
               ) : (
-                users.map((u: any) => (
-                  <MenuItem value={u._id} key={u._id}>
-                    <ListItemText
-                      primary={`${u.firstName} ${u.lastName}`}
-                      secondary={u.email.toLowerCase()}
-                    />
+                users.map((user: any) => (
+                  <MenuItem value={user._id} key={user._id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar
+                        src={user.avatar}
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          fontSize: "12px",
+                          bgcolor: "#E0E0E0",
+                          color: "#484c7f",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                        }}
+                        title={`${user.firstName} ${user.lastName}`}
+                      >
+                        {user.firstName?.[0]}
+                        {user.lastName?.[0]}
+                      </Avatar>
+                      <ListItemText
+                        primary={`${user.firstName} ${user.lastName}`}
+                        secondary={user.email.toLowerCase()}
+                      />
+                    </Box>
                   </MenuItem>
                 ))
               )}
             </Select>
           </Box>
-     
+
           <Box sx={{ mb: 3 }}>
             <Typography
               sx={{
@@ -470,7 +489,7 @@ function CreateProjectModal({
               type="submit"
               loading={loading}
               loadingPosition="end"
-              sx={{bgcolor: "#9333ea", color: "white"}}
+              sx={{ bgcolor: "#9333ea", color: "white" }}
             >
               {isUpdate ? "Update" : "Save"}
             </Button>

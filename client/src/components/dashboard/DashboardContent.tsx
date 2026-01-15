@@ -12,6 +12,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import api from "../api/axiosConfig";
+import ProjectCharts from "./DashboardProjectCharts";
 
 function DashboardContent() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -20,15 +21,34 @@ function DashboardContent() {
   const navigate = useNavigate();
   const { user } = useUser();
 
-  const totalTask = tasks.length;
-  const totalToDoTasks = tasks.filter((task: any) => task.status === "to-do").length;
-  const totalCompletedTasks = tasks.filter((task: any) => task.status === "completed").length;
-  const totalProgressTasks = tasks.filter((task: any) => task.status === "in-progress").length;
+   const getUserProjects = () => {
+    if (!user) return [];
+    return projects.filter(
+      (p) => p.leaderId === user._id || p.members?.includes(user._id)
+    );
+  };
 
-  const totalProjects = projects.length;
+  const userProjects = getUserProjects();
+
+  const getUserTasks = () => {
+    if (!user) return [];
+    const userProjects = getUserProjects();
+    const projectIds = userProjects.map(p => p._id);
+    return tasks.filter(task => projectIds.includes(task.projectId));
+  };
+
+  const userTasks = getUserTasks();
+
+  // Bây giờ tính từ userTasks
+  const totalTask = userTasks.length;
+  const totalToDoTasks = userTasks.filter((task: any) => task.status === "to-do").length;
+  const totalCompletedTasks = userTasks.filter((task: any) => task.status === "completed").length;
+  const totalProgressTasks = userTasks.filter((task: any) => task.status === "in-progress").length;
+
+  const totalProject = userProjects.length;
   //const toDoProject = projects.filter((project: any) => project.completion > 0).length;
-  const totalCompletedProjects = projects.filter((project: any) => project.completion === 100).length;
-  const totalProgressProjects = projects.filter((project: any) => project.completion > 0).length;
+  const totalCompletedProjects = userProjects.filter((project: any) => project.completion === 100).length;
+  const totalProgressProjects = userProjects.filter((project: any) => project.completion > 0).length;
 
   const fetchAllDatas = async () => {
     setLoading(true);
@@ -49,15 +69,6 @@ function DashboardContent() {
   useEffect(() => {
     fetchAllDatas();
   }, []);
-
-  const getUserProjects = () => {
-        if (!user) return [];
-        return projects.filter(
-            (p) => p.leaderId === user._id || p.members?.includes(user._id)
-        );
-    };
-
-    const userProjects = getUserProjects();
 
   if (loading) {
     return (
@@ -80,7 +91,7 @@ function DashboardContent() {
   const handleViewTasks = () => {
     navigate("/task");
   }
-  
+
 
   return (
     <>
@@ -136,7 +147,7 @@ function DashboardContent() {
                   Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {userProjects.length === 0 ? 0 : totalTask}
+                  {userTasks.length === 0 ? 0 : totalTask}
                 </Typography>
               </Box>
             </CardContent>
@@ -194,7 +205,7 @@ function DashboardContent() {
                   To Do Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {userProjects.length === 0 ? 0 : totalToDoTasks}
+                  {userTasks.length === 0 ? 0 : totalToDoTasks}
                 </Typography>
               </Box>
             </CardContent>
@@ -252,7 +263,7 @@ function DashboardContent() {
                   Completed Tasks
                 </Typography>
                 <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {userProjects.length === 0 ? 0 : totalCompletedTasks}
+                  {userTasks.length === 0 ? 0 : totalCompletedTasks}
                 </Typography>
               </Box>
             </CardContent>
@@ -366,29 +377,10 @@ function DashboardContent() {
           </Paper>
         </Grid>
 
-        {/* <Grid size={{ xs: 12 }}>
-          <Paper elevation={0} sx={{
-            p: 3, 
-            border: (theme) =>
-              `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
-          }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              Project Timeline
-            </Typography>
-            <Box
-              sx={{
-                height: 100,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Timeline visualization area
-              </Typography>
-            </Box>
-          </Paper>
-        </Grid> */}
+        {/* Project Charts - Status Overview & Priority Breakdown */}
+        <Grid size={{ xs: 12 }}>
+          <ProjectCharts projects={userProjects} tasks={tasks} />
+        </Grid>
       </Grid>
 
       {/* Project Cards */}
@@ -438,7 +430,7 @@ function DashboardContent() {
                   Total Projects
                 </Typography>
                 <Typography sx={{ marginBottom: 0 }}>
-                  {userProjects.length === 0 ? 0 : totalProjects}
+                  {userProjects.length === 0 ? 0 : totalProject}
                 </Typography>
               </Box>
               <IconButton

@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { IoMdClose as CloseIcon } from "react-icons/io";
 import { MdAttachFile, MdDelete } from "react-icons/md";
+import HighPriority from "../../assets/HighPriority";
+import MediumPriority from "../../assets/MediumPriority";
+import LowPriority from "../../assets/LowPriority";
 import {
+  Avatar,
   Box,
   Button,
+  Chip,
   IconButton,
+  ListItemText,
   MenuItem,
   Modal,
   Select,
@@ -65,15 +71,7 @@ function CreateTaskModal({
     if (!dateString) return '';
 
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-
-    // Format: DD/MM/YYYY HH:mm
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
@@ -104,7 +102,8 @@ function CreateTaskModal({
             name: att.name,
             url: att.url,
             type: att.type,
-            isExisting: true
+            isExisting: true,
+            uploadedAt: att.uploadedAt
           }));
         setAttachments(taskAttachments);
       }
@@ -552,9 +551,23 @@ function CreateTaskModal({
 
               {/* Attachments */}
               <Box>
-                <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1, color: "black" }}>
-                  Attachments
-                </Typography>
+                <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1 }}>
+                  <Typography sx={{ fontSize: "14px", fontWeight: 500, color: "black" }}>
+                    Attachments
+                  </Typography>
+
+                  <Chip
+                    label={attachments.length}
+                    size="small"
+                    sx={{
+                      width: 22,
+                      height: 22,
+                      fontSize: "10px",
+                      fontWeight: 500,
+                    }}
+                  />
+                </Box>
+
 
                 <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
                   <input
@@ -644,13 +657,10 @@ function CreateTaskModal({
                         processedUrl = URL.createObjectURL(att.file);
                       }
 
-                      // Nếu URL là relative path, thêm base URL
                       if (processedUrl && processedUrl.startsWith('/uploads/')) {
                         const baseURL = 'http://localhost:6969';
                         processedUrl = baseURL + processedUrl;
                       }
-
-                      console.log(att)
 
                       return (
                         <Box
@@ -863,27 +873,63 @@ function CreateTaskModal({
                   multiple
                   onChange={(e) => setAssignedTo(e.target.value as [])}
                   value={assignedTo}
-                  renderValue={(selected) =>
-                    selected.length === 0
-                      ? "Choose members"
-                      : selected.map((id: any) => {
-                        const m = users.find((u) => u._id === id);
-                        return `${m?.firstName} ${m?.lastName}`;
-                      }).join(", ")
-                  }
+                  renderValue={(selected) => {
+                    if (selected.length === 0) {
+                      return (
+                        <span style={{ color: "#9ca3af" }}>Choose members</span>
+                      );
+                    }
+                    return (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {selected.map((userId: any) => {
+                          const member = users.find((u: any) => u._id === userId);
+                          return (
+                            <Chip
+                              key={userId}
+                              label={`${member?.firstName} ${member?.lastName}`}
+                              size="small"
+                              sx={{ color: "black" }}
+                            />
+                          );
+                        })}
+                      </Box>
+                    );
+                  }}
                   sx={{
                     fontSize: "14px",
                     border: "1px solid #d1d5db",
                     borderRadius: "4px",
-                    color: "black"
+                    color: "black",
+                    textTransform: "capitalize"
                   }}
                 >
                   {projectMembers.length === 0 ? (
                     <MenuItem disabled>No members in project</MenuItem>
                   ) : (
-                    projectMembers.map((m: any) => (
-                      <MenuItem key={m._id} value={m._id}>
-                        {m.firstName} {m.lastName}
+                    projectMembers.map((member: any) => (
+                      <MenuItem value={member._id} key={member._id}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar
+                            src={member.avatar}
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              fontSize: "12px",
+                              bgcolor: "#E0E0E0",
+                              color: "#484c7f",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                            }}
+                            title={`${member.firstName} ${member.lastName}`}
+                          >
+                            {member.firstName?.[0]}
+                            {member.lastName?.[0]}
+                          </Avatar>
+                          <ListItemText
+                            primary={`${member.firstName} ${member.lastName}`}
+                            secondary={member.email.toLowerCase()}
+                          />
+                        </Box>
                       </MenuItem>
                     ))
                   )}
@@ -918,9 +964,25 @@ function CreateTaskModal({
                   <MenuItem value="" disabled>
                     Choose priority
                   </MenuItem>
-                  <MenuItem value="high">High</MenuItem>
-                  <MenuItem value="medium">Medium</MenuItem>
-                  <MenuItem value="low">Low</MenuItem>
+                  <MenuItem value="high">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <HighPriority />
+                      <span>High</span>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="medium">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <MediumPriority />
+                      <span>Medium</span>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="low">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LowPriority />
+                      <span>Low</span>
+
+                    </Box>
+                  </MenuItem>
                 </Select>
               </Box>
             </>
@@ -978,8 +1040,8 @@ function CreateTaskModal({
         {/* <TaskDetail /> */}
 
 
-      </Box>
-    </Modal>
+      </Box >
+    </Modal >
   );
 }
 
