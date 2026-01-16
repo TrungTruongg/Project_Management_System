@@ -1,8 +1,9 @@
 import { Box, Paper, Typography } from "@mui/material";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Sector } from 'recharts';
 import HighPriority from "../../assets/HighPriority";
 import MediumPriority from "../../assets/MediumPriority";
 import LowPriority from "../../assets/LowPriority";
+import { useNavigate } from "react-router-dom";
 
 interface ChartsProps {
     projects: any[];
@@ -10,6 +11,8 @@ interface ChartsProps {
 }
 
 function ProjectCharts({ projects, tasks }: ChartsProps) {
+
+    const navigate = useNavigate();
 
     const getUserTasks = () => {
         const projectIds = projects.map(p => p._id);
@@ -46,6 +49,89 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
     const statusData = getStatusData();
     const priorityData = getPriorityData();
     const totalTasks = userTasks.length;
+
+    const CustomStatusTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <Box
+                    sx={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    }}
+                >
+                    <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                        {payload[0].name}
+                    </Typography>
+                    <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
+                        {payload[0].value} {payload[0].value === 1 ? 'task' : 'tasks'}
+                    </Typography>
+                </Box>
+            );
+        }
+        return null;
+    };
+
+    // Custom Tooltip for Priority Chart
+    const CustomPriorityTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <Box
+                    sx={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    }}
+                >
+                    <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#111827', mb: 0.5 }}>
+                        {payload[0].payload.name} Priority
+                    </Typography>
+                    <Typography sx={{ fontSize: '12px', color: '#6b7280' }}>
+                        {payload[0].value} {payload[0].value === 1 ? 'task' : 'tasks'}
+                    </Typography>
+                </Box>
+            );
+        }
+        return null;
+    };
+
+    const renderActiveShape = (props: any) => {
+        const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+
+        return (
+            <g>
+                <Sector
+                    cx={cx}
+                    cy={cy}
+                    innerRadius={innerRadius}
+                    outerRadius={outerRadius + 5}  
+                    startAngle={startAngle}
+                    endAngle={endAngle}
+                    fill={fill}
+                    stroke="#ffffff"
+                    strokeWidth={2}
+                    style={{
+                        filter: 'brightness(0.9)', 
+                        cursor: 'pointer'
+                    }}
+                />
+            </g>
+        );
+    };
+
+    // Handle click on pie chart
+    const handlePieClick = (data: any) => {
+        navigate(`/task?status=${data.status}`);
+    };
+
+    // Handle click on bar chart
+    const handleBarClick = (data: any) => {
+        navigate(`/task?priority=${data.priority}`);
+    };
 
     // Custom label cho donut chart
     const renderCustomLabel = ({ cx, cy }: any) => {
@@ -157,11 +243,15 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                                     dataKey="value"
                                     label={renderCustomLabel}
                                     labelLine={false}
+                                    onClick={handlePieClick}
+                                    style={{ cursor: 'pointer' }}
+                                    activeShape={renderActiveShape}
                                 >
                                     {statusData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
+                                <Tooltip content={<CustomStatusTooltip />} isAnimationActive={false} />
                             </PieChart>
                         </ResponsiveContainer>
 
@@ -174,7 +264,15 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                                         alignItems: 'center',
                                         gap: 1,
                                         mb: 0.5,
+                                        cursor: 'pointer',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
+                                        transition: 'background-color 0.2s',
+                                        '&:hover': {
+                                            backgroundColor: '#f3f4f6'
+                                        }
                                     }}
+                                    onClick={() => handlePieClick(entry)}
                                 >
                                     <Box
                                         sx={{
@@ -229,6 +327,8 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                         <BarChart
                             data={priorityData}
                             margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
+                            onClick={handleBarClick}
+
                         >
                             <XAxis
                                 dataKey="name"
@@ -242,11 +342,19 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                                 tick={{ fill: '#9ca3af', fontSize: 12 }}
                                 domain={[0, 'dataMax + 1']}
                             />
+                            <Tooltip content={<CustomPriorityTooltip />} cursor={false} isAnimationActive={false} />
                             <Bar
                                 dataKey="value"
                                 fill="#9ca3af"
                                 radius={[4, 4, 0, 0]}
                                 maxBarSize={60}
+                                style={{ cursor: 'pointer' }}
+                                activeBar={{
+                                    fill: '#6b7280',
+                                    stroke: '#4b5563',
+                                    strokeWidth: 1,
+                                    style: { cursor: 'pointer' }
+                                }}
                             />
                         </BarChart>
                     </ResponsiveContainer>

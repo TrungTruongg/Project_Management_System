@@ -8,13 +8,13 @@ import {
   Chip,
   CircularProgress,
   Divider,
-  Grid,
   IconButton,
   Typography,
 } from "@mui/material";
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
 import { CalendarToday, Delete, Edit, CheckCircle as CheckStatusIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { useEffect, useState } from "react";
+import TaskFilters, { type FilterState } from './TaskFilters';
 import CreateTaskModal from "./CreateTaskModal";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
 import { useUser } from "../context/UserContext";
@@ -23,9 +23,7 @@ import { useSearch } from "../context/SearchContext";
 import api from "../api/axiosConfig";
 
 function Tasks() {
-  const [searchParams] = useSearchParams();
-  const projectId = searchParams.get('id');
-
+  const [searchParams, setSearchParams] = useSearchParams();
   const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskList, setTaskList] = useState<any[]>([]);
@@ -37,6 +35,49 @@ function Tasks() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { searchTerm } = useSearch();
+
+  // Get filter params from URL
+  const projectId = searchParams.get('id');
+  const filterStatusParam = searchParams.get('status');
+  const filterPriorityParam = searchParams.get('priority');
+
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
+    assignee: [],
+    status: [],
+    priority: [],
+  })
+
+  const getInitialFilters = (): FilterState => {
+    const initialFilters: FilterState = {
+      assignee: [],
+      status: [],
+      priority: [],
+    };
+
+    if (filterStatusParam) {
+      initialFilters.status = [filterStatusParam];
+    }
+
+    if (filterPriorityParam) {
+      initialFilters.priority = [filterPriorityParam];
+    }
+
+    return initialFilters;
+  };
+
+  useEffect(() => {
+     if (filterStatusParam || filterPriorityParam) {
+      const initialFilters = getInitialFilters();
+      setActiveFilters(initialFilters);
+      
+      // Clean URL after reading params
+      searchParams.delete('status');
+      searchParams.delete('priority');
+      setSearchParams(searchParams, { replace: true });
+    }
+
+    fetchAllData();
+  }, []);
 
   const calculateDeadline = (dateStart: string, dateEnd: string) => {
     const startDate = new Date(dateStart);
@@ -93,25 +134,61 @@ function Tasks() {
   };
 
   const filteredTasks = taskList.filter((task: any) => {
+    // Filter by project
     if (projectId && task.projectId !== projectId) {
       return false;
     }
 
-    if (!searchTerm.trim()) return true;
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const matchesSearch =
+        task.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return (
-      task.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      if (!matchesSearch) return false;
+    }
+
+    // Filter by assignees
+    if (activeFilters.assignee.length > 0) {
+      const taskAssignees = [...task.assignedTo];
+      const taskProject = projects.find(p => p._id === task.projectId);
+
+      if (taskProject?.leaderId) {
+        taskAssignees.push(taskProject.leaderId);
+      }
+
+      const hasMatch = taskAssignees.some(userId =>
+        activeFilters.assignee.includes(userId)
+      );
+
+      if (!hasMatch) return false;
+    }
+
+    // Filter by status
+    if (activeFilters.status.length > 0) {
+      if (!activeFilters.status.includes(task.status)) {
+        return false;
+      }
+    }
+
+    // Filter by priority
+    if (activeFilters.priority.length > 0) {
+      if (!activeFilters.priority.includes(task.priority)) {
+        return false;
+      }
+    }
+
+    return true;
   });
+
+  // Handler cho filter change
+  const handleFilterChange = (filters: FilterState) => {
+    setActiveFilters(filters);
+  };
 
   const currentProject = projectId
     ? projects.find(p => p._id === projectId)
     : null;
-
-  useEffect(() => {
-    fetchAllData();
-  }, []);
 
   const getUserProjects = () => {
     if (!user) return [];
@@ -122,13 +199,13 @@ function Tasks() {
 
   const userProjects = getUserProjects();
 
-  const tasksByStatus = () => {
-    return {
-      toDo: filteredTasks.filter((t) => t.completion === 0),
-      inProgress: filteredTasks.filter((t) => t.completion > 0 && t.completion < 100),
-      completed: filteredTasks.filter((t) => t.completion === 100),
-    };
-  };
+  // const tasksByStatus = () => {
+  //   return {
+  //     toDo: filteredTasks.filter((t) => t.completion === 0),
+  //     inProgress: filteredTasks.filter((t) => t.completion > 0 && t.completion < 100),
+  //     completed: filteredTasks.filter((t) => t.completion === 100),
+  //   };
+  // };
 
   const getPriorityChip = (priority: "high" | "medium" | "low") => {
     const config = {
@@ -581,109 +658,116 @@ function Tasks() {
 
   return (
     <>
-      <Grid container spacing={3} sx={{ mb: 3, width: "100%" }}>
-        <Box
-          sx={{
-            width: "100%",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 3,
-          }}
-        >
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            {currentProject ? (
-              <Typography fontSize="1.5rem" fontWeight="600">
-                <>
-                  Tasks in
-                  <Box component="span" sx={{ color: "#C62828", px: 1, borderRadius: 1, textTransform: "capitalize" }}>
-                    {currentProject.name}
-                  </Box>
-                </>
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 3,
+        }}
+      >
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          {currentProject ? (
+            <Typography fontSize="1.5rem" fontWeight="600">
+              <>
+                Tasks in
+                <Box component="span" sx={{ color: "#C62828", px: 1, borderRadius: 1, textTransform: "capitalize" }}>
+                  {currentProject.name}
+                </Box>
+              </>
 
+            </Typography>
+          ) : (
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <Typography fontSize="1.5rem" fontWeight="700">
+                Tasks Management
               </Typography>
-            ) : (
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Typography fontSize="1.5rem" fontWeight="700">
-                  Tasks Management
-                </Typography>
-              </Box>
-            )}
+            </Box>
+          )}
 
-            <Chip
-              label={filteredTasks.length}
-              size="small"
-              sx={{
-                fontSize: "14px",
-                fontWeight: 500,
-              }}
-            />
-          </Box>
-
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <IconButton
-              onClick={fetchAllData}
-              disabled={loading}
-              sx={{ color: "text.secondary" }}
-              title="Refresh members"
-            >
-              <RefreshIcon />
-            </IconButton>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<AddTaskIcon />}
-              onClick={handleOpenModal}
-              disabled={userProjects.length === 0}
-              sx={{
-                backgroundColor: "#484c7f",
-                color: "white",
-                textTransform: "none",
-                px: 3,
-              }}
-            >
-              Create Task
-            </Button>
-          </Box>
-
+          <Chip
+            label={filteredTasks.length}
+            size="small"
+            sx={{
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+          />
         </Box>
 
-        {/* Tasks Grid */}
-        {loading ? (
-          <Box
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <TaskFilters
+            users={users}
+            currentUser={user}
+            onFilterChange={handleFilterChange}
+            initialFilters={getInitialFilters()}
+          />
+
+          <IconButton
+            onClick={fetchAllData}
+            disabled={loading}
+            sx={{ color: "text.secondary" }}
+            title="Refresh members"
+          >
+            <RefreshIcon />
+          </IconButton>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<AddTaskIcon />}
+            onClick={handleOpenModal}
+            disabled={userProjects.length === 0}
             sx={{
-              order: 3,
-              flex: "1 1",
-              height: "60vh",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              backgroundColor: "#484c7f",
+              color: "white",
+              textTransform: "none",
+              px: 3,
             }}
           >
-            <CircularProgress />
-          </Box>
-        ) : userProjects.length === 0 ? (
-          <Typography fontStyle="italic">
-            You are not part of any projects to create task.
-            Start {""}
-            <Typography fontStyle="normal" component="a"
-              sx={{ color: "#0052cc", textDecoration: "underline", cursor: "pointer" }}
-              onClick={handleOpenProjectModal}>create new project
-            </Typography>
-          </Typography>
-        ) : taskList.length === 0 ? (
-          <Typography fontStyle="italic">No tasks available!</Typography>
-        ) : (
-          <Grid container spacing={3} sx={{ width: "100%" }}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                To do ({tasksByStatus().toDo.length})
-              </Typography>
-              {tasksByStatus().toDo.map(renderTaskCard)}
-            </Grid>
+            Create Task
+          </Button>
+        </Box>
+      </Box>
 
-            <Grid size={{ xs: 12, md: 4 }}>
+      {/* Tasks Grid */}
+      {loading ? (
+        <Box
+          sx={{
+            order: 3,
+            flex: "1 1",
+            height: "60vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : userProjects.length === 0 ? (
+        <Typography fontStyle="italic">
+          You are not part of any projects to create task.
+          Start {""}
+          <Typography fontStyle="normal" component="a"
+            sx={{ color: "#0052cc", textDecoration: "underline", cursor: "pointer" }}
+            onClick={handleOpenProjectModal}>create new project
+          </Typography>
+        </Typography>
+      ) : filteredTasks.length === 0 ? (
+        <Typography fontStyle="italic">No tasks available!</Typography>
+      ) : (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 3,
+          }}
+        >
+          {filteredTasks.map(renderTaskCard)}
+
+
+          {/* <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
                 In Progress ({tasksByStatus().inProgress.length})
               </Typography>
@@ -695,10 +779,9 @@ function Tasks() {
                 Completed ({tasksByStatus().completed.length})
               </Typography>
               {tasksByStatus().completed.map(renderTaskCard)}
-            </Grid>
-          </Grid>
-        )}
-      </Grid>
+            </Grid> */}
+        </Box>
+      )}
 
       <CreateTaskModal
         open={openCreateTaskModal}
