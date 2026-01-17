@@ -27,9 +27,9 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
         const toDo = userTasks.filter(t => t.status === 'to-do').length;
 
         return [
-            { name: 'Done', value: completed, color: '#3b82f6' },
-            { name: 'In Progress', value: inProgress, color: '#22c55e' },
-            { name: 'To Do', value: toDo, color: '#a855f7' },
+            { id: "completed", name: 'Completed', value: completed, color: '#3b82f6' },
+            { id: "in-progress", name: 'In Progress', value: inProgress, color: '#22c55e' },
+            { id: "to-do", name: 'To Do', value: toDo, color: '#a855f7' },
         ].filter(item => item.value > 0);
     };
 
@@ -40,9 +40,9 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
         const low = userTasks.filter(task => task.priority === 'low').length;
 
         return [
-            { name: 'High', value: high, IconComponent: HighPriority },
-            { name: 'Medium', value: medium, IconComponent: MediumPriority },
-            { name: 'Low', value: low, IconComponent: LowPriority },
+            { id: "high", name: 'High', value: high, IconComponent: HighPriority },
+            { id: "medium", name: 'Medium', value: medium, IconComponent: MediumPriority },
+            { id: "low", name: 'Low', value: low, IconComponent: LowPriority },
         ];
     };
 
@@ -124,13 +124,13 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
     };
 
     // Handle click on pie chart
-    const handlePieClick = (data: any) => {
-        navigate(`/task?status=${data.status}`);
+    const handlePieClick = (status: any) => {
+        navigate(`/task?status=${status.id}`);
     };
 
     // Handle click on bar chart
-    const handleBarClick = (data: any) => {
-        navigate(`/task?priority=${data.priority}`);
+    const handleBarClick = (priority: any) => {    
+        navigate(`/task?priority=${priority.activeLabel.toLowerCase()}`);
     };
 
     // Custom label cho donut chart

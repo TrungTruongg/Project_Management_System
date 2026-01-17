@@ -23,7 +23,7 @@ import ViewLockedUsers from "./components/security/ViewLockedUsers";
 import SupportsView from "./components/ticket/SupportsView";
 import SupportsDetail from "./components/ticket/SupportsDetail";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import AttachmentManagement from "./components/resources/AttachmentManagement";
+import AttachmentManagement from "./components/attachment/AttachmentManagement";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 

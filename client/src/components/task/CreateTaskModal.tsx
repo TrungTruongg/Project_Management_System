@@ -336,13 +336,13 @@ function CreateTaskModal({
           }
         }
 
-        // Lưu attachment vào database
         try {
           await api.post("/attachments/create", {
             taskId: taskId,
             url: finalUrl,
             name: att.name,
             type: att.type,
+            createdBy: user?._id,
             uploadedAt: new Date().toISOString(),
           });
         } catch (error) {

@@ -83,12 +83,13 @@ export const createAttachment = async (req, res) => {
     const db = client.db("db_pms");
     const collection = db.collection("attachments");
 
-    const { taskId, url, name, type } = req.body;
+    const { taskId, url, name, type, createdBy } = req.body;
     const newAttachment = {
       url: url,
       name: name,
       type: type, 
       taskId: taskId,
+      createdBy: createdBy,
       uploadedAt: new Date()
     };
     const result = await collection.insertOne(newAttachment);

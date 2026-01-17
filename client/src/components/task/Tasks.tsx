@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { GoPlusCircle as AddTaskIcon } from "react-icons/go";
 import { CalendarToday, Delete, Edit, CheckCircle as CheckStatusIcon, Refresh as RefreshIcon } from "@mui/icons-material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TaskFilters, { type FilterState } from './TaskFilters';
 import CreateTaskModal from "./CreateTaskModal";
 import DeleteConfirmDialog from "../DeleteConfirmDialog";
@@ -38,8 +38,6 @@ function Tasks() {
 
   // Get filter params from URL
   const projectId = searchParams.get('id');
-  const filterStatusParam = searchParams.get('status');
-  const filterPriorityParam = searchParams.get('priority');
 
   const [activeFilters, setActiveFilters] = useState<FilterState>({
     assignee: [],
@@ -47,33 +45,40 @@ function Tasks() {
     priority: [],
   })
 
-  const getInitialFilters = (): FilterState => {
-    const initialFilters: FilterState = {
+  const initialFilters = useMemo(() => {
+    const filterStatusParam = searchParams.get('status');
+    const filterPriorityParam = searchParams.get('priority');
+
+    const filters: FilterState = {
       assignee: [],
       status: [],
       priority: [],
     };
 
     if (filterStatusParam) {
-      initialFilters.status = [filterStatusParam];
+      filters.status = [filterStatusParam];
     }
 
     if (filterPriorityParam) {
-      initialFilters.priority = [filterPriorityParam];
+      filters.priority = [filterPriorityParam];
     }
 
-    return initialFilters;
-  };
+    return filters;
+  }, []);
 
+  // Apply initial filters from URL on mount
   useEffect(() => {
-     if (filterStatusParam || filterPriorityParam) {
-      const initialFilters = getInitialFilters();
+    const filterStatusParam = searchParams.get('status');
+    const filterPriorityParam = searchParams.get('priority');
+
+    if (filterStatusParam || filterPriorityParam) {
       setActiveFilters(initialFilters);
-      
+
       // Clean URL after reading params
-      searchParams.delete('status');
-      searchParams.delete('priority');
-      setSearchParams(searchParams, { replace: true });
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('status');
+      newSearchParams.delete('priority');
+      setSearchParams(newSearchParams, { replace: true });
     }
 
     fetchAllData();
@@ -198,14 +203,6 @@ function Tasks() {
   };
 
   const userProjects = getUserProjects();
-
-  // const tasksByStatus = () => {
-  //   return {
-  //     toDo: filteredTasks.filter((t) => t.completion === 0),
-  //     inProgress: filteredTasks.filter((t) => t.completion > 0 && t.completion < 100),
-  //     completed: filteredTasks.filter((t) => t.completion === 100),
-  //   };
-  // };
 
   const getPriorityChip = (priority: "high" | "medium" | "low") => {
     const config = {
@@ -702,7 +699,7 @@ function Tasks() {
             users={users}
             currentUser={user}
             onFilterChange={handleFilterChange}
-            initialFilters={getInitialFilters()}
+            initialFilters={initialFilters}
           />
 
           <IconButton

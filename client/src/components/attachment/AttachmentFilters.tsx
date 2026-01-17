@@ -10,7 +10,6 @@ import {
     Popper,
     TextField,
     Typography,
-    Divider,
     ClickAwayListener,
     Avatar,
 } from '@mui/material';
@@ -18,75 +17,75 @@ import {
     KeyboardArrowDown,
     Close as CloseIcon,
     Person as PersonIcon,
-    CheckCircle as StatusIcon,
-    Flag as PriorityIcon,
 } from '@mui/icons-material';
-import HighPriority from '../../assets/HighPriority';
-import MediumPriority from '../../assets/MediumPriority';
-import LowPriority from '../../assets/LowPriority';
+import {PiMicrosoftExcelLogoBold as SpreadsheetTypeIcon} from "react-icons/pi";
+import {
+    FiImage as ImageTypeIcon,
+    FiFileText as DocumentTypeIcon,
+    FiFile as PDFTypeIcon,
+    FiVideo as VideoTypeIcon
+} from "react-icons/fi";
+import { GoFile as TypeIcon } from "react-icons/go";
+import { MdDateRange as DateIcon } from "react-icons/md";
 
-interface TaskFiltersProps {
+interface AttachmentFiltersProps {
     users: any[];
-    currentUser: any;
     onFilterChange: (filters: FilterState) => void;
-    initialFilters?: FilterState;
 }
 
 export interface FilterState {
-    assignee: string[];
-    status: string[];
-    priority: string[];
+    createdBy: string[];
+    type: string[];
+    createdDate: string[];
 }
 
-function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: TaskFiltersProps) {
-    const [filters, setFilters] = useState<FilterState>(initialFilters ||{
-        assignee: [],
-        status: [],
-        priority: [],
+function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
+    const [filters, setFilters] = useState<FilterState>({
+        createdBy: [],
+        type: [],
+        createdDate: [],
     });
 
     const [anchorEl, setAnchorEl] = useState<{
-        assignee: null | HTMLElement;
-        status: null | HTMLElement;
-        priority: null | HTMLElement;
+        createdBy: null | HTMLElement;
+        type: null | HTMLElement;
+        createdDate: null | HTMLElement;
     }>({
-        assignee: null,
-        status: null,
-        priority: null,
+        createdBy: null,
+        type: null,
+        createdDate: null,
     });
 
     const [searchTerms, setSearchTerms] = useState({
-        assignee: '',
-        status: '',
-        priority: '',
+        createdBy: '',
+        type: '',
+        createdDate: '',
     });
 
-    useEffect(() => {
-    if (initialFilters) {
-      setFilters(initialFilters);
-    }
-  }, [initialFilters]);
-
-    const statusOptions = [
-        { value: 'to-do', label: 'TO DO', color: '#616161' },
-        { value: 'in-progress', label: 'IN PROGRESS', color: '#1976d2' },
-        { value: 'completed', label: 'COMPLETED', color: '#2e7d32' },
+    const typeOptions = [
+        { value: 'image', label: 'Images', IconComponent: ImageTypeIcon, color: "#CD519D" },
+        { value: 'document', label: 'Documents', IconComponent: DocumentTypeIcon, color: "#357DE8" },
+        { value: 'pdf', label: 'PDFs', IconComponent: PDFTypeIcon, color: "#C9372C" },
+        { value: 'spreadsheet', label: 'Spreadsheets', IconComponent: SpreadsheetTypeIcon, color: "#22A06B" },
+        { value: 'video', label: 'Audio', IconComponent: VideoTypeIcon, color: "#2898BD" },
     ];
 
-    const priorityOptions = [
-        { value: 'high', label: 'High', IconComponent: HighPriority },
-        { value: 'medium', label: 'Medium', IconComponent: MediumPriority },
-        { value: 'low', label: 'Low', IconComponent: LowPriority },
+    const createdDateOptions = [
+        { value: 'today', label: 'Today' },
+        { value: 'yesterday', label: 'Yesterday' },
+        { value: 'last-7-days', label: 'Last 7 days' },
+        { value: 'this-month', label: 'This month' },
+        { value: 'this-year', label: `This year (${new Date().getFullYear()})` },
     ];
 
-    const handleTogglePopper = (type: 'assignee' | 'status' | 'priority', event: React.MouseEvent<HTMLElement>) => {
+    const handleTogglePopper = (type: 'createdBy' | 'type' | 'createdDate', event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(prev => ({
             ...prev,
             [type]: prev[type] ? null : event.currentTarget,
         }));
     };
 
-    const handleClosePopper = (type: 'assignee' | 'status' | 'priority') => {
+    const handleClosePopper = (type: 'createdBy' | 'type' | 'createdDate') => {
         setAnchorEl(prev => ({ ...prev, [type]: null }));
     };
 
@@ -119,21 +118,21 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
 
     // Filter users based on search
     const filteredUsers = users.filter(user =>
-        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerms.assignee.toLowerCase())
+        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerms.createdBy.toLowerCase())
     );
 
-    // Filter statuses based on search
-    const filteredStatuses = statusOptions.filter(status =>
-        status.label.toLowerCase().includes(searchTerms.status.toLowerCase())
+    // Filter types based on search
+    const filteredTypes = typeOptions.filter(type =>
+        type.label.toLowerCase().includes(searchTerms.type.toLowerCase())
     );
 
-    // Filter priorities based on search
-    const filteredPriorities = priorityOptions.filter(priority =>
-        priority.label.toLowerCase().includes(searchTerms.priority.toLowerCase())
+    // Filter dates based on search
+    const filteredCreatedDate = createdDateOptions.filter(date =>
+        date.label.toLowerCase().includes(searchTerms.createdDate.toLowerCase())
     );
 
     const renderFilterButton = (
-        type: 'assignee' | 'status' | 'priority',
+        type: 'createdBy' | 'type' | 'createdDate',
         label: string,
         icon: React.ReactNode
     ) => {
@@ -204,15 +203,15 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
 
     return (
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            {/* Assignee Filter */}
-            {renderFilterButton('assignee', 'Assignee', <PersonIcon sx={{ fontSize: 16 }} />)}
+            {/* Created By Filter */}
+            {renderFilterButton('createdBy', 'Created By', <PersonIcon sx={{ fontSize: 16 }} />)}
             <Popper
-                open={Boolean(anchorEl.assignee)}
-                anchorEl={anchorEl.assignee}
+                open={Boolean(anchorEl.createdBy)}
+                anchorEl={anchorEl.createdBy}
                 placement="bottom-start"
                 sx={{ zIndex: 1300 }}
             >
-                <ClickAwayListener onClickAway={() => handleClosePopper('assignee')}>
+                <ClickAwayListener onClickAway={() => handleClosePopper('createdBy')}>
                     <Paper
                         elevation={3}
                         sx={{
@@ -226,13 +225,13 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                     >
                         <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
                             <Typography sx={{ fontSize: '12px', color: '#5e6c84', mb: 1 }}>
-                                Assignees
+                                Created By
                             </Typography>
                             <TextField
                                 fullWidth
                                 size="small"
                                 placeholder="Search Assignee"
-                                value={searchTerms.assignee}
+                                value={searchTerms.createdBy}
                                 onChange={(e) => setSearchTerms(prev => ({ ...prev, assignee: e.target.value }))}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
@@ -243,52 +242,16 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                         </Box>
 
                         <Box sx={{ overflowY: 'auto', flex: 1 }}>
-                            {/* Current User */}
-                            <Box sx={{ p: 1.5 }}>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            size="small"
-                                            checked={filters.assignee.includes(currentUser?._id)}
-                                            onChange={() => handleToggleFilter('assignee', currentUser?._id)}
-                                        />
-                                    }
-                                    label={
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Avatar
-                                                src={currentUser.avatar}
-                                                sx={{
-                                                    width: 20,
-                                                    height: 20,
-                                                    fontSize: "10px",
-                                                    bgcolor: "#E0E0E0",
-                                                    textTransform: "uppercase"
-                                                }}
-                                                title={`${currentUser.firstName} ${currentUser.lastName}`}
-                                            >
-                                                {currentUser.firstName?.[0]}{currentUser.lastName?.[0]}
-                                            </Avatar>
-                                            <Typography sx={{ fontSize: '14px' }}>Current User</Typography>
-                                        </Box>
-                                    }
-                                />
-                            </Box>
-
-                            <Divider />
-
                             {/* Suggested Users */}
                             <Box sx={{ p: 1.5 }}>
-                                <Typography sx={{ fontSize: '12px', color: '#5e6c84', mb: 1 }}>
-                                    Suggested Users
-                                </Typography>
                                 {filteredUsers.map(user => (
                                     <FormControlLabel
                                         key={user._id}
                                         control={
                                             <Checkbox
                                                 size="small"
-                                                checked={filters.assignee.includes(user._id)}
-                                                onChange={() => handleToggleFilter('assignee', user._id)}
+                                                checked={filters.createdBy.includes(user._id)}
+                                                onChange={() => handleToggleFilter('createdBy', user._id)}
                                             />
                                         }
                                         label={
@@ -321,7 +284,7 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                             <Typography
                                 sx={{
                                     fontSize: '12px',
-                                    color: filters.assignee.length > 0 ? '#5e6c84' : '#9e9e9e',
+                                    color: filters.createdBy.length > 0 ? '#5e6c84' : '#9e9e9e',
                                 }}
                             >
                                 {filteredUsers.length} of {users.length}
@@ -331,15 +294,15 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                 </ClickAwayListener>
             </Popper>
 
-            {/* Status Filter */}
-            {renderFilterButton('status', 'Status', <StatusIcon sx={{ fontSize: 16 }} />)}
+            {/* Type Filter */}
+            {renderFilterButton('type', 'Type', <TypeIcon fontSize="16" />)}
             <Popper
-                open={Boolean(anchorEl.status)}
-                anchorEl={anchorEl.status}
+                open={Boolean(anchorEl.type)}
+                anchorEl={anchorEl.type}
                 placement="bottom-start"
                 sx={{ zIndex: 1300 }}
             >
-                <ClickAwayListener onClickAway={() => handleClosePopper('status')}>
+                <ClickAwayListener onClickAway={() => handleClosePopper('type')}>
                     <Paper
                         elevation={3}
                         sx={{
@@ -350,14 +313,14 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                     >
                         <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
                             <Typography sx={{ fontSize: '12px', color: '#5e6c84', mb: 1 }}>
-                                Status
+                                Type
                             </Typography>
                             <TextField
                                 fullWidth
                                 size="small"
-                                placeholder="Search Status"
-                                value={searchTerms.status}
-                                onChange={(e) => setSearchTerms(prev => ({ ...prev, status: e.target.value }))}
+                                placeholder="Search Type"
+                                value={searchTerms.type}
+                                onChange={(e) => setSearchTerms(prev => ({ ...prev, type: e.target.value }))}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         fontSize: '14px',
@@ -367,51 +330,48 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                         </Box>
 
                         <Box sx={{ p: 1.5 }}>
-                            {filteredStatuses.map(status => (
-                                <FormControlLabel
-                                    key={status.value}
-                                    control={
-                                        <Checkbox
-                                            size="small"
-                                            checked={filters.status.includes(status.value)}
-                                            onChange={() => handleToggleFilter('status', status.value)}
-                                        />
-                                    }
-                                    label={
-                                        <Chip
-                                            label={status.label}
-                                            size="small"
-                                            sx={{
-                                                bgcolor: `${status.color}15`,
-                                                color: status.color,
-                                                fontWeight: 600,
-                                                fontSize: '11px',
-                                            }}
-                                        />
-                                    }
-                                    sx={{ width: '100%', m: 0, mb: 0.5 }}
-                                />
-                            ))}
+                            {filteredTypes.map(type => {
+                                const IconComponent = type?.IconComponent;
+                                return (
+                                    <FormControlLabel
+                                        key={type.value}
+                                        control={
+                                            <Checkbox
+                                                size="small"
+                                                checked={filters.type.includes(type.value)}
+                                                onChange={() => handleToggleFilter('type', type.value)}
+                                            />
+                                        }
+                                        label={
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <IconComponent color={type.color} />
+                                                <Typography sx={{ fontSize: '14px' }}>{type.label}</Typography>
+                                            </Box>
+                                        }
+                                        sx={{ width: '100%', m: 0, mb: 0.5 }}
+                                    />
+                                )
+                            })}
                         </Box>
 
                         <Box sx={{ p: 1.5, borderTop: '1px solid #e0e0e0', textAlign: 'center' }}>
                             <Typography sx={{ fontSize: '12px', color: '#5e6c84' }}>
-                                {filteredStatuses.length} of {statusOptions.length}
+                                {filteredTypes.length} of {typeOptions.length}
                             </Typography>
                         </Box>
                     </Paper>
                 </ClickAwayListener>
             </Popper>
 
-            {/* Priority Filter */}
-            {renderFilterButton('priority', 'Priority', <PriorityIcon sx={{ fontSize: 16 }} />)}
+            {/* Dates Filter */}
+            {renderFilterButton('createdDate', 'Created Date', <DateIcon fontSize="16" />)}
             <Popper
-                open={Boolean(anchorEl.priority)}
-                anchorEl={anchorEl.priority}
+                open={Boolean(anchorEl.createdDate)}
+                anchorEl={anchorEl.createdDate}
                 placement="bottom-start"
                 sx={{ zIndex: 1300 }}
             >
-                <ClickAwayListener onClickAway={() => handleClosePopper('priority')}>
+                <ClickAwayListener onClickAway={() => handleClosePopper('createdDate')}>
                     <Paper
                         elevation={3}
                         sx={{
@@ -420,54 +380,31 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                             overflow: 'hidden',
                         }}
                     >
-                        <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
-                            <Typography sx={{ fontSize: '12px', color: '#5e6c84', mb: 1 }}>
-                                Priority
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                placeholder="Search Priority"
-                                value={searchTerms.priority}
-                                onChange={(e) => setSearchTerms(prev => ({ ...prev, priority: e.target.value }))}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        fontSize: '14px',
-                                    }
-                                }}
-                            />
-                        </Box>
-
                         <Box sx={{ p: 1.5 }}>
-                            {filteredPriorities.map(priority => {
-                                const IconComponent = priority?.IconComponent;
+                            {filteredCreatedDate.map(date => {
+
                                 return (
                                     <FormControlLabel
-                                        key={priority.value}
+                                        key={date.value}
                                         control={
                                             <Checkbox
                                                 size="small"
-                                                checked={filters.priority.includes(priority.value)}
-                                                onChange={() => handleToggleFilter('priority', priority.value)}
+                                                checked={filters.createdDate.includes(date.value)}
+                                                onChange={() => handleToggleFilter('createdDate', date.value)}
                                             />
                                         }
                                         label={
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <IconComponent />
-                                                <Typography sx={{ fontSize: '14px' }}>{priority.label}</Typography>
-                                            </Box>
+                                            <Typography sx={{ fontSize: '14px' }}>{date.label}</Typography>
                                         }
                                         sx={{ width: '100%', m: 0, mb: 0.5 }}
                                     />
                                 )
-                            }
-
-                            )}
+                            })}
                         </Box>
 
                         <Box sx={{ p: 1.5, borderTop: '1px solid #e0e0e0', textAlign: 'center' }}>
                             <Typography sx={{ fontSize: '12px', color: '#5e6c84' }}>
-                                {filteredPriorities.length} of {priorityOptions.length}
+                                {filteredCreatedDate.length} of {createdDateOptions.length}
                             </Typography>
                         </Box>
                     </Paper>
@@ -477,4 +414,4 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
     );
 }
 
-export default TaskFilters;
+export default AttachmentFilters;
