@@ -119,7 +119,7 @@ export const register = async (req, res) => {
   }
 };
 
-export const forgotPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
   try {
     await client.connect();
     const db = client.db("db_pms");
@@ -160,7 +160,7 @@ export const forgotPassword = async (req, res) => {
         $set: {
           passwordResetCode: verificationCode,
           passwordResetToken: token,
-          passwordResetExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 phút
+          passwordResetExpires: new Date(Date.now() + 10 * 60 * 1000), 
           updatedAt: new Date(),
         },
       },
@@ -170,10 +170,12 @@ export const forgotPassword = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: "Password Reset Request",
+      subject: "Password Reset - Verification Code",
       html: `
-        <p>You requested a password reset. Click the link below to reset your password:</p>
-        <a href="${resetUrl}">${resetUrl}</a>
+        <div class="code-box">
+          <div class="code">${verificationCode}</div> 
+        </div>
+        <p><strong>This code will expire in 10 minutes.</strong></p>
       `,
     };
 
@@ -187,7 +189,7 @@ export const forgotPassword = async (req, res) => {
     } catch (err) {
       console.error("Failed to send password reset email:", err);
 
-      // Xóa verification code nếu gửi email thất bại
+      // Delete verification code if send email failed
       await collection.updateOne(
         { _id: user._id },
         {
@@ -227,7 +229,7 @@ export const verifyResetCode = async (req, res) => {
       });
     }
 
-    // Tìm user với email và code
+    // Find user with email and verification code
     const user = await collection.findOne({
       email: email.toLowerCase(),
       passwordResetCode: verificationCode.trim(),
@@ -240,9 +242,9 @@ export const verifyResetCode = async (req, res) => {
       });
     }
 
-    // Kiểm tra code đã hết hạn chưa
+    // Check if code is outdated
     if (new Date() > new Date(user.passwordResetExpires)) {
-      // Xóa code đã hết hạn
+      // Delete outdated code
       await collection.updateOne(
         { _id: user._id },
         {
@@ -260,7 +262,7 @@ export const verifyResetCode = async (req, res) => {
       });
     }
 
-    // Tạo token mới để reset password
+    // Create new token to reset password
     const resetToken = jwt.sign(
       {
         id: user._id,
@@ -279,97 +281,6 @@ export const verifyResetCode = async (req, res) => {
     });
   } catch (err) {
     console.error("Verify reset code error:", err);
-    res.status(500).json({
-      success: false,
-      error: "An error occurred. Please try again later.",
-    });
-  }
-};
-
-// Bước 3: Reset password với token đã verify
-export const resetPassword = async (req, res) => {
-  try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("users");
-    const { resetToken, newPassword } = req.body;
-
-    if (!resetToken || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        error: "Reset token and new password are required",
-      });
-    }
-
-    // Verify token
-    let decoded;
-    try {
-      decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
-    } catch (err) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid or expired reset token",
-      });
-    }
-
-    // Kiểm tra purpose của token
-    if (decoded.purpose !== "password-reset") {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid reset token",
-      });
-    }
-
-    // Tìm user
-    const user = await collection.findOne({ _id: decoded.id });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: "User not found",
-      });
-    }
-
-    // Hash password mới
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Cập nhật password và xóa các trường reset
-    await collection.updateOne(
-      { _id: user._id },
-      {
-        $set: {
-          password: hashedPassword,
-          updatedAt: new Date(),
-        },
-        $unset: {
-          passwordResetCode: "",
-          passwordResetToken: "",
-          passwordResetExpires: "",
-        },
-      },
-    );
-
-    // Gửi email thông báo password đã được thay đổi
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Password Reset Confirmation",
-      html: `
-      <p>Your password has been successfully reset. If you did not initiate this request, please contact us immediately.</p>
-    `,
-    };
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (err) {
-      console.error("Failed to send confirmation email:", err);
-    }
-
-    res.json({
-      success: true,
-      message: "Password has been reset successfully",
-    });
-  } catch (err) {
-    console.error("Reset password error:", err);
     res.status(500).json({
       success: false,
       error: "An error occurred. Please try again later.",
@@ -398,9 +309,7 @@ export const googleAuth = async (req, res, next) => {
       email: email.toLowerCase(),
     });
 
-    // Nếu chưa có user, tạo mới
     if (!user) {
-      // Tạo random password (user login bằng Google không cần password)
       const randomPassword = Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
@@ -421,7 +330,6 @@ export const googleAuth = async (req, res, next) => {
       const result = await collection.insertOne(newUser);
       user = { ...newUser, _id: result.insertedId };
     } else {
-      // User đã tồn tại, update last login và avatar
       await collection.updateOne(
         { _id: user._id },
         {
@@ -433,7 +341,6 @@ export const googleAuth = async (req, res, next) => {
       );
     }
 
-    // Trả về user (không có password)
     const { password: _, ...userResponse } = user;
 
     res.json({
