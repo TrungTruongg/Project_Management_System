@@ -108,14 +108,14 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                     cx={cx}
                     cy={cy}
                     innerRadius={innerRadius}
-                    outerRadius={outerRadius + 5}  
+                    outerRadius={outerRadius + 5}
                     startAngle={startAngle}
                     endAngle={endAngle}
                     fill={fill}
                     stroke="#ffffff"
                     strokeWidth={2}
                     style={{
-                        filter: 'brightness(0.9)', 
+                        filter: 'brightness(0.9)',
                         cursor: 'pointer'
                     }}
                 />
@@ -129,7 +129,7 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
     };
 
     // Handle click on bar chart
-    const handleBarClick = (priority: any) => {    
+    const handleBarClick = (priority: any) => {
         navigate(`/task?priority=${priority.activeLabel.toLowerCase()}`);
     };
 
@@ -230,7 +230,21 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                         </Typography>
                     </Box>
                 ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            '& .recharts-wrapper': {
+                                outline: 'none !important',
+                            },
+                            '& .recharts-surface': {
+                                outline: 'none !important',
+                            },
+                            '& *:focus': {
+                                outline: 'none !important',
+                            }
+                        }}>
                         <ResponsiveContainer width="100%" height={200}>
                             <PieChart>
                                 <Pie
@@ -244,7 +258,7 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                                     label={renderCustomLabel}
                                     labelLine={false}
                                     onClick={handlePieClick}
-                                    style={{ cursor: 'pointer' }}
+                                    style={{ cursor: 'pointer', border: "none" }}
                                     activeShape={renderActiveShape}
                                 >
                                     {statusData.map((entry, index) => (
@@ -323,41 +337,56 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                         </Typography>
                     </Box>
                 ) : (
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart
-                            data={priorityData}
-                            margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
-                            onClick={handleBarClick}
+                    <Box sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            '& .recharts-wrapper': {
+                                outline: 'none !important',
+                            },
+                            '& .recharts-surface': {
+                                outline: 'none !important',
+                            },
+                            '& *:focus': {
+                                outline: 'none !important',
+                            }
+                        }}>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart
+                                data={priorityData}
+                                margin={{ top: 10, right: 10, left: -20, bottom: 5 }}
+                                onClick={handleBarClick}
 
-                        >
-                            <XAxis
-                                dataKey="name"
-                                tick={<CustomXAxisTick />}
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            <YAxis
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fill: '#9ca3af', fontSize: 12 }}
-                                domain={[0, 'dataMax + 1']}
-                            />
-                            <Tooltip content={<CustomPriorityTooltip />} cursor={false} isAnimationActive={false} />
-                            <Bar
-                                dataKey="value"
-                                fill="#9ca3af"
-                                radius={[4, 4, 0, 0]}
-                                maxBarSize={60}
-                                style={{ cursor: 'pointer' }}
-                                activeBar={{
-                                    fill: '#6b7280',
-                                    stroke: '#4b5563',
-                                    strokeWidth: 1,
-                                    style: { cursor: 'pointer' }
-                                }}
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
+                            >
+                                <XAxis
+                                    dataKey="name"
+                                    tick={<CustomXAxisTick />}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#9ca3af', fontSize: 12 }}
+                                    domain={[0, 'dataMax + 1']}
+                                />
+                                <Tooltip content={<CustomPriorityTooltip />} cursor={false} isAnimationActive={false} />
+                                <Bar
+                                    dataKey="value"
+                                    fill="#9ca3af"
+                                    radius={[4, 4, 0, 0]}
+                                    maxBarSize={60}
+                                    style={{ cursor: 'pointer' }}
+                                    activeBar={{
+                                        fill: '#6b7280',
+                                        stroke: '#4b5563',
+                                        strokeWidth: 1,
+                                        style: { cursor: 'pointer' }
+                                    }}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </Box>
                 )}
             </Paper>
         </Box>

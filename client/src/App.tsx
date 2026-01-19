@@ -1,7 +1,7 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import "./App.css";
 import Dashboard from "./components/dashboard/Dashboard";
-import Login from "./components/Login";
+import Login from "./components/auth/Login";
 import {
   createTheme,
   StyledEngineProvider,
@@ -14,7 +14,7 @@ import Projects from "./components/project/Projects";
 import Tasks from "./components/task/Tasks";
 import MemberList from "./components/member/MemberList";
 import DashboardContent from "./components/dashboard/DashboardContent";
-import Register from "./components/Register";
+import Register from "./components/auth/Register";
 import MemberProfile from "./components/member/MemberProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TaskDetail from "./components/task/TaskDetail";
@@ -24,6 +24,8 @@ import SupportsView from "./components/ticket/SupportsView";
 import SupportsDetail from "./components/ticket/SupportsDetail";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AttachmentManagement from "./components/attachment/AttachmentManagement";
+import PasswordReset from "./components/auth/PasswordReset";
+import PasswordAuthentication from "./components/auth/PasswordAuthentication";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -86,6 +88,8 @@ function App() {
 
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/password-reset" element={<PasswordReset />} />
+                  <Route path="/2-step-authentication" element={<PasswordAuthentication />} />
                 </Routes>
               </Router>
             </SearchProvider>

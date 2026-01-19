@@ -499,8 +499,9 @@ function CreateTaskModal({
                   fullWidth
                   displayEmpty
                   size="small"
+                  defaultValue = ""
                   value={projectId}
-                  onChange={(e) => handleProjectChange(e.target.value)}
+                  onChange={(e) => handleProjectChange(String(e.target.value))}
                   sx={{
                     fontSize: "14px",
                     color: projectId === "" ? "#9ca3af" : "#111827",

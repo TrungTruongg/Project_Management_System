@@ -18,7 +18,7 @@ import {
     Close as CloseIcon,
     Person as PersonIcon,
 } from '@mui/icons-material';
-import {PiMicrosoftExcelLogoBold as SpreadsheetTypeIcon} from "react-icons/pi";
+import { PiMicrosoftExcelLogoBold as SpreadsheetTypeIcon } from "react-icons/pi";
 import {
     FiImage as ImageTypeIcon,
     FiFileText as DocumentTypeIcon,
@@ -224,13 +224,10 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                         }}
                     >
                         <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
-                            <Typography sx={{ fontSize: '12px', color: '#5e6c84', mb: 1 }}>
-                                Created By
-                            </Typography>
                             <TextField
                                 fullWidth
                                 size="small"
-                                placeholder="Search Assignee"
+                                placeholder="Search People"
                                 value={searchTerms.createdBy}
                                 onChange={(e) => setSearchTerms(prev => ({ ...prev, assignee: e.target.value }))}
                                 sx={{
@@ -242,7 +239,7 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                         </Box>
 
                         <Box sx={{ overflowY: 'auto', flex: 1 }}>
-                            {/* Suggested Users */}
+                            {/* Created By */}
                             <Box sx={{ p: 1.5 }}>
                                 {filteredUsers.map(user => (
                                     <FormControlLabel
@@ -279,17 +276,6 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                                 ))}
                             </Box>
                         </Box>
-
-                        <Box sx={{ p: 1.5, borderTop: '1px solid #e0e0e0', textAlign: 'center' }}>
-                            <Typography
-                                sx={{
-                                    fontSize: '12px',
-                                    color: filters.createdBy.length > 0 ? '#5e6c84' : '#9e9e9e',
-                                }}
-                            >
-                                {filteredUsers.length} of {users.length}
-                            </Typography>
-                        </Box>
                     </Paper>
                 </ClickAwayListener>
             </Popper>
@@ -306,29 +292,11 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                     <Paper
                         elevation={3}
                         sx={{
-                            width: 300,
+                            width: 200,
                             mt: 1,
                             overflow: 'hidden',
                         }}
                     >
-                        <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
-                            <Typography sx={{ fontSize: '12px', color: '#5e6c84', mb: 1 }}>
-                                Type
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                placeholder="Search Type"
-                                value={searchTerms.type}
-                                onChange={(e) => setSearchTerms(prev => ({ ...prev, type: e.target.value }))}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        fontSize: '14px',
-                                    }
-                                }}
-                            />
-                        </Box>
-
                         <Box sx={{ p: 1.5 }}>
                             {filteredTypes.map(type => {
                                 const IconComponent = type?.IconComponent;
@@ -345,19 +313,13 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                                         label={
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <IconComponent color={type.color} />
-                                                <Typography sx={{ fontSize: '14px' }}>{type.label}</Typography>
+                                                <Typography sx={{ fontSize: '14px', fontWeight: 500 }}>{type.label}</Typography>
                                             </Box>
                                         }
                                         sx={{ width: '100%', m: 0, mb: 0.5 }}
                                     />
                                 )
                             })}
-                        </Box>
-
-                        <Box sx={{ p: 1.5, borderTop: '1px solid #e0e0e0', textAlign: 'center' }}>
-                            <Typography sx={{ fontSize: '12px', color: '#5e6c84' }}>
-                                {filteredTypes.length} of {typeOptions.length}
-                            </Typography>
                         </Box>
                     </Paper>
                 </ClickAwayListener>
@@ -400,12 +362,6 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                                     />
                                 )
                             })}
-                        </Box>
-
-                        <Box sx={{ p: 1.5, borderTop: '1px solid #e0e0e0', textAlign: 'center' }}>
-                            <Typography sx={{ fontSize: '12px', color: '#5e6c84' }}>
-                                {filteredCreatedDate.length} of {createdDateOptions.length}
-                            </Typography>
                         </Box>
                     </Paper>
                 </ClickAwayListener>

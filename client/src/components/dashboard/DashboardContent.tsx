@@ -39,7 +39,6 @@ function DashboardContent() {
 
   const userTasks = getUserTasks();
 
-  // Bây giờ tính từ userTasks
   const totalTask = userTasks.length;
   const totalToDoTasks = userTasks.filter((task: any) => task.status === "to-do").length;
   const totalCompletedTasks = userTasks.filter((task: any) => task.status === "completed").length;
