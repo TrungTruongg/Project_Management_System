@@ -15,10 +15,6 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
-    }
     
     return config;
   },
@@ -31,13 +27,26 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      window.location.pathname !== "/login"
-    ) {
-      localStorage.clear();
-      window.location.href = "/login";
+    if (error.response?.status === 401) {
+      const errorMessage = error.response.data?.error || 
+                          error.response.data?.message || "";
+      
+      const isAuthenticationError = 
+        errorMessage.toLowerCase().includes("token") ||
+        errorMessage.toLowerCase().includes("expired") ||
+        errorMessage.toLowerCase().includes("invalid token") ||
+        errorMessage.toLowerCase().includes("not authenticated") ||
+        errorMessage === "Unauthorized"; 
+      
+      if (isAuthenticationError) {
+        console.log("Session expired, redirecting to login...");
+        localStorage.clear();
+        window.location.href = "/login";
+      } else {
+        console.log("Validation error, staying on page");
+      }
     }
+    
     return Promise.reject(error);
   }
 );

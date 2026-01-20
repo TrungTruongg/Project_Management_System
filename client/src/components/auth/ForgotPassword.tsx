@@ -12,7 +12,7 @@ import imageLogin from "../../assets/image_login.svg";
 import resetPassword from "../../assets/reset-password.svg"
 import api from "../api/axiosConfig";
 
-function PasswordReset() {
+function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [success, setSuccess] = useState("");
     const [error, setError] = useState("");
@@ -254,7 +254,7 @@ function PasswordReset() {
                             />
                         </Box>
 
-                        {/* Sybmit Button */}
+                        {/* Submit Button */}
                         <Box sx={{ textAlign: "center", mt: 2 }}>
                             <Button
                                 type="submit"
@@ -303,4 +303,4 @@ function PasswordReset() {
 }
 
 
-export default PasswordReset;
+export default ForgotPassword;

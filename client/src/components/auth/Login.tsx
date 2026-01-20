@@ -372,7 +372,7 @@ function Login() {
                   Password
                 </Typography>
                 <Typography
-                  onClick={() => navigate("/password-reset")}
+                  onClick={() => navigate("/forgot-password")}
                   sx={{
                     color: "#FFB74D",
                     fontSize: "13px",

@@ -83,16 +83,16 @@ function PasswordAuthentication() {
                 verificationCode: verificationCode.trim(),
             });
             if (response.data.success) {
-                setSuccess("Verification successful! Redirecting to login...");
+                setSuccess("Verification successful! Redirecting...");
 
-                // Chuyển về trang login sau 2 giây
                 setTimeout(() => {
-                    navigate("/login", {
+                    navigate("/reset-password", {
                         state: {
-                            message: "Password reset successful! Please login with your new password."
+                            email: email,
+                            userId: response.data.userId, 
                         }
                     });
-                }, 2000);
+                }, 1500);
             }
         } catch (error: any) {
             console.error("Request reset password failed", error);

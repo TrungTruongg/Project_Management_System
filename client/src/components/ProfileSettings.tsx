@@ -13,12 +13,11 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import axios from "axios";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/Visibility";
 import { useUser } from "./context/UserContext";
-
-const API_KEY = import.meta.env.VITE_API_KEY;
+import api from "./api/axiosConfig";
+import ChangeEmailAddressDialog from "./auth/ChangeEmailAddressDialog";
 
 const ProfileSettings = () => {
   const { user, setUser } = useUser();
@@ -40,6 +39,7 @@ const ProfileSettings = () => {
     message: "",
     type: "success" as "success" | "error",
   });
+  const [openChangeEmailDialog, setOpenChangeEmailDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleAvatarChange = async (
@@ -145,35 +145,60 @@ const ProfileSettings = () => {
         updatedData.password = form.newPassword;
       }
 
-      const response = await axios.put(
-        `https://mindx-mockup-server.vercel.app/api/resources/users/${user._id}?apiKey=${API_KEY}`,
+      const response = await api.put(`/users/update/${user._id}`,
         updatedData
       );
 
       setUser(response.data.data);
       localStorage.setItem("user", JSON.stringify(response.data.data));
 
-      if (form.currentPassword && form.newPassword) {
-        setForm({
-          firstName: response.data.data.firstName,
-          lastName: response.data.data.lastName,
-          currentPassword: "",
-          newPassword: "",
-          confirmPassword: "",
+      if (response.data.success) {
+        const updatedUser = response.data.user;
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+
+        // Reset password fields if password changed
+        if (form.newPassword) {
+          setForm((prev) => ({
+            ...prev,
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+          }));
+        }
+
+        setSnackbar({
+          open: true,
+          message: "Profile updated successfully!",
+          type: "success",
         });
       }
-
+    } catch (error: any) {
+      console.error("Error updating avatar:", error);
       setSnackbar({
         open: true,
-        message: "Profile updated successfully!",
-        type: "success",
+        message: error.response?.data?.error || "Failed to update profile",
+        type: "error",
       });
-      return;
-    } catch (error) {
-      console.error("Error updating avatar:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenChangeEmailDialog = () => {
+    setOpenChangeEmailDialog(true);
+  };
+
+  const handleCloseChangeEmailDialog = () => {
+    setOpenChangeEmailDialog(false);
+  };
+
+  const handleEmailChangeSuccess = () => {
+    setSnackbar({
+      open: true,
+      message: "Email changed successfully!",
+      type: "success",
+    });
   };
 
   return (
@@ -212,12 +237,12 @@ const ProfileSettings = () => {
                 name="email"
                 value={user?.email}
                 disabled
-              />
-
-              {/* <Link href="#" underline="hover" sx={{ mt: 2 }}>
-                <Typography>Change Email Address</Typography>
-              </Link> */}
+              />       
             </Box>
+
+             <Button variant="text" onClick={handleOpenChangeEmailDialog} sx={{ mt: 1, textTransform: "none", textDecoration: "underline" }}>
+                Change Email Address
+              </Button>
           </CardContent>
         </Card>
 
@@ -334,6 +359,13 @@ const ProfileSettings = () => {
           </CardContent>
         </Card>
       </Grid>
+
+      <ChangeEmailAddressDialog
+        open={openChangeEmailDialog}
+        onClose={handleCloseChangeEmailDialog}
+        onSuccess={handleEmailChangeSuccess}
+      />
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={5000}

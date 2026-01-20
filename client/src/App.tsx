@@ -24,8 +24,9 @@ import SupportsView from "./components/ticket/SupportsView";
 import SupportsDetail from "./components/ticket/SupportsDetail";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AttachmentManagement from "./components/attachment/AttachmentManagement";
-import PasswordReset from "./components/auth/PasswordReset";
 import PasswordAuthentication from "./components/auth/PasswordAuthentication";
+import ForgotPassword from "./components/auth/ForgotPassword";
+import ResetPassword from "./components/auth/ResetPassword";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -88,8 +89,9 @@ function App() {
 
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
-                  <Route path="/password-reset" element={<PasswordReset />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/2-step-authentication" element={<PasswordAuthentication />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                 </Routes>
               </Router>
             </SearchProvider>

@@ -262,6 +262,17 @@ export const verifyResetCode = async (req, res) => {
       });
     }
 
+    await collection.updateOne(
+      { _id: user._id },
+      {
+        $unset: {
+          passwordResetCode: "",
+          passwordResetToken: "",
+          passwordResetExpires: "",
+        },
+      },
+    );
+    
     // Create new token to reset password
     const resetToken = jwt.sign(
       {
@@ -277,7 +288,7 @@ export const verifyResetCode = async (req, res) => {
       success: true,
       message: "Verification successful",
       resetToken: resetToken,
-      userId: user._id,
+      userId: user._id.toString(),
     });
   } catch (err) {
     console.error("Verify reset code error:", err);
