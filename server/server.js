@@ -24,25 +24,17 @@ const port = process.env.PORT || 6969;
 
 // Middleware
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    const allowedPatterns = [
-      /^https:\/\/.*\.project-management-system-orpin\.vercel\.app$/,
-      /^https:\/\/project-management-system-orpin\.vercel\.app$/,
-      /^http:\/\/localhost:\d+$/
-    ];
-    
-    const isAllowed = allowedPatterns.some(pattern => pattern.test(origin));
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:1234',
+    'https://accounts.google.com',
+    'https://www.googleapis.com',
+    'https://project-management-system-orpin.vercel.app',
+    'https://project-management-system-orpin.vercel.app/login'
+  ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(bodyParser.json({ limit: "50mb" }));
