@@ -659,7 +659,7 @@ function CreateTaskModal({
                       }
 
                       if (processedUrl && processedUrl.startsWith('/uploads/')) {
-                        const baseURL = 'http://localhost:6969';
+                        const baseURL = import.meta.env.VITE_SERVER_URL;
                         processedUrl = baseURL + processedUrl;
                       }
 

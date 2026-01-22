@@ -448,7 +448,7 @@ function TaskDetail() {
                 {attachments.map((att: any, index: number) => {
                   let processedUrl = att.url;
                   if (processedUrl.startsWith('/uploads/')) {
-                    const baseURL = 'http://localhost:6969';
+                    const baseURL = import.meta.env.VITE_SERVER_URL;
                     processedUrl = baseURL + processedUrl;
                   }
 
