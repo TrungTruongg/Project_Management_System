@@ -44,7 +44,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await api.post("/api/auth/login", {
+      const response = await api.post("/auth/login", {
         email: email.trim(),
         password: password,
       });
@@ -90,7 +90,7 @@ function Login() {
 
         const googleUser = await googleUserRes.json();
 
-        const response = await api.post("/api/auth/google", {
+        const response = await api.post("/auth/google", {
           email: googleUser.email,
           name: googleUser.name,
           picture: googleUser.picture,
