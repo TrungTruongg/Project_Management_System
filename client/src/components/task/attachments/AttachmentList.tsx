@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
 import {
-    Box,
     Typography,
-    Chip,
     IconButton,
     List,
     ListItem,
     ListItemText,
     ListItemButton,
+    Box,
+    CircularProgress,
 } from "@mui/material";
 import {
     Delete,
     InsertDriveFile,
     Link as LinkIcon,
-    Download,
 } from "@mui/icons-material";
 import api from "../../api/axiosConfig";
 
@@ -78,7 +77,18 @@ function AttachmentList({ taskId, refresh }: AttachmentListProps) {
 
     return (
         <List dense>
-            {attachments.map((attachment) => (
+            {loading ? (
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        py: 10,
+                    }}
+                >
+                    <CircularProgress />
+                </Box>
+            ) : attachments.map((attachment) => (
                 <ListItem
                     key={attachment._id}
                     secondaryAction={
