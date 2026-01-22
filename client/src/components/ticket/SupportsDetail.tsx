@@ -159,14 +159,13 @@ function SupportsDetail() {
           flexWrap: "wrap",
           alignItems: "center",
           justifyContent: "space-between",
-          mb: 3,
         }}
       >
         <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton onClick={() => navigate(-1)}>
             <ArrowBack />
           </IconButton>
-          <Typography variant="h4" fontWeight="700">
+          <Typography fontSize="1.5rem" fontWeight="700">
             Support Tickets Detail
           </Typography>
         </Box>

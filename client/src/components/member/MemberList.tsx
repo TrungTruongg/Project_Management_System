@@ -188,7 +188,7 @@ function MemberList() {
             </Typography>
 
             <Chip
-              label={`${workspaceMembers.length + guests.length} / 10`}
+              label={`${workspaceMembers.length + guests.length}`}
               size="small"
               sx={{
                 fontSize: "14px",
@@ -196,7 +196,6 @@ function MemberList() {
               }}
             />
           </Box>
-
 
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <IconButton

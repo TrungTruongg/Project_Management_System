@@ -39,7 +39,6 @@ api.interceptors.response.use(
         errorMessage === "Unauthorized"; 
       
       if (isAuthenticationError) {
-        console.log("Session expired, redirecting to login...");
         localStorage.clear();
         window.location.href = "/login";
       } else {

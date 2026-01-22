@@ -5,7 +5,6 @@ import {
     Checkbox,
     Chip,
     FormControlLabel,
-    IconButton,
     Paper,
     Popper,
     TextField,
@@ -145,21 +144,25 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                     size="small"
                     endIcon={
                         count > 0 ? (
-                            <IconButton
-                                size="small"
+                            <Box
+                                component="span"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleClearFilter(type);
                                 }}
                                 sx={{
-                                    p: 0,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
                                     ml: 0.5,
-                                    color: 'inherit',
+                                    p: 0.25,
+                                    borderRadius: '50%',
                                     '&:hover': { bgcolor: 'rgba(0,0,0,0.1)' }
                                 }}
                             >
                                 <CloseIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
+                            </Box>
                         ) : (
                             <KeyboardArrowDown />
                         )

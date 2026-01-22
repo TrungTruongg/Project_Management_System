@@ -21,7 +21,7 @@ function DashboardContent() {
   const navigate = useNavigate();
   const { user } = useUser();
 
-   const getUserProjects = () => {
+  const getUserProjects = () => {
     if (!user) return [];
     return projects.filter(
       (p) => p.leaderId === user._id || p.members?.includes(user._id)
@@ -104,7 +104,10 @@ function DashboardContent() {
               overflow: "visible",
               cursor: "pointer",
               border: (theme) =>
-                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={handleViewTasks}
           >
@@ -114,6 +117,8 @@ function DashboardContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 py: 3,
+                minHeight: { xs: 'auto', sm: 100, md: 110 },
+                flex: 1,
               }}
             >
               <Box
@@ -126,6 +131,7 @@ function DashboardContent() {
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 30,
+                  flexShrink: 0,
                 }}
               >
                 <TotalTaskIcon />
@@ -136,16 +142,23 @@ function DashboardContent() {
                   flexDirection: "column",
                   flex: "1 1 auto",
                   marginLeft: "1.5rem",
+                  overflow: 'hidden',
                 }}
               >
                 <Typography
                   variant="body1"
                   color="text.secondary"
                   fontWeight="500"
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
                 >
                   Tasks
                 </Typography>
-                <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                <Typography variant="h5" sx={{ marginBottom: 0, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' }, }}>
                   {userTasks.length === 0 ? 0 : totalTask}
                 </Typography>
               </Box>
@@ -162,7 +175,10 @@ function DashboardContent() {
               overflow: "visible",
               cursor: "pointer",
               border: (theme) =>
-                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={handleViewTasks}
           >
@@ -172,6 +188,8 @@ function DashboardContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 py: 3,
+                minHeight: { xs: 'auto', sm: 100, md: 110 },
+                flex: 1,
               }}
             >
               <Box
@@ -184,6 +202,7 @@ function DashboardContent() {
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 30,
+                  flexShrink: 0,
                 }}
               >
                 <CompleteTaskIcon />
@@ -194,16 +213,23 @@ function DashboardContent() {
                   flexDirection: "column",
                   flex: "1 1 auto",
                   marginLeft: "1.5rem",
+                  overflow: 'hidden',
                 }}
               >
                 <Typography
                   variant="body1"
                   color="text.secondary"
                   fontWeight="500"
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
                 >
                   To Do Tasks
                 </Typography>
-                <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                <Typography variant="h5" sx={{ marginBottom: 0, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' }, }}>
                   {userTasks.length === 0 ? 0 : totalToDoTasks}
                 </Typography>
               </Box>
@@ -220,7 +246,10 @@ function DashboardContent() {
               overflow: "visible",
               cursor: "pointer",
               border: (theme) =>
-                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={handleViewTasks}
           >
@@ -230,6 +259,8 @@ function DashboardContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 py: 3,
+                minHeight: { xs: 'auto', sm: 100, md: 110 },
+                flex: 1,
               }}
             >
               <Box
@@ -242,6 +273,7 @@ function DashboardContent() {
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 30,
+                  flexShrink: 0,
                 }}
               >
                 <CompleteTaskIcon />
@@ -252,16 +284,23 @@ function DashboardContent() {
                   flexDirection: "column",
                   flex: "1 1 auto",
                   marginLeft: "1.5rem",
+                  overflow: 'hidden',
                 }}
               >
                 <Typography
                   variant="body1"
                   color="text.secondary"
                   fontWeight="500"
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
                 >
                   Completed Tasks
                 </Typography>
-                <Typography variant="h5" sx={{ marginBottom: 0 }}>
+                <Typography variant="h5" sx={{ marginBottom: 0, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' }, }}>
                   {userTasks.length === 0 ? 0 : totalCompletedTasks}
                 </Typography>
               </Box>
@@ -278,7 +317,10 @@ function DashboardContent() {
               overflow: "visible",
               cursor: "pointer",
               border: (theme) =>
-                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`
+                `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
             onClick={handleViewTasks}
           >
@@ -288,18 +330,21 @@ function DashboardContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 py: 3,
+                minHeight: { xs: 'auto', sm: 100, md: 110 },
+                flex: 1,
               }}
             >
               <Box
                 sx={{
-                  width: 60,
-                  height: 60,
+                  width: 50,
+                  height: 50,
                   bgcolor: "#FFE28C",
                   borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 32,
+                  fontSize: 30,
+                  flexShrink: 0,
                 }}
               >
                 <ProgressTaskIcon />
@@ -310,17 +355,24 @@ function DashboardContent() {
                   flexDirection: "column",
                   flex: "1 1 auto",
                   marginLeft: "1.5rem",
+                  overflow: 'hidden',
                 }}
               >
                 <Typography
                   variant="body1"
                   color="text.secondary"
                   fontWeight="500"
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
                 >
                   Progress Tasks
                 </Typography>
-                <Typography variant="h5" sx={{ marginBottom: 0 }}>
-                  {userProjects.length === 0 ? 0 : totalProgressTasks}
+                <Typography variant="h5" sx={{ marginBottom: 0, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' }, }}>
+                  {userTasks.length === 0 ? 0 : totalProgressTasks}
                 </Typography>
               </Box>
             </CardContent>
@@ -335,25 +387,35 @@ function DashboardContent() {
           <Paper
             elevation={0}
             sx={{
-              p: 4,
+              p: { xs: 2, sm: 3, md: 4 },
               display: "flex",
-              flexDirection: "row",
+              flexDirection: { xs: 'column', md: 'row' },
               alignItems: "center",
               justifyContent: "space-between",
               border: (theme) =>
                 `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
-              gap: 4,
+              gap: { xs: 2, md: 4 },
             }}
           >
-            <Box sx={{ flex: 1, maxWidth: "60%" }}>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
+            <Box sx={{ flex: 1, maxWidth: { xs: '100%', md: '60%' }, }}>
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                gutterBottom
+                sx={{
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
+                }}>
                 Welcome to My-task, a Project Management System
               </Typography>
               <Typography
                 variant="body1"
                 color="text.secondary"
                 component="p"
-                sx={{ lineHeight: "24px", mb: 3 }}
+                sx={{
+                  lineHeight: "24px",
+                  mb: { xs: 2, md: 3 },
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                }}
               >
                 Manage projects with ease and boost team productivity. Our
                 intuitive platform helps you plan, execute, and track every
@@ -368,7 +430,8 @@ function DashboardContent() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                maxWidth: "40%",
+
+                maxWidth: { xs: '100%', md: '40%' }
               }}
             >
               <WelcomeIcon />
@@ -394,6 +457,9 @@ function DashboardContent() {
               border: (theme) =>
                 `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : 'inherit'}`,
               color: "white",
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             <CardContent
@@ -402,6 +468,8 @@ function DashboardContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 py: 3,
+                minHeight: { xs: 'auto', md: 100 },
+                flex: 1,
               }}
             >
               <Box
@@ -413,6 +481,7 @@ function DashboardContent() {
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 32,
+                  flexShrink: 0,
                 }}
               >
                 <TotalProjectIcon />
@@ -423,12 +492,25 @@ function DashboardContent() {
                   flexDirection: "column",
                   flex: "1 1 auto",
                   marginLeft: "1.5rem",
+                  overflow: 'hidden',
                 }}
               >
-                <Typography variant="h6" fontWeight="500" fontSize="16px">
+                <Typography
+                  variant="h6"
+                  fontWeight="500"
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   Total Projects
                 </Typography>
-                <Typography sx={{ marginBottom: 0 }}>
+                <Typography sx={{
+                  marginBottom: 0,
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                }}>
                   {userProjects.length === 0 ? 0 : totalProject}
                 </Typography>
               </Box>
@@ -436,6 +518,7 @@ function DashboardContent() {
                 onClick={() => navigate("/project")}
                 sx={{
                   borderRadius: 1,
+                  flexShrink: 0,
                   transition: "all 0.3s ease",
                   "&:hover": {
                     bgcolor: "rgba(0, 0, 0, 0.04)",
@@ -455,7 +538,8 @@ function DashboardContent() {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }} >
+        {/* Completed Projects Card */}
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card
             elevation={0}
             sx={{
@@ -465,6 +549,9 @@ function DashboardContent() {
               border: (theme) =>
                 `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : 'inherit'}`,
               color: "white",
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             <CardContent
@@ -473,6 +560,8 @@ function DashboardContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 py: 3,
+                minHeight: { xs: 'auto', md: 100 },
+                flex: 1,
               }}
             >
               <Box
@@ -484,6 +573,7 @@ function DashboardContent() {
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 32,
+                  flexShrink: 0,
                 }}
               >
                 <CompleteProjectIcon />
@@ -494,12 +584,25 @@ function DashboardContent() {
                   flexDirection: "column",
                   flex: "1 1 auto",
                   marginLeft: "1.5rem",
+                  overflow: 'hidden',
                 }}
               >
-                <Typography variant="h6" fontWeight="500" fontSize="16px">
+                <Typography
+                  variant="h6"
+                  fontWeight="500"
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   Total Completed Projects
                 </Typography>
-                <Typography sx={{ marginBottom: 0 }}>
+                <Typography sx={{
+                  marginBottom: 0,
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                }}>
                   {userProjects.length === 0 ? 0 : totalCompletedProjects}
                 </Typography>
               </Box>
@@ -507,6 +610,7 @@ function DashboardContent() {
                 onClick={() => navigate("/project")}
                 sx={{
                   borderRadius: 1,
+                  flexShrink: 0,
                   transition: "all 0.3s ease",
                   "&:hover": {
                     bgcolor: "rgba(0, 0, 0, 0.04)",
@@ -522,12 +626,12 @@ function DashboardContent() {
               >
                 <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
               </IconButton>
-
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }} >
+        {/* Progress Projects Card */}
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card
             elevation={0}
             sx={{
@@ -537,6 +641,9 @@ function DashboardContent() {
               border: (theme) =>
                 `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : 'inherit'}`,
               color: "white",
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             <CardContent
@@ -545,6 +652,8 @@ function DashboardContent() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 py: 3,
+                minHeight: { xs: 'auto', md: 100 },
+                flex: 1,
               }}
             >
               <Box
@@ -556,6 +665,7 @@ function DashboardContent() {
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 32,
+                  flexShrink: 0,
                 }}
               >
                 <ProgressProjectIcon />
@@ -566,12 +676,25 @@ function DashboardContent() {
                   flexDirection: "column",
                   flex: "1 1 auto",
                   marginLeft: "1.5rem",
+                  overflow: 'hidden',
                 }}
               >
-                <Typography variant="h6" fontWeight="500" fontSize="16px">
+                <Typography
+                  variant="h6"
+                  fontWeight="500"
+                  sx={{
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   Total Progress Projects
                 </Typography>
-                <Typography sx={{ marginBottom: 0 }}>
+                <Typography sx={{
+                  marginBottom: 0,
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                }}>
                   {userProjects.length === 0 ? 0 : totalProgressProjects}
                 </Typography>
               </Box>
@@ -579,6 +702,7 @@ function DashboardContent() {
                 onClick={() => navigate("/project")}
                 sx={{
                   borderRadius: 1,
+                  flexShrink: 0,
                   transition: "all 0.3s ease",
                   "&:hover": {
                     bgcolor: "rgba(0, 0, 0, 0.04)",
@@ -594,7 +718,6 @@ function DashboardContent() {
               >
                 <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
               </IconButton>
-
             </CardContent>
           </Card>
         </Grid>

@@ -18,6 +18,7 @@ import {
 import GeminiIcon from "../../assets/GeminiIcon"
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useUser } from "../context/UserContext";
+import GeminiColorfulIcon from "../../assets/GeminiColorfulIcon";
 
 const GeminiChatBox = () => {
   const [openChat, setOpenChat] = useState(false);
@@ -39,7 +40,7 @@ const GeminiChatBox = () => {
         role: "user",
         parts: [
           {
-            text: `Bạn là một nhân viên lập trình Web Fullstack chuyên nghiệp, hãy nói chào người dùng với email là: ${user?.email}. Ví dụ: Xin chào anh/chị, example@gmail.com`,
+            text: `Bạn là một Gemini chat bot, hãy nói chào người dùng với email là ${user?.email}. Ví dụ: Xin chào anh/chị ${user?.lastName.toUpperCase()}`,
           },
         ],
       },
@@ -63,7 +64,7 @@ const GeminiChatBox = () => {
 
       setMessages([...newMessages, { role: "model", content: responseText }]);
     } catch (err) {
-      setError("Lỗi kết nối Gemini. Kiểm tra API key hoặc mạng.");
+      setError("Error connect to Gemini. Check API key or network.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -117,12 +118,12 @@ const GeminiChatBox = () => {
               alignItems: "center",
               justifyContent: "space-between",
               p: 2,
-              bgcolor: "skyblue",
+              bgcolor: "#4285F4",
               color: "white",
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <GeminiIcon  />
+              <GeminiColorfulIcon />
               <Typography variant="h6" fontWeight="600">
                 Gemini AI Assistant
               </Typography>
@@ -162,6 +163,7 @@ const GeminiChatBox = () => {
                   sx={{
                     width: 36,
                     height: 36,
+                    bgcolor: msg.role === "user" ? "" : "#4285F4"
                   }}
                 >
                   {msg.role === "user" ? user?.firstName?.[0] : "G"}
@@ -171,7 +173,7 @@ const GeminiChatBox = () => {
                   sx={{
                     p: 2,
                     maxWidth: "70%",
-                    // bgcolor: msg.role === "user" ? "#E8F5E9" : "white",
+                    bgcolor: msg.role === "user" ? "#E8F5E9" : "white",
                     borderRadius: 2,
                   }}
                 >
