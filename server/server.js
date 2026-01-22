@@ -29,7 +29,7 @@ app.use(cors({
     'http://localhost:1234',
     'https://accounts.google.com',
     'https://www.googleapis.com',
-    'https://project-management-system-rb5c.onrender.com/'
+    'https://project-management-system-orpin.vercel.app/'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
