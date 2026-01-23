@@ -33,7 +33,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 function App() {
   const theme = createTheme({
     typography: {
-      fontFamily: "Open Sans, sans-serif",
+      fontFamily: "Google Sans Flex, sans-serif",
     },
     colorSchemes: {
       light: {
