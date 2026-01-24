@@ -1,5 +1,4 @@
-import { Box, Card, CardContent, CircularProgress, Grid, IconButton, Paper, Typography } from "@mui/material"
-import { ChevronRight } from "@mui/icons-material"
+import { Box, Card, CardContent, CircularProgress, Grid, Paper, Typography } from "@mui/material"
 import { BsJournalCheck as TotalTaskIcon } from "react-icons/bs";
 import { BsListCheck as CompleteTaskIcon } from "react-icons/bs";
 import { BsClipboardData as ProgressTaskIcon } from "react-icons/bs";
