@@ -94,7 +94,7 @@ function DashboardContent() {
 
   return (
     <>
-      <Grid container spacing={3} sx={{ mb: 4, gap: 1 }}>
+      <Grid container spacing={3} sx={{ mb: 4, gap: 3 }}>
         {/* Total Task Cards */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }} >
           <Card
@@ -513,27 +513,7 @@ function DashboardContent() {
                 }}>
                   {userProjects.length === 0 ? 0 : totalProject}
                 </Typography>
-              </Box>
-              <IconButton
-                onClick={() => navigate("/project")}
-                sx={{
-                  borderRadius: 1,
-                  flexShrink: 0,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: "rgba(0, 0, 0, 0.04)",
-                    transform: "translateX(4px)",
-                    "& .MuiSvgIcon-root": {
-                      opacity: 0.8,
-                    }
-                  },
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  }
-                }}
-              >
-                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
-              </IconButton>
+              </Box>           
             </CardContent>
           </Card>
         </Grid>
@@ -605,27 +585,7 @@ function DashboardContent() {
                 }}>
                   {userProjects.length === 0 ? 0 : totalCompletedProjects}
                 </Typography>
-              </Box>
-              <IconButton
-                onClick={() => navigate("/project")}
-                sx={{
-                  borderRadius: 1,
-                  flexShrink: 0,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: "rgba(0, 0, 0, 0.04)",
-                    transform: "translateX(4px)",
-                    "& .MuiSvgIcon-root": {
-                      opacity: 0.8,
-                    }
-                  },
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  }
-                }}
-              >
-                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
-              </IconButton>
+              </Box>        
             </CardContent>
           </Card>
         </Grid>
@@ -697,33 +657,11 @@ function DashboardContent() {
                 }}>
                   {userProjects.length === 0 ? 0 : totalProgressProjects}
                 </Typography>
-              </Box>
-              <IconButton
-                onClick={() => navigate("/project")}
-                sx={{
-                  borderRadius: 1,
-                  flexShrink: 0,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    bgcolor: "rgba(0, 0, 0, 0.04)",
-                    transform: "translateX(4px)",
-                    "& .MuiSvgIcon-root": {
-                      opacity: 0.8,
-                    }
-                  },
-                  "&:active": {
-                    transform: "scale(0.95)",
-                  }
-                }}
-              >
-                <ChevronRight sx={{ fontSize: 40, opacity: 0.5, transition: "all 0.3s" }} />
-              </IconButton>
+              </Box>        
             </CardContent>
           </Card>
         </Grid>
-
       </Grid>
-
       <DashboardProjectInformation />
     </>
   )

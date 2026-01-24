@@ -561,8 +561,8 @@ function CreateTaskModal({
                     label={attachments.length}
                     size="small"
                     sx={{
-                      width: 22,
-                      height: 22,
+                      width: 23,
+                      height: 23,
                       fontSize: "10px",
                       fontWeight: 500,
                     }}
