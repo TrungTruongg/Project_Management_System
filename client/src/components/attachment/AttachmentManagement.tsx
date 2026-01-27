@@ -7,9 +7,13 @@ import { useSearch } from "../context/SearchContext";
 import api from "../api/axiosConfig";
 import AttachmentPreview from "./AttachmentPreview";
 import AttachmentFilters, { type FilterState } from "./AttachmentFilters";
+import DeleteConfirmDialog from "../DeleteConfirmDialog";
 
 function AttachmentManagement() {
     const [loading, setLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedAttachment, setSelectedAttachment] = useState<any>(null);
     const [attachments, setAttachments] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
@@ -34,27 +38,18 @@ function AttachmentManagement() {
     const getFileType = (url: string): string => {
         const ext = getFileExtension(url);
 
-        // Image types
         if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) {
             return 'image';
         }
-
-        // Document types
         if (['doc', 'docx', 'txt', 'rtf', 'odt'].includes(ext)) {
             return 'document';
         }
-
-        // PDF
         if (ext === 'pdf') {
             return 'pdf';
         }
-
-        // Spreadsheet types
         if (['xls', 'xlsx', 'csv', 'ods'].includes(ext)) {
             return 'spreadsheet';
         }
-
-        // Video/Audio types
         if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mp3', 'wav', 'aac', 'ogg'].includes(ext)) {
             return 'video';
         }
@@ -202,19 +197,31 @@ function AttachmentManagement() {
         navigate(`/task-detail?id=${taskId}`);
     };
 
-    const handleDeleteAttachment = async (attachment: any) => {
-        if (!window.confirm(`Delete ${attachment.name}?`)) {
-            return;
-        }
+    const handleDeleteAttachment = async () => {
+        if (!selectedAttachment) return;
+        
+        setDeleteLoading(true);
 
         try {
-            await api.delete(`attachments/delete/${attachment._id}`);
+            await api.delete(`attachments/delete/${selectedAttachment._id}`);
 
-            setAttachments(attachments.filter((att: any) => att._id !== attachment._id));
-
+            setAttachments(attachments.filter((att: any) => att._id !== selectedAttachment._id));
+            handleCloseDeleteDialog();
         } catch (err) {
             console.error("Error deleting attachment:", err);
+        } finally {
+            setDeleteLoading(false);
         }
+    };
+
+    const handleOpenDeleteDialog = (attachment: any) => {
+        setSelectedAttachment(attachment);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setSelectedAttachment(null);
     };
 
     const handleFilterChange = (filters: FilterState) => {
@@ -302,7 +309,7 @@ function AttachmentManagement() {
                             >
                                 <AttachmentPreview
                                     attachment={attachment}
-                                    onDelete={handleDeleteAttachment}
+                                    onDelete={() => handleOpenDeleteDialog(attachment)}
                                 />
 
                                 {/* Content */}
@@ -356,6 +363,14 @@ function AttachmentManagement() {
                     })}
                 </Box>
             )}
+
+            <DeleteConfirmDialog
+                open={deleteDialogOpen}
+                onClose={handleCloseDeleteDialog}
+                onDelete={handleDeleteAttachment}
+                selected={selectedAttachment ? selectedAttachment.name : ""}
+                loading={deleteLoading}
+            />
         </>
     )
 }

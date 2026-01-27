@@ -1,4 +1,5 @@
 import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -6,6 +7,7 @@ import {
   Chip,
   CircularProgress,
   IconButton,
+  Snackbar,
   Tab,
   Tabs,
   Typography,
@@ -28,6 +30,12 @@ function MemberList() {
   const { searchTerm, setSearchTerm } = useSearch();
   const { user } = useUser();
   const [tabValue, setTabValue] = useState(0);
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    type: "success" as "success" | "error",
+  });
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -111,7 +119,6 @@ function MemberList() {
     if (!searchTerm.trim()) return members;
 
     return members.filter((member: any) => {
-      console.log(member)
       const fullName = `${member.firstName} ${member.lastName}`.toLowerCase();
       const username = member.username?.toLowerCase() || '';
       return fullName.includes(searchTerm.toLowerCase()) ||
@@ -123,6 +130,12 @@ function MemberList() {
 
   const handleAddMember = async () => {
     await fetchAllData();
+
+    setSnackbar({
+      open: true,
+      message: "Add member successfully!",
+      type: "success",
+    });
   };
 
   const handleOpenAddMemberModal = () => {
@@ -380,6 +393,19 @@ function MemberList() {
         allUsers={users}
         allProjects={projects}
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.type}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

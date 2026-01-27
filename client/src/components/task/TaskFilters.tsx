@@ -259,7 +259,7 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                                     label={
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Avatar
-                                                src={currentUser.avatar}
+                                                src={currentUser?.avatar}
                                                 sx={{
                                                     width: 20,
                                                     height: 20,
@@ -267,9 +267,9 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
                                                     bgcolor: "#E0E0E0",
                                                     textTransform: "uppercase"
                                                 }}
-                                                title={`${currentUser.firstName} ${currentUser.lastName}`}
+                                                title={`${currentUser?.firstName} ${currentUser?.lastName}`}
                                             >
-                                                {currentUser.firstName?.[0]}{currentUser.lastName?.[0]}
+                                                {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
                                             </Avatar>
                                             <Typography sx={{ fontSize: '14px' }}>Current User</Typography>
                                         </Box>

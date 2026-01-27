@@ -174,7 +174,7 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                         color: count > 0 ? 'white' : '#5e6c84',
                         borderColor: '#dfe1e6',
                         '&:hover': {
-                            bgcolor: count > 0 ? '#1565c0' : '#f4f5f7',
+                            bgcolor: count > 0 ? '#1565c0' : '',
                             borderColor: '#dfe1e6',
                         },
                         px: 1.5,
@@ -192,7 +192,7 @@ function AttachmentFilters({ users, onFilterChange }: AttachmentFiltersProps) {
                                 sx={{
                                     ml: 1,
                                     height: 18,
-                                    fontSize: '11px',
+                                    fontSize: '10px',
                                     bgcolor: 'rgba(255,255,255,0.3)',
                                     color: 'white',
                                 }}

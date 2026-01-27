@@ -21,6 +21,19 @@ export const createTask = async (req, res) => {
 
     const { name, description, startDate, endDate, status, projectId, assignedTo, priority, completion } = req.body;
 
+    if (!name) {
+      return res.status(400).json({ error: "Name is required" });
+    }
+    if (!projectId) {
+      return res.status(400).json({ error: "Project is required" });
+    }
+    if (!priority) {
+      return res.status(400).json({ error: "Priority is required" });
+    }
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
     const newTask = {
       name: name,
       description: description,
@@ -61,6 +74,12 @@ export const updateTask = async (req, res) => {
 
     if (!name) {
       return res.status(400).json({ error: "Name is required" });
+    }
+    if (!priority) {
+      return res.status(400).json({ error: "Priority is required" });
+    }
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
     }
 
     const updateFields = {

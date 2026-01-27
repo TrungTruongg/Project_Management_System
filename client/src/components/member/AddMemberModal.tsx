@@ -17,6 +17,8 @@ import {
   Select,
   MenuItem,
   FormControl,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import api from "../api/axiosConfig";
 
@@ -30,15 +32,19 @@ function AddMemberModal({
 }: any) {
   const [selectedProjectId, setSelectedProjectId] = useState<number | "">("");
   const [emailOrName, setEmailOrName] = useState("");
-  const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [snackbar, setSnackbar] = useState({
+      open: false,
+      message: "",
+      type: "success" as "success" | "error",
+    });
 
   // Filter user who are not in any project
   const getAvailableUsers = () => {
     return allUsers.filter((user: any) => {
-      const hasProject = allProjects.some((project: any) => 
+      const hasProject = allProjects.some((project: any) =>
         project.leaderId === user._id || project.members?.includes(user._id)
       );
       return !hasProject;
@@ -74,25 +80,27 @@ function AddMemberModal({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!selectedProjectId) {
-      alert("Please select project!");
-      return;
-    }
-
-    if (!selectedUser) {
-      setShowError(true);
-      return;
-    }
-
     setLoading(true);
 
     try {
       // Find selected project
       const selectedProject = leaderProjects.find((p: any) => p._id === selectedProjectId);
-      
+
+      if (!selectedUser) {
+        setSnackbar({
+          open: true,
+          message: "Please choose user!",
+          type: "error",
+        });
+        return;
+      }
+
       if (!selectedProject?._id) {
-        alert("Project not found!");
+        setSnackbar({
+          open: true,
+          message: "Project not found!",
+          type: "error",
+        });
         return;
       }
 
@@ -106,7 +114,7 @@ function AddMemberModal({
         updatedProject
       );
 
-      onSave();
+      onSave();      
       onClose();
     } catch (error) {
       console.error("Error when adding members:", error);
@@ -122,7 +130,6 @@ function AddMemberModal({
       setEmailOrName("");
       setSelectedUser(null);
       setSuggestions([]);
-      setShowError(false);
       setLoading(false);
     }
   }, [open]);
@@ -130,190 +137,204 @@ function AddMemberModal({
   if (!open) return null;
 
   const availableCount = getAvailableUsers().length;
-
+  
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      closeAfterTransition
-      className="flex items-center justify-center"
-    >
-      <Box className="relative bg-white rounded-xl w-125 overflow-y-auto shadow-xl mx-auto p-6">
-        <Box className="flex items-center justify-between mb-6">
-          <Typography sx={{ fontSize: "18px", fontWeight: 600 }}>
-            Add Member To Project
-          </Typography>
-          <Button
-            onClick={onClose}
-            sx={{
-              minWidth: "30px",
-              width: "30px",
-              height: "30px",
-              padding: 0,
-              borderRadius: "50%",
-              color: "rgb(156, 163, 175)",
-              "&:hover": {
-                backgroundColor: "#d5d5d5",
-                color: "rgb(75, 85, 99)",
-              },
-            }}
-          >
-            <CloseIcon className="w-10 h-10" />
-          </Button>
-        </Box>
-
-        {leaderProjects.length === 0 ? (
-          <Box sx={{ textAlign: "center", py: 4 }}>
-            <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
-              You dont own any projects.
+    <>
+      <Modal
+        open={open}
+        onClose={onClose}
+        closeAfterTransition
+        className="flex items-center justify-center"
+      >
+        <Box className="relative bg-white rounded-xl w-125 overflow-y-auto shadow-xl mx-auto p-6">
+          <Box className="flex items-center justify-between mb-6">
+            <Typography sx={{ fontSize: "18px", fontWeight: 600 }}>
+              Add Member To Project
             </Typography>
-            <Button variant="outlined" onClick={onClose} sx={{ mt: 3 }}>
-              Close
+            <Button
+              onClick={onClose}
+              sx={{
+                minWidth: "30px",
+                width: "30px",
+                height: "30px",
+                padding: 0,
+                borderRadius: "50%",
+                color: "rgb(156, 163, 175)",
+                "&:hover": {
+                  backgroundColor: "#d5d5d5",
+                  color: "rgb(75, 85, 99)",
+                },
+              }}
+            >
+              <CloseIcon className="w-10 h-10" />
             </Button>
           </Box>
-        ) : availableCount === 0 ? (
-          <Box sx={{ textAlign: "center", py: 4 }}>
-            <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
-              No available users to add.
-              <br />
-              All users are already in projects.
-            </Typography>
-            <Button variant="outlined" onClick={onClose} sx={{ mt: 3 }}>
-              Close
-            </Button>
-          </Box>
-        ) : (
-          <Box component="form" className="space-y-4" onSubmit={handleSave}>
-            {/* Choose Project */}
-            {leaderProjects.length > 1 && (
-              <Box>
-                <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
-                  Choose Project <span className="text-red-500">*</span>
-                </Typography>
-                <FormControl fullWidth size="small">
-                  <Select
-                    value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value as number)}
-                    displayEmpty
-                  >
-                    <MenuItem value="" disabled>
-                      Choose a project
-                    </MenuItem>
-                    {leaderProjects.map((project: any) => (
-                      <MenuItem key={project._id} value={project._id}>
-                        {project.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            )}
 
-            {/* Tìm kiếm User */}
-            <Box>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Email address..."
-                value={emailOrName}
-                onChange={(e) => handleEmailOrNameChange(e.target.value)}
-                error={showError && !selectedUser}
-                helperText={showError && !selectedUser ? "Please choose members" : ""}
-              />
-
-              {/* Suggestions */}
-              {suggestions.length > 0 && (
-                <Paper sx={{ mt: 1, maxHeight: 300, overflow: "auto", border: "1px solid #e5e7eb" }}>
-                  <List sx={{ p: 0 }}>
-                    {suggestions.map((user) => (
-                      <ListItem key={user._id} disablePadding sx={{ "&:hover": { bgcolor: "#f3f4f6" } }}>
-                        <ListItemButton onClick={() => handleSelectUser(user)} sx={{ py: 1 }}>
-                          <ListItemAvatar sx={{ minWidth: 40 }}>
-                            <Avatar
-                              src={user.avatar}
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                fontSize: "12px",
-                                bgcolor: "#E0E0E0",
-                                textTransform: "uppercase",
-                              }}
-                            >
-                              {user.firstName?.[0]}{user.lastName?.[0]}
-                            </Avatar>
-                          </ListItemAvatar>
-                          <ListItemText
-                            primary={`${user.firstName} ${user.lastName}`}
-                            secondary={user.email}
-                            slotProps={{
-                              primary: {
-                                fontSize: "14px"
-                              },
-                              secondary: {
-                                fontSize: "12px"
-                              }
-                            }}
-                          />
-                        </ListItemButton>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Paper>
-              )}
-
-              {emailOrName.trim() && suggestions.length === 0 && !selectedUser && (
-                <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 1, fontStyle: "italic" }}>
-                  No matching users found.
-                </Typography>
-              )}
+          {leaderProjects.length === 0 ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
+                You dont own any projects.
+              </Typography>
+              <Button variant="outlined" onClick={onClose} sx={{ mt: 3 }}>
+                Close
+              </Button>
             </Box>
+          ) : availableCount === 0 ? (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
+                No available users to add.
+                <br />
+                All users are already in projects.
+              </Typography>
+              <Button variant="outlined" onClick={onClose} sx={{ mt: 3 }}>
+                Close
+              </Button>
+            </Box>
+          ) : (
+            <Box component="form" className="space-y-4" onSubmit={handleSave}>
+              {/* Choose Project */}
+              {leaderProjects.length > 1 && (
+                <Box>
+                  <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
+                    Choose Project <span className="text-red-500">*</span>
+                  </Typography>
+                  <FormControl fullWidth size="small">
+                    <Select
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value as number)}
+                      displayEmpty
+                    >
+                      <MenuItem value="" disabled>
+                        Choose a project
+                      </MenuItem>
+                      {leaderProjects.map((project: any) => (
+                        <MenuItem key={project._id} value={project._id}>
+                          {project.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
 
-            {/* Display selected user */}
-            {selectedUser && (
-              <Box sx={{ p: 2, bgcolor: "#f9fafb", borderRadius: 1, border: "1px solid #e5e7eb" }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Avatar
-                    src={selectedUser.avatar}
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      fontSize: "16px",
-                      bgcolor: "#E0E0E0",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
-                  </Avatar>
-                  <Box>
-                    <Typography sx={{ fontSize: "14px", fontWeight: 600, textTransform: "capitalize" }}>
-                      {selectedUser.firstName} {selectedUser.lastName}
-                    </Typography>
-                    <Typography sx={{ fontSize: "12px", color: "text.secondary" }}>
-                      {selectedUser.email}
-                    </Typography>
+              {/* Tìm kiếm User */}
+              <Box>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Email address..."
+                  value={emailOrName}
+                  onChange={(e) => handleEmailOrNameChange(e.target.value)}
+                />
+
+                {/* Suggestions */}
+                {suggestions.length > 0 && (
+                  <Paper sx={{ mt: 1, maxHeight: 300, overflow: "auto", border: "1px solid #e5e7eb" }}>
+                    <List sx={{ p: 0 }}>
+                      {suggestions.map((user) => (
+                        <ListItem key={user._id} disablePadding sx={{ "&:hover": { bgcolor: "#f3f4f6" } }}>
+                          <ListItemButton onClick={() => handleSelectUser(user)} sx={{ py: 1 }}>
+                            <ListItemAvatar sx={{ minWidth: 40 }}>
+                              <Avatar
+                                src={user.avatar}
+                                sx={{
+                                  width: 32,
+                                  height: 32,
+                                  fontSize: "12px",
+                                  bgcolor: "#E0E0E0",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {user.firstName?.[0]}{user.lastName?.[0]}
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={`${user.firstName} ${user.lastName}`}
+                              secondary={user.email}
+                              slotProps={{
+                                primary: {
+                                  fontSize: "14px"
+                                },
+                                secondary: {
+                                  fontSize: "12px"
+                                }
+                              }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Paper>
+                )}
+
+                {emailOrName.trim() && suggestions.length === 0 && !selectedUser && (
+                  <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 1 }}>
+                    No matching users found.
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Display selected user */}
+              {selectedUser && (
+                <Box sx={{ p: 2, bgcolor: "#f9fafb", borderRadius: 1, border: "1px solid #e5e7eb" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <Avatar
+                      src={selectedUser.avatar}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        fontSize: "16px",
+                        bgcolor: "#E0E0E0",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
+                    </Avatar>
+                    <Box>
+                      <Typography sx={{ fontSize: "14px", fontWeight: 600, textTransform: "capitalize" }}>
+                        {selectedUser.firstName} {selectedUser.lastName}
+                      </Typography>
+                      <Typography sx={{ fontSize: "12px", color: "text.secondary" }}>
+                        {selectedUser.email}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
-            )}
+              )}
 
-            <Box sx={{ display: "flex", gap: 1.5 }}>
-              <Button fullWidth variant="outlined" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                fullWidth
-                variant="contained"
-                type="submit"
-                disabled={loading || !selectedUser || !selectedProjectId}
-                sx={{ bgcolor: "#9333ea", "&:hover": { bgcolor: "#7e22ce" } }}
-              >
-                {loading ? "Adding..." : "Add"}
-              </Button>
+              <Box sx={{ display: "flex", gap: 1.5 }}>
+                <Button fullWidth variant="outlined" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  type="submit"
+                  disabled={loading || !selectedUser || !selectedProjectId}
+                  sx={{ bgcolor: "#9333ea", "&:hover": { bgcolor: "#7e22ce" } }}
+                >
+                  {loading ? "Adding..." : "Add"}
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        )}
-      </Box>
-    </Modal>
+          )}
+        </Box>
+      </Modal>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.type}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </>
+
   );
 }
 

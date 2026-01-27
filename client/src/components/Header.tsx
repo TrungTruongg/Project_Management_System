@@ -124,7 +124,7 @@ function Header() {
       <SearchInput />
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        <IconButton sx={{ bgcolor: "white" }}>
+        <IconButton>
           <Info color="primary" />
         </IconButton>
         <AvatarGroup
@@ -134,7 +134,6 @@ function Header() {
               width: 35,
               height: 35,
               fontSize: 15,
-              border: "2px solid white",
             }
           }}
         >
