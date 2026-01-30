@@ -27,6 +27,7 @@ import AttachmentManagement from "./components/attachment/AttachmentManagement";
 import PasswordAuthentication from "./components/auth/PasswordAuthentication";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPassword from "./components/auth/ResetPassword";
+import AdminLayout from "./components/admin/AdminLayout";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -92,6 +93,8 @@ function App() {
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/2-step-authentication" element={<PasswordAuthentication />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+
+                  <Route path="/admin" element={<AdminLayout />} />
                 </Routes>
               </Router>
             </SearchProvider>
