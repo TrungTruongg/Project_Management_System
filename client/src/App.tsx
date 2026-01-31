@@ -28,6 +28,8 @@ import PasswordAuthentication from "./components/auth/PasswordAuthentication";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPassword from "./components/auth/ResetPassword";
 import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import UserManagement from "./components/admin/UserManagement";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -94,7 +96,10 @@ function App() {
                   <Route path="/2-step-authentication" element={<PasswordAuthentication />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
 
-                  <Route path="/admin" element={<AdminLayout />} />
+                  <Route path="/admin" element={<AdminLayout />} >
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="users" element={<UserManagement />} />
+                  </Route>
                 </Routes>
               </Router>
             </SearchProvider>
