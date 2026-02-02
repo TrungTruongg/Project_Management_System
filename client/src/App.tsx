@@ -30,6 +30,7 @@ import ResetPassword from "./components/auth/ResetPassword";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import UserManagement from "./components/admin/UserManagement";
+import UserProfile from "./components/admin/UserProfile";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -99,6 +100,7 @@ function App() {
                   <Route path="/admin" element={<AdminLayout />} >
                     <Route index element={<AdminDashboard />} />
                     <Route path="users" element={<UserManagement />} />
+                    <Route path="user-profile" element={<UserProfile />} />
                   </Route>
                 </Routes>
               </Router>

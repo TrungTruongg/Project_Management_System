@@ -121,8 +121,6 @@ function MemberProfile() {
   };
 
   const handleOpenDeleteDialog = () => {
-    console.log(memberId);
-
     setDeleteDialogOpen(true);
   };
 
