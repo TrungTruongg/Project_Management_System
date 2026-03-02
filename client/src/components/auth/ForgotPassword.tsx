@@ -40,7 +40,6 @@ function ForgotPassword() {
             const response = await api.post("/auth/reset-password", {
                 email: email.toLowerCase(),
             });
-            console.log(response);
             
             if (response.data.success) {
                 setSuccess(response.data.message);

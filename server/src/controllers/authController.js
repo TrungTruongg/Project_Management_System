@@ -2,6 +2,10 @@ import client from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import { transporter, generateVerificationCode } from '../utils/helper.js';
 import jwt from 'jsonwebtoken';
+import sgMail from '@sendgrid/mail';
+import 'dotenv/config';
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Login
 export const login = async (req, res) => {
@@ -183,8 +187,8 @@ export const resetPassword = async (req, res) => {
 
     // Send the password reset email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
       to: user.email,
+      from: process.env.EMAIL_USER,
       subject: 'Password Reset - Verification Code',
       html: `
         <div class="code-box">
@@ -195,7 +199,8 @@ export const resetPassword = async (req, res) => {
     };
 
     try {
-      await transporter.sendMail(mailOptions);
+      //await transporter.sendMail(mailOptions);
+      await sgMail.send(mailOptions);
 
       res.json({
         success: true,
@@ -356,12 +361,12 @@ export const googleAuth = async (req, res, next) => {
       const result = await collection.insertOne(newUser);
       user = { ...newUser, _id: result.insertedId };
     } else {
-       if (user.isLocked) {
+      if (user.isLocked) {
         return res.status(403).json({
           success: false,
           message: `${email} doesn't have access`,
           isLocked: true,
-          email: email
+          email: email,
         });
       }
       await collection.updateOne(
@@ -373,7 +378,7 @@ export const googleAuth = async (req, res, next) => {
           },
         }
       );
-    };
+    }
 
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
@@ -397,7 +402,7 @@ export const googleAuth = async (req, res, next) => {
           lastLogin: userResponse.lastLogin,
         },
         token,
-      },   
+      },
       message: 'Google login successful',
     });
   } catch (error) {
