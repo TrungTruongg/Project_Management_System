@@ -2,7 +2,6 @@ import {
   Avatar,
   Box,
   Card,
-  CardContent,
   CircularProgress,
   Grid,
   IconButton,
