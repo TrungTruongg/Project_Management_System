@@ -12,7 +12,6 @@ import {
   IconButton,
   InputBase,
   Avatar,
-  Divider,
   Collapse,
 } from '@mui/material';
 import {
@@ -25,19 +24,21 @@ import {
 } from '@mui/icons-material';
 import { menuSections } from './constant/constants';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import AdminDashboard from './AdminDashboard';
+import TaskIcon from '../icons/TaskIcon';
+import { useUser } from '../context/UserContext';
 
 const DRAWER_WIDTH = 240;
 
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useUser();
   const [openSections, setOpenSections] = React.useState({
     users: false,
   });
 
   const handleToggleSection = (section: string) => {
-    setOpenSections(prev => ({
+    setOpenSections((prev) => ({
       ...prev,
       [section]: !prev[section as keyof typeof prev],
     }));
@@ -61,7 +62,7 @@ const AdminLayout = () => {
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           {/* Left side - Icons */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton>
+            <IconButton onClick={() => navigate('/')}>
               <Home />
             </IconButton>
             <Typography variant="body2" sx={{ fontWeight: 600, ml: 1 }}>
@@ -69,7 +70,7 @@ const AdminLayout = () => {
             </Typography>
           </Box>
 
-          {/* Center - Search bar */}
+          {/* Search bar */}
           <Box
             sx={{
               display: 'flex',
@@ -82,11 +83,7 @@ const AdminLayout = () => {
             }}
           >
             <Search sx={{ color: '#5e6c84', mr: 1 }} />
-            <InputBase
-              placeholder="Tìm kiếm"
-              fullWidth
-              sx={{ fontSize: 14 }}
-            />
+            <InputBase placeholder="Search..." fullWidth sx={{ fontSize: 14 }} />
           </Box>
 
           {/* Right side - Icons */}
@@ -97,21 +94,25 @@ const AdminLayout = () => {
             <IconButton>
               <HelpOutline />
             </IconButton>
+            {user && (
             <Avatar
+              src={user?.avatar || '/images/user_avatar.jpg'}
               sx={{
-                width: 32,
-                height: 32,
-                bgcolor: '#6554c0',
-                fontSize: 14,
+                width: { xs: 10, sm: 36, md: 40 },
+                height: { xs: 10, sm: 36, md: 40 },
+                fontSize: '15px',
+                textTransform: 'uppercase',
               }}
             >
-              T
+              {user?.firstName?.[0]}
+              {user?.lastName?.[0]}
             </Avatar>
+            )}
           </Box>
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar Drawer - Giống Jira */}
+      {/* Sidebar */}
       <Drawer
         sx={{
           width: DRAWER_WIDTH,
@@ -126,7 +127,7 @@ const AdminLayout = () => {
         variant="permanent"
         anchor="left"
       >
-        {/* Organization Header */}
+        {/* Header */}
         <Box
           sx={{
             p: 2,
@@ -138,16 +139,14 @@ const AdminLayout = () => {
         >
           <Box
             sx={{
-              width: 32,
-              height: 32,
-              bgcolor: '#DFE1E6',
-              borderRadius: 0.5,
+              width: 23,
+              height: 23,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            🏢
+            <TaskIcon />
           </Box>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             my-task
@@ -156,7 +155,7 @@ const AdminLayout = () => {
 
         {/* Menu Items */}
         <List sx={{ pt: 2, px: 1 }}>
-          {menuSections.map((section, sectionIndex) => (
+          {menuSections.map((section) => (
             <React.Fragment key={section.title}>
               {section.items.map((item: any) => (
                 <React.Fragment key={item.id}>
@@ -194,9 +193,11 @@ const AdminLayout = () => {
                     </ListItemIcon>
                     <ListItemText
                       primary={item.text}
-                      primaryTypographyProps={{
-                        fontSize: 14,
-                        fontWeight: isActive(item.path) ? 600 : 400,
+                      slotProps={{
+                        primary: {
+                          fontSize: 14,
+                          fontWeight: isActive(item.path) ? 600 : 400,
+                        },
                       }}
                     />
                     {item.badge && (
@@ -246,8 +247,10 @@ const AdminLayout = () => {
                           >
                             <ListItemText
                               primary={subItem.text}
-                              primaryTypographyProps={{
-                                fontSize: 14,
+                              slotProps={{
+                                primary: {
+                                  fontSize: 14,
+                                },
                               }}
                             />
                             {subItem.badge && (

@@ -27,7 +27,17 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User>(null);
+  const [user, setUser] = useState<User>(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        return JSON.parse(savedUser);
+      }
+    } catch (error) {
+      console.error('Error loading user from localStorage:', error);
+    }
+    return null;
+  });
   const userRef = useRef(user);
 
   useEffect(() => {

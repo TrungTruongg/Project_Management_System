@@ -16,6 +16,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import imageLogin from "../../assets/image_login.svg";
 import { useUser } from "../context/UserContext";
 import api from "../api/axiosConfig";
+import { IoWarningOutline } from "react-icons/io5";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -23,6 +24,7 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useUser();
 
@@ -30,6 +32,7 @@ function Login() {
     e.preventDefault();
 
     setError("");
+    setIsLocked(false);
 
     if (!email || !password) {
       setError("Please enter email and password");
@@ -51,6 +54,12 @@ function Login() {
 
       if (response.data && response.data.success) {
         const userData = response.data.data.user;
+
+        if (userData.isLocked) {
+          setIsLocked(true);
+          setError(`${email} doesn't have access `);
+          return;
+        }
 
         // localStorage.setItem("token", token);
         localStorage.setItem("auth", "true");
@@ -100,6 +109,12 @@ function Login() {
 
         if (response.data.success) {
           const { user, token } = response.data.data;
+
+          if (user.isLocked) {
+          setIsLocked(true);
+          setError(`${email} doesn't have access `);
+          return;
+        }
 
           localStorage.setItem("token", token);
           localStorage.setItem("auth", "true");
@@ -249,7 +264,20 @@ function Login() {
           </Typography>
 
           {error && (
-            <Alert severity="warning" sx={{ mb: 3 }}>
+            <Alert 
+              severity={isLocked ? "error" : "warning"} 
+              sx={{ 
+                mb: 3,
+                ...(isLocked && {
+                  backgroundColor: '#fff4e5',
+                  border: '1px solid #ff991f',
+                  '& .MuiAlert-icon': {
+                    color: '#ff991f',
+                  },
+                })
+              }}
+              icon={isLocked ? <IoWarningOutline size={24} /> : undefined}
+            >
               {error}
             </Alert>
           )}

@@ -15,6 +15,7 @@ import attachmentRoutes from "./src/routes/attachmentRoutes.js";
 import commentRoutes from "./src/routes/commentRoutes.js";
 import replyRoutes from "./src/routes/replyRoutes.js";
 import ticketRoutes from "./src/routes/ticketRoutes.js";
+import lockRoutes from "./src/routes/lockRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,6 +53,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/comments", commentRoutes);
 app.use("/api/replies", replyRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/locks", lockRoutes);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

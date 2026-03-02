@@ -3,9 +3,6 @@ import {
   People,
   Security,
   Settings,
-  HelpOutline,
-  Email,
-  Contacts,
 } from '@mui/icons-material';
 
 export const menuSections = [
@@ -32,9 +29,6 @@ export const menuSections = [
     title: 'Configuration',
     items: [
       { text: 'Settings', icon: <Settings />, path: '/admin/settings', id: 'settings' },
-      { text: 'Support', icon: <HelpOutline />, path: '/admin/support', id: 'support' },
-      { text: 'Email', icon: <Email />, path: '/admin/email', id: 'email' },
-      { text: 'Contact', icon: <Contacts />, path: '/admin/contacts', id: 'contacts' },
     ],
   },
 ];

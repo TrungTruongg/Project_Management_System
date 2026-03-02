@@ -1,15 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { MdAttachFile, MdDelete } from "react-icons/md";
-import HighPriority from "../../assets/HighPriority";
-import MediumPriority from "../../assets/MediumPriority";
-import LowPriority from "../../assets/LowPriority";
+import { useEffect, useRef, useState } from 'react';
+import { MdAttachFile } from 'react-icons/md';
+import HighPriority from '../../assets/HighPriority';
+import MediumPriority from '../../assets/MediumPriority';
+import LowPriority from '../../assets/LowPriority';
 import {
   Alert,
   Avatar,
   Box,
   Button,
   Chip,
-  IconButton,
   ListItemText,
   MenuItem,
   Modal,
@@ -18,10 +17,23 @@ import {
   TextareaAutosize,
   TextField,
   Typography,
-} from "@mui/material";
-import { createNotification } from "../utils/createNotification";
-import { useUser } from "../context/UserContext";
-import api from "../api/axiosConfig";
+} from '@mui/material';
+import { createNotification } from '../utils/createNotification';
+import { useUser } from '../context/UserContext';
+import api from '../api/axiosConfig';
+import AttachmentList from './attachments/AttachmentList';
+import AttachmentPreviewModal from './attachments/AttachmentPreviewModal';
+
+interface AttachmentItem {
+  _id?: string;
+  name: string;
+  url: string;
+  type: 'file' | 'link' | 'image' | 'video';
+  file?: File;
+  isExisting: boolean;
+  uploadedAt?: string;
+  previewUrl?: string; 
+}
 
 function CreateTaskModal({
   open,
@@ -32,23 +44,24 @@ function CreateTaskModal({
   currentProject,
 }: any) {
   const [isStatusOnly, setIsStatusOnly] = useState(false);
-  const [name, setName] = useState("");
-  const [projectId, setProjectId] = useState<string | "">("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [projectId, setProjectId] = useState<string | ''>('');
+  const [description, setDescription] = useState('');
   const [attachments, setAttachments] = useState<any[]>([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([]);
-  const [attachmentInput, setAttachmentInput] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [priority, setPriority] = useState("");
+  const [attachmentInput, setAttachmentInput] = useState('');
+  const [previewAtt, setPreviewAtt] = useState<AttachmentItem | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [priority, setPriority] = useState('');
   const [assignedTo, setAssignedTo] = useState<string[]>([]);
-  const [status, setStatus] = useState("to-do");
+  const [status, setStatus] = useState('to-do');
   const [loading, setLoading] = useState(false);
   const [showError, setShowError] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    type: "success" as "success" | "error",
+    message: '',
+    type: 'success' as 'success' | 'error',
   });
 
   const [projects, setProjects] = useState<any[]>([]);
@@ -59,48 +72,20 @@ function CreateTaskModal({
 
   const isUpdate = selectedTask !== null;
 
-  const shortenFileName = (fileName: string, maxLength: number = 20) => {
-    if (!fileName || fileName.length <= maxLength) return fileName;
-
-    const ext = fileName.split('.').pop();
-    const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
-    const availableLength = maxLength - (ext ? ext.length + 1 : 0) - 3; // -3 for "..."
-
-    if (availableLength <= 0) return fileName;
-
-    return `${nameWithoutExt.substring(0, availableLength)}...${ext ? '.' + ext : ''}`;
-  };
-
-  // Helper function to format upload date
-  const formatUploadDate = (dateString: string) => {
-    if (!dateString) return '';
-
-    const date = new Date(dateString);
-
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
-  };
-
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseProject, responseUser, responseAttachment] =
-        await Promise.all([
-          api.get("/projects"),
-          api.get("/users"),
-          api.get("/attachments"),
-        ]);
+      const [responseProject, responseUser, responseAttachment] = await Promise.all([
+        api.get('/projects'),
+        api.get('/users'),
+        api.get('/attachments'),
+      ]);
 
       setProjects(responseProject.data);
       setUsers(responseUser.data);
 
       if (selectedTask) {
-        const taskAttachments = responseAttachment.data
+        const taskAttachments: AttachmentItem[] = responseAttachment.data
           .filter((att: any) => att.taskId === selectedTask._id)
           .map((att: any) => ({
             _id: att._id,
@@ -108,7 +93,7 @@ function CreateTaskModal({
             url: att.url,
             type: att.type,
             isExisting: true,
-            uploadedAt: att.uploadedAt
+            uploadedAt: att.uploadedAt,
           }));
         setAttachments(taskAttachments);
       }
@@ -126,24 +111,19 @@ function CreateTaskModal({
     if (url.startsWith('data:')) {
       setSnackbar({
         open: true,
-        message: "Invalid url",
-        type: "error",
+        message: 'Invalid url',
+        type: 'error',
       });
       return;
     }
 
     try {
       new URL(url);
-      setSnackbar({
-        open: true,
-        message: "Add link successfully!",
-        type: "success",
-      });
     } catch (error) {
       setSnackbar({
         open: true,
-        message: "Invalid url",
-        type: "error",
+        message: 'Invalid url',
+        type: 'error',
       });
       return;
     }
@@ -154,10 +134,15 @@ function CreateTaskModal({
         name: url,
         url: url,
         type: 'link',
-        isExisting: false
-      }
+        isExisting: false,
+      },
     ]);
-    setAttachmentInput("");
+    setAttachmentInput('');
+    setSnackbar({
+      open: true,
+      message: 'Add link successfully!',
+      type: 'success',
+    });
   };
 
   // Add file
@@ -165,31 +150,28 @@ function CreateTaskModal({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newFiles = Array.from(files).map(file => ({
+    const newFiles: AttachmentItem[] = Array.from(files).map((file) => ({
       name: file.name,
-      file: file,
+      file,
+      url: URL.createObjectURL(file),
+      previewUrl: URL.createObjectURL(file),
       type: 'file',
-      isExisting: false
+      isExisting: false,
     }));
 
-    setAttachments([...attachments, ...newFiles]);
+    setAttachments((prev) => [...prev, ...newFiles]);
 
-    // Reset input to choose same file
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Delete attachment
   const handleRemoveAttachment = (index: number) => {
     const attachment = attachments[index];
 
-    // Nếu là attachment đã tồn tại, thêm vào list cần xóa
     if (attachment.isExisting && attachment._id) {
       setDeletedAttachmentIds([...deletedAttachmentIds, attachment._id]);
     }
 
-    // Xóa khỏi state hiển thị
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
@@ -209,8 +191,8 @@ function CreateTaskModal({
 
     const selectedProject = projects.find((p) => p._id === newProjectId);
     if (selectedProject) {
-      setStartDate(selectedProject.startDate || "");
-      setEndDate(selectedProject.endDate || "");
+      setStartDate(selectedProject.startDate || '');
+      setEndDate(selectedProject.endDate || '');
     }
   };
 
@@ -224,32 +206,32 @@ function CreateTaskModal({
     if (start >= end) {
       setSnackbar({
         open: true,
-        message: "End Date must be after Start Date",
-        type: "error",
+        message: 'End Date must be after Start Date',
+        type: 'error',
       });
       return;
     }
     if (end < now) {
       setSnackbar({
         open: true,
-        message: "End Date cannot be in the past",
-        type: "error",
+        message: 'End Date cannot be in the past',
+        type: 'error',
       });
       return;
     }
     if (projectStart && start < projectStart) {
       setSnackbar({
         open: true,
-        message: "Start Date cannot before Project Start Date",
-        type: "error",
+        message: 'Start Date cannot before Project Start Date',
+        type: 'error',
       });
       return;
     }
     if (projectEnd && end > projectEnd) {
       setSnackbar({
         open: true,
-        message: "End Date cannot after Project End Date",
-        type: "error",
+        message: 'End Date cannot after Project End Date',
+        type: 'error',
       });
       return;
     }
@@ -260,10 +242,10 @@ function CreateTaskModal({
     const formData = new FormData();
     formData.append('file', file);
     formData.append('taskId', taskId);
-    const response = await api.post("/attachments/upload", formData, {
+    const response = await api.post('/attachments/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     });
 
     return response.data.url;
@@ -288,18 +270,17 @@ function CreateTaskModal({
     setLoading(true);
 
     try {
-      // Count completion based on status
       let completion = 0;
-      if (status === "to-do") {
+      if (status === 'to-do') {
         completion = 0;
-      } else if (status === "in-progress") {
+      } else if (status === 'in-progress') {
         completion = 50;
-      } else if (status === "completed") {
+      } else if (status === 'completed') {
         completion = 100;
       }
 
       const taskData = {
-        projectId: isUpdate ? selectedTask.projectId : (currentProject?._id || projectId),
+        projectId: isUpdate ? selectedTask.projectId : currentProject?._id || projectId,
         name,
         description,
         startDate,
@@ -310,14 +291,10 @@ function CreateTaskModal({
         completion,
       };
 
-      let taskId;
+      let taskId: string;
 
       if (isUpdate) {
-
-        const response = await api.put(
-          `/tasks/update/${selectedTask._id}`,
-          taskData
-        );
+        const response = await api.put(`/tasks/update/${selectedTask._id}`, taskData);
 
         const updatedData = response.data.task;
         taskId = selectedTask._id;
@@ -326,21 +303,25 @@ function CreateTaskModal({
           updatedData._id = selectedTask._id;
         }
 
-        // Delete old attachments 
-        for (const attachmentId of deletedAttachmentIds) {
-          try {
-            await api.delete(`/attachments/delete/${attachmentId}`);
+        // Delete old attachments
+        // for (const attachmentId of deletedAttachmentIds) {
+        //   try {
+        //     await api.delete(`/attachments/delete/${attachmentId}`);
 
-            await new Promise(resolve => setTimeout(resolve, 100));
-          } catch (error) {
-            console.error(`Error deleting attachment ${attachmentId}:`, error);
-          }
+        //     await new Promise((resolve) => setTimeout(resolve, 100));
+        //   } catch (error) {
+        //     console.error(`Error deleting attachment ${attachmentId}:`, error);
+        //   }
+        // }
+
+        for (const id of deletedAttachmentIds) {
+          await api.delete(`/attachments/delete/${id}`).catch(console.error);
         }
 
         if (assignedTo.length > 0) {
           await createNotification({
             userId: assignedTo,
-            type: "task",
+            type: 'task',
             title: `Task Updated`,
             description: `updated task: ${name}`,
             createdBy: user?._id,
@@ -350,11 +331,11 @@ function CreateTaskModal({
         onUpdate(updatedData);
         setSnackbar({
           open: true,
-          message: "Update task successfully!",
-          type: "success",
+          message: 'Update task successfully!',
+          type: 'success',
         });
       } else {
-        const response = await api.post("/tasks/create", taskData);
+        const response = await api.post('/tasks/create', taskData);
         const createdData = response.data;
 
         taskId = createdData._id || createdData.task?._id;
@@ -363,7 +344,7 @@ function CreateTaskModal({
         if (assignedTo.length > 0) {
           await createNotification({
             userId: assignedTo,
-            type: "task",
+            type: 'task',
             title: `New Task Assignment`,
             description: `assigned you to task: ${name}`,
             createdBy: user?._id,
@@ -373,8 +354,8 @@ function CreateTaskModal({
         onSave(createdData);
         setSnackbar({
           open: true,
-          message: "Create task successfully!",
-          type: "success",
+          message: 'Create task successfully!',
+          type: 'success',
         });
       }
 
@@ -394,7 +375,7 @@ function CreateTaskModal({
         }
 
         try {
-          await api.post("/attachments/create", {
+          await api.post('/attachments/create', {
             taskId: taskId,
             url: finalUrl,
             name: att.name,
@@ -408,7 +389,6 @@ function CreateTaskModal({
       }
 
       onClose();
-
     } catch (error) {
       console.error(error);
     } finally {
@@ -432,25 +412,25 @@ function CreateTaskModal({
         // Status-only mode if not leader but assigned to task
         setIsStatusOnly(!isLeader && isAssigned);
 
-        setName(selectedTask.name || "");
-        setProjectId(selectedTask.projectId || "");
-        setDescription(selectedTask.description || "");
-        setStartDate(selectedTask.startDate || "");
-        setEndDate(selectedTask.endDate || "");
-        setPriority(selectedTask.priority || "");
+        setName(selectedTask.name || '');
+        setProjectId(selectedTask.projectId || '');
+        setDescription(selectedTask.description || '');
+        setStartDate(selectedTask.startDate || '');
+        setEndDate(selectedTask.endDate || '');
+        setPriority(selectedTask.priority || '');
         setAssignedTo(Array.isArray(selectedTask.assignedTo) ? selectedTask.assignedTo : []);
-        setStatus(selectedTask.status || "");
+        setStatus(selectedTask.status || '');
       } else {
         setIsStatusOnly(false);
-        setName("");
-        setProjectId(currentProject?._id || "");
-        setDescription("");
+        setName('');
+        setProjectId(currentProject?._id || '');
+        setDescription('');
         setAttachments([]);
-        setStartDate(currentProject?.startDate || "");
-        setEndDate(currentProject?.endDate || "");
-        setPriority("");
+        setStartDate(currentProject?.startDate || '');
+        setEndDate(currentProject?.endDate || '');
+        setPriority('');
         setAssignedTo([]);
-        setStatus("to-do");
+        setStatus('to-do');
       }
       setDeletedAttachmentIds([]);
     }
@@ -460,61 +440,61 @@ function CreateTaskModal({
 
   return (
     <>
-      <Modal
-        open={open}
-        onClose={onClose}
-      >
+      <Modal open={open} onClose={onClose}>
         <Box
           component="form"
           onSubmit={handleSave}
           sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: { xs: "95%", sm: "90%", md: "600px" },
-            maxHeight: "90vh",
-            bgcolor: "background.paper",
-            borderRadius: "8px",
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '95%', sm: '90%', md: '600px' },
+            maxHeight: '90vh',
+            bgcolor: 'background.paper',
+            borderRadius: '8px',
             boxShadow: 24,
-            display: "flex",
-            flexDirection: "column",
-          }}>
-
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           {/* Header */}
           <Box
             sx={{
               p: 2,
-              borderBottom: "1px solid #e5e7eb",
+              borderBottom: '1px solid #e5e7eb',
               flexShrink: 0,
-            }}>
+            }}
+          >
             <Typography
               sx={{
-                fontSize: "18px",
-                lineHeight: "28px",
+                fontSize: '18px',
+                lineHeight: '28px',
                 fontWeight: 600,
               }}
             >
-              {isStatusOnly ? "Update Task Status" : isUpdate ? "Update Task" : "Create Task"}
+              {isStatusOnly ? 'Update Task Status' : isUpdate ? 'Update Task' : 'Create Task'}
             </Typography>
           </Box>
 
           {/* Content */}
-          <Box sx={{
-            p: 2,
-            overflow: "auto",
-            flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-          }}>
+          <Box
+            sx={{
+              p: 2,
+              overflow: 'auto',
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
             {!isStatusOnly && (
               <>
                 {/* Name */}
                 <Box>
                   <Typography
                     sx={{
-                      fontSize: "14px",
+                      fontSize: '14px',
                       fontWeight: 500,
                       mb: 0.5,
                     }}
@@ -530,13 +510,13 @@ function CreateTaskModal({
                     placeholder="Type task name"
                     error={showError && !name.trim()}
                     sx={{
-                      "& .MuiOutlinedInput-root": {
-                        fontSize: "14px",
-                      }
+                      '& .MuiOutlinedInput-root': {
+                        fontSize: '14px',
+                      },
                     }}
                   />
                   {showError && !name.trim() && (
-                    <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
+                    <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>
                       Task name is required
                     </Typography>
                   )}
@@ -546,7 +526,7 @@ function CreateTaskModal({
                 <Box>
                   <Typography
                     sx={{
-                      fontSize: "14px",
+                      fontSize: '14px',
                       fontWeight: 500,
                       mb: 0.5,
                     }}
@@ -562,8 +542,8 @@ function CreateTaskModal({
                     error={showError && !projectId}
                     onChange={(e) => handleProjectChange(String(e.target.value))}
                     sx={{
-                      fontSize: "14px",
-                      color: projectId === "" ? "#9ca3af" : "",
+                      fontSize: '14px',
+                      color: projectId === '' ? '#9ca3af' : '',
                     }}
                     disabled={!!currentProject}
                   >
@@ -578,7 +558,7 @@ function CreateTaskModal({
                   </Select>
 
                   {showError && !projectId && (
-                    <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
+                    <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>
                       Project name is required
                     </Typography>
                   )}
@@ -587,7 +567,7 @@ function CreateTaskModal({
                 <Box className="gap-4">
                   <Typography
                     sx={{
-                      fontSize: "14px",
+                      fontSize: '14px',
                       fontWeight: 500,
                       mb: 0.5,
                     }}
@@ -596,14 +576,14 @@ function CreateTaskModal({
                   </Typography>
                   <Box
                     sx={{
-                      border: "1px solid #d1d5db",
-                      borderRadius: "4px",
-                      "&:focus-within": {
-                        border: "2px solid #1976d2",
+                      border: '1px solid #d1d5db',
+                      borderRadius: '4px',
+                      '&:focus-within': {
+                        border: '2px solid #1976d2',
                       },
-                      "& textarea": {
-                        "&::placeholder": {
-                          color: "#9ca3af",
+                      '& textarea': {
+                        '&::placeholder': {
+                          color: '#9ca3af',
                         },
                       },
                     }}
@@ -614,14 +594,14 @@ function CreateTaskModal({
                       onChange={(e) => setDescription(e.target.value)}
                       minRows={3}
                       style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: "none",
-                        borderRadius: "4px",
-                        fontSize: "14px",
-                        resize: "none",
-                        fontFamily: "inherit",
-                        outline: "none",
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        resize: 'none',
+                        fontFamily: 'inherit',
+                        outline: 'none',
                       }}
                     />
                   </Box>
@@ -629,24 +609,17 @@ function CreateTaskModal({
 
                 {/* Attachments */}
                 <Box>
-                  <Box sx={{ display: "flex", gap: 1, alignItems: "center", mb: 1 }}>
-                    <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
-                      Attachments
-                    </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 1 }}>
+                    <Typography sx={{ fontSize: '14px', fontWeight: 500 }}>Attachments</Typography>
 
                     <Chip
                       label={attachments.length}
                       size="small"
-                      sx={{
-                        width: 23,
-                        height: 23,
-                        fontSize: "10px",
-                        fontWeight: 500,
-                      }}
+                      sx={{ height: 20, fontSize: '11px' }}
                     />
                   </Box>
 
-                  <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -656,6 +629,7 @@ function CreateTaskModal({
                     />
 
                     <Button
+                      type="button"
                       variant="outlined"
                       startIcon={<MdAttachFile />}
                       onClick={() => fileInputRef.current?.click()}
@@ -669,7 +643,7 @@ function CreateTaskModal({
                       placeholder="or paste link"
                       value={attachmentInput}
                       onChange={(e) => setAttachmentInput(e.target.value)}
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           handleAddLink();
@@ -677,178 +651,34 @@ function CreateTaskModal({
                       }}
                       sx={{
                         flex: 1,
-                        "& .MuiOutlinedInput-root": {
-                          fontSize: "14px",
-                        }
+                        '& .MuiOutlinedInput-root': {
+                          fontSize: '14px',
+                        },
                       }}
                     />
 
-                    <Button
-                      variant="outlined"
-                      onClick={handleAddLink}
-                      size="small"
-                    >
+                    <Button type="button" variant="outlined" onClick={handleAddLink} size="small">
                       Add
                     </Button>
                   </Box>
 
                   {attachments.length > 0 && (
                     <Box sx={{
-                      display: "flex",
-                      gap: 1,
-                      overflowX: "auto",
-                      overflowY: "hidden",
-                      padding: "8px 4px",
-                      borderRadius: "4px",
-
-                    }}>
-                      {attachments.map((att, i) => {
-                        const ext = att.name?.split('.').pop()?.toLowerCase();
-
-                        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
-                        const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'];
-                        const docExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
-
-                        const isImage = ext && imageExtensions.includes(ext);
-                        const isVideo = ext && videoExtensions.includes(ext);
-                        const isDoc = ext && docExtensions.includes(ext);
-
-                        let processedUrl = att.url || '';
-                        if (att.file && !processedUrl) {
-                          processedUrl = URL.createObjectURL(att.file);
-                        }
-
-                        if (processedUrl && processedUrl.startsWith('/uploads/')) {
-                          const baseURL = import.meta.env.VITE_SERVER_URL;
-                          processedUrl = baseURL + processedUrl;
-                        }
-
-                        return (
-                          <Box
-                            key={i}
-                            sx={{
-                              position: "relative",
-                              flexShrink: 0,
-                              width: "140px",
-                              border: "1px solid #e5e7eb",
-                              borderRadius: "6px",
-                              overflow: "hidden",
-                              backgroundColor: "#ffffff",
-                              transition: "all 0.2s",
-                              "&:hover": {
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                                borderColor: "#9333ea",
-                              }
-                            }}
-                          >
-                            {/* Thumbnail/Preview */}
-                            <Box
-                              sx={{
-                                height: "90px",
-                                backgroundColor: "#f9fafb",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: att.type === 'link' || att.url ? "pointer" : "default",
-                                overflow: "hidden",
-                              }}
-                              onClick={() => {
-                                if (processedUrl && att.isExisting) {
-                                  window.open(processedUrl, '_blank');
-                                }
-                              }}
-                            >
-                              {isImage && processedUrl ? (
-                                <img
-                                  src={processedUrl}
-                                  alt={att.name}
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                  }}
-                                />
-                              ) : isVideo && processedUrl ? (
-                                <video
-                                  src={processedUrl}
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                  }}
-                                />
-                              ) : isDoc ? (
-                                <iframe
-                                  src={processedUrl}
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    border: 'none',
-                                    pointerEvents: 'none',
-                                  }}
-                                  title={att.name}
-                                />
-                              ) : (
-                                <Box sx={{ textAlign: "center", color: "#6b7280" }}>
-                                  <MdAttachFile style={{ fontSize: "40px" }} />
-                                  <Typography sx={{ fontSize: "10px", fontWeight: 600, mt: 0.5 }}>
-                                    {att.type === 'link' ? 'LINK' : 'FILE'}
-                                  </Typography>
-                                </Box>
-                              )}
-                            </Box>
-
-                            {/* File Info */}
-                            <Box sx={{ padding: "8px" }}>
-                              <Typography
-                                sx={{
-                                  fontSize: "12px",
-                                  fontWeight: 500,
-                                  color: "#111827",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                  lineHeight: "16px",
-                                }}
-                                title={att.name}
-                              >
-                                {shortenFileName(att.name, 18)}
-                              </Typography>
-
-                              {/* Upload date/time */}
-                              {att.uploadedAt && (
-                                <Typography
-                                  sx={{
-                                    fontSize: "10px",
-                                    color: "#6b7280",
-                                    lineHeight: "14px",
-                                  }}
-                                >
-                                  {att.uploadedAt ? formatUploadDate(att.uploadedAt) : 'Uploaded'}
-                                </Typography>
-                              )}
-                            </Box>
-
-                            {/* Delete Button */}
-                            <IconButton
-                              size="small"
-                              onClick={() => handleRemoveAttachment(i)}
-                              sx={{
-                                position: "absolute",
-                                top: "4px",
-                                right: "4px",
-                                padding: "4px",
-                                backgroundColor: "rgba(255, 255, 255, 0.9)",
-                                "&:hover": {
-                                  backgroundColor: "#fee2e2",
-                                }
-                              }}
-                            >
-                              <MdDelete style={{ fontSize: "16px", color: "#ef4444" }} />
-                            </IconButton>
-                          </Box>
-                        );
-                      })}
+                        display: 'flex',
+                        gap: 1,
+                        overflowX: 'auto',
+                        overflowY: 'hidden',
+                        padding: '8px 4px',
+                        borderRadius: '4px',
+                      }}>
+                      {attachments.map((att, i) => (
+                        <AttachmentList
+                          key={i}
+                          att={att}
+                          onRemove={() => handleRemoveAttachment(i)}
+                          onPreview={() => setPreviewAtt(att)}
+                        />
+                      ))}
                     </Box>
                   )}
                 </Box>
@@ -858,7 +688,7 @@ function CreateTaskModal({
                   <Box className="w-full">
                     <Typography
                       sx={{
-                        fontSize: "14px",
+                        fontSize: '14px',
                         fontWeight: 500,
                         mb: 0.5,
                       }}
@@ -872,10 +702,10 @@ function CreateTaskModal({
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       sx={{
-                        "& .MuiOutlinedInput-root": {
-                          fontSize: "14px",
-                          color: startDate === "" ? "#9ca3af" : "",
-                        }
+                        '& .MuiOutlinedInput-root': {
+                          fontSize: '14px',
+                          color: startDate === '' ? '#9ca3af' : '',
+                        },
                       }}
                     />
                   </Box>
@@ -883,7 +713,7 @@ function CreateTaskModal({
                   <Box className="w-full">
                     <Typography
                       sx={{
-                        fontSize: "14px",
+                        fontSize: '14px',
                         fontWeight: 500,
                         mb: 0.5,
                       }}
@@ -897,10 +727,10 @@ function CreateTaskModal({
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       sx={{
-                        "& .MuiOutlinedInput-root": {
-                          fontSize: "14px",
-                          color: endDate === "" ? "#9ca3af" : "",
-                        }
+                        '& .MuiOutlinedInput-root': {
+                          fontSize: '14px',
+                          color: endDate === '' ? '#9ca3af' : '',
+                        },
                       }}
                     />
                   </Box>
@@ -909,9 +739,9 @@ function CreateTaskModal({
                 <Box>
                   <Typography
                     sx={{
-                      fontSize: "14px",
+                      fontSize: '14px',
                       fontWeight: 500,
-                      mb: 0.5
+                      mb: 0.5,
                     }}
                   >
                     Assign To
@@ -927,12 +757,10 @@ function CreateTaskModal({
                     value={assignedTo}
                     renderValue={(selected) => {
                       if (selected.length === 0) {
-                        return (
-                          <span style={{ color: "#9ca3af" }}>Choose members</span>
-                        );
+                        return <span style={{ color: '#9ca3af' }}>Choose members</span>;
                       }
                       return (
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                           {selected.map((userId: any) => {
                             const member = users.find((u: any) => u._id === userId);
                             return (
@@ -940,7 +768,6 @@ function CreateTaskModal({
                                 key={userId}
                                 label={`${member?.firstName} ${member?.lastName}`}
                                 size="small"
-  
                               />
                             );
                           })}
@@ -948,9 +775,9 @@ function CreateTaskModal({
                       );
                     }}
                     sx={{
-                      fontSize: "14px",
-                      color: "black",
-                      textTransform: "capitalize"
+                      fontSize: '14px',
+                      color: 'black',
+                      textTransform: 'capitalize',
                     }}
                   >
                     {projectMembers.length === 0 ? (
@@ -964,11 +791,11 @@ function CreateTaskModal({
                               sx={{
                                 width: 32,
                                 height: 32,
-                                fontSize: "12px",
-                                bgcolor: "#E0E0E0",
-                                color: "#484c7f",
+                                fontSize: '12px',
+                                bgcolor: '#E0E0E0',
+                                color: '#484c7f',
                                 fontWeight: 600,
-                                textTransform: "uppercase",
+                                textTransform: 'uppercase',
                               }}
                               title={`${member.firstName} ${member.lastName}`}
                             >
@@ -990,7 +817,7 @@ function CreateTaskModal({
                 <Box>
                   <Typography
                     sx={{
-                      fontSize: "14px",
+                      fontSize: '14px',
                       fontWeight: 500,
                       mb: 0.5,
                     }}
@@ -1005,8 +832,8 @@ function CreateTaskModal({
                     error={showError && !priority}
                     onChange={(e) => setPriority(e.target.value)}
                     sx={{
-                      fontSize: "14px",
-                      color: priority === "" ? "#9ca3af" : "",
+                      fontSize: '14px',
+                      color: priority === '' ? '#9ca3af' : '',
                     }}
                   >
                     <MenuItem value="" disabled>
@@ -1033,7 +860,7 @@ function CreateTaskModal({
                   </Select>
 
                   {showError && !priority && (
-                    <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
+                    <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>
                       Priority is required
                     </Typography>
                   )}
@@ -1045,7 +872,7 @@ function CreateTaskModal({
             <Box>
               <Typography
                 sx={{
-                  fontSize: "14px",
+                  fontSize: '14px',
                   fontWeight: 500,
                   mb: 0.5,
                 }}
@@ -1060,8 +887,8 @@ function CreateTaskModal({
                 error={showError && !status}
                 onChange={(e) => setStatus(e.target.value)}
                 sx={{
-                  fontSize: "14px",
-                  color: status === "" ? "#9ca3af" : "",
+                  fontSize: '14px',
+                  color: status === '' ? '#9ca3af' : '',
                 }}
               >
                 <MenuItem value="" disabled>
@@ -1072,30 +899,32 @@ function CreateTaskModal({
                 <MenuItem value="completed">Completed</MenuItem>
               </Select>
               {showError && !status && (
-                <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
+                <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>
                   Status is required
                 </Typography>
               )}
             </Box>
 
-            <Box sx={{ display: "flex", gap: 1.5, pt: 2 }}>
-              <Button fullWidth variant="outlined" onClick={onClose}>
+            <Box sx={{ display: 'flex', gap: 1.5, pt: 2 }}>
+              <Button type="button" fullWidth variant="outlined" onClick={onClose}>
                 Cancel
               </Button>
               <Button
                 fullWidth
-                // variant="contained"
                 type="submit"
                 loading={loading}
                 loadingPosition="end"
-                sx={{ bgcolor: "#9333ea", color: "white" }}
+                sx={{ bgcolor: '#9333ea', color: 'white' }}
               >
-                {isUpdate ? "Update" : "Save"}
+                {isUpdate ? 'Update' : 'Save'}
               </Button>
             </Box>
           </Box>
         </Box>
       </Modal>
+      
+      {/* Preview Modal */}
+      {previewAtt && <AttachmentPreviewModal attachment={previewAtt} onClose={() => setPreviewAtt(null)} />}
 
       <Snackbar
         open={snackbar.open}
@@ -1103,10 +932,7 @@ function CreateTaskModal({
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         sx={{ mt: 10 }}
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.type}
-        >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.type}>
           {snackbar.message}
         </Alert>
       </Snackbar>

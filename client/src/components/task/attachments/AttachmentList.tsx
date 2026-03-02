@@ -1,131 +1,199 @@
-import { useState, useEffect } from "react";
+import { Box, IconButton, Typography } from '@mui/material';
 import {
-    Typography,
-    IconButton,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemButton,
-    Box,
-    CircularProgress,
-} from "@mui/material";
-import {
-    Delete,
-    InsertDriveFile,
-    Link as LinkIcon,
-} from "@mui/icons-material";
-import api from "../../api/axiosConfig";
+  BsFiletypeDoc,
+  BsFiletypeDocx,
+  BsFiletypePpt,
+  BsFiletypePptx,
+  BsFiletypeXls,
+  BsFiletypeXlsx,
+} from 'react-icons/bs';
+import { MdDelete, MdInsertDriveFile, MdLink } from 'react-icons/md';
 
-interface AttachmentListProps {
-    taskId: string;
-    refresh: boolean;
+interface AttachmentItem {
+  _id?: string;
+  name: string;
+  url: string;
+  type: 'file' | 'link' | 'image' | 'video';
+  file?: File;
+  isExisting: boolean;
+  uploadedAt?: string;
+  previewUrl?: string;
 }
 
-function AttachmentList({ taskId, refresh }: AttachmentListProps) {
-    const [attachments, setAttachments] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
+function AttachmentList({
+  att,
+  onRemove,
+  onPreview,
+}: {
+  att: AttachmentItem;
+  onRemove: () => void;
+  onPreview: () => void;
+}) {
+  const ext = att.name?.split('.').pop()?.toLowerCase() ?? '';
+  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+  const isVideo = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'].includes(ext);
+  const isDoc = ['txt', 'pdf'].includes(ext);
+  const isOffice = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(ext);
 
-    const fetchAttachments = async () => {
-        setLoading(true);
-        try {
-            const response = await api.get(`/attachments/task/${taskId}`);
-            setAttachments(response.data?.data || response.data || []);
-        } catch (error) {
-            console.error("Fetch attachments error:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const thumbUrl = att.previewUrl || (att.isExisting ? att.url : '');
 
-    useEffect(() => {
-        if (taskId) {
-            fetchAttachments();
-        }
-    }, [taskId, refresh]);
+  const formatUploadDate = (dateString: string) => {
+    if (!dateString) return '';
 
-    const handleDelete = async (attachmentId: string) => {
-        if (!confirm("Delete this attachment?")) return;
+    const date = new Date(dateString);
 
-        try {
-            await api.delete(`/attachments/${attachmentId}`);
-            fetchAttachments();
-        } catch (error) {
-            console.error("Delete attachment error:", error);
-        }
-    };
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
 
-    const getFileIcon = (attachment: any) => {
-        if (attachment.type === "link") {
-            return <LinkIcon />;
-        }
-        return <InsertDriveFile />;
-    };
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
 
-    const formatSize = (bytes: number) => {
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-    };
-
-    if (attachments.length === 0) {
-        return (
-            <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                No attachments
-            </Typography>
-        );
+  const getFileIcon = (ext: string) => {
+    switch (ext) {
+      case 'xlsx':
+        return <BsFiletypeXlsx />;
+      case 'xls':
+        return <BsFiletypeXls />;
+      case 'docx':
+        return <BsFiletypeDocx />;
+      case 'doc':
+        return <BsFiletypeDoc />;
+      case 'pptx':
+        return <BsFiletypePptx />;
+      case 'ppt':
+        return <BsFiletypePpt />;
+      default:
+        return '📎';
     }
+  };
 
-    return (
-        <List dense>
-            {loading ? (
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        py: 10,
-                    }}
-                >
-                    <CircularProgress />
-                </Box>
-            ) : attachments.map((attachment) => (
-                <ListItem
-                    key={attachment._id}
-                    secondaryAction={
-                        <IconButton
-                            edge="end"
-                            size="small"
-                            onClick={() => handleDelete(attachment._id)}
-                        >
-                            <Delete fontSize="small" />
-                        </IconButton>
-                    }
-                    disablePadding
-                >
-                    <ListItemButton
-                        onClick={() => window.open(attachment.url, "_blank")}
-                        sx={{ borderRadius: 1 }}
-                    >
-                        {getFileIcon(attachment)}
-                        <ListItemText
-                            primary={attachment.displayText || attachment.name}
-                            secondary={
-                                <>
-                                    {attachment.type === "link" && attachment.domain}
-                                    {attachment.type === "file" &&
-                                        attachment.size &&
-                                        formatSize(attachment.size)}
-                                    {" • "}
-                                    {new Date(attachment.uploadedAt).toLocaleDateString()}
-                                </>
-                            }
-                            sx={{ ml: 2 }}
-                        />
-                    </ListItemButton>
-                </ListItem>
-            ))}
-        </List>
-    );
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        flexShrink: 0,
+        width: '140px',
+        border: '1px solid #e5e7eb',
+        borderRadius: '6px',
+        overflow: 'hidden',
+        backgroundColor: '#ffffff',
+        transition: 'all 0.2s',
+        '&:hover': {
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          borderColor: '#9333ea',
+        },
+      }}
+      onClick={onPreview}
+    >
+      {/* Thumbnail */}
+      <Box
+        sx={{
+          height: '90px',
+          backgroundColor: '#f9fafb',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: att.type === 'link' || att.url ? 'pointer' : 'default',
+          overflow: 'hidden',
+        }}
+      >
+        {isImage && thumbUrl ? (
+          <img
+            src={thumbUrl}
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : isVideo ? (
+          <video
+            src={thumbUrl}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        ) : isDoc ? (
+          <iframe
+            src={thumbUrl}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              pointerEvents: 'none',
+            }}
+            title={att.name}
+          />
+        ) : isOffice ? (
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
+          >
+            <Typography variant="h3" sx={{ fontSize: 48 }}>
+              {getFileIcon(ext || '')}
+            </Typography>
+          </Box>
+        ) : att.type === 'link' ? (
+          <MdLink style={{ fontSize: 22, color: '#9333ea' }} />
+        ) : (
+          <MdInsertDriveFile style={{ fontSize: 22, color: '#6b7280' }} />
+        )}
+      </Box>
+
+      {/* Name */}
+      <Box sx={{ padding: '8px' }}>
+        <Typography
+          sx={{
+            fontSize: '12px',
+            fontWeight: 500,
+            color: '#111827',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            lineHeight: '16px',
+          }}
+          title={att.name}
+        >
+          {att.name}
+        </Typography>
+
+        {/* Upload date/time */}
+        {att.uploadedAt && (
+          <Typography
+            sx={{
+              fontSize: '10px',
+              color: '#6b7280',
+              lineHeight: '14px',
+            }}
+          >
+            {att.uploadedAt ? formatUploadDate(att.uploadedAt) : 'Uploaded'}
+          </Typography>
+        )}
+      </Box>
+
+      {/* Delete */}
+      <IconButton
+        size="small"
+        onClick={(e: any) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        sx={{
+          position: 'absolute',
+          top: '4px',
+          right: '4px',
+          padding: '4px',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          '&:hover': {
+            backgroundColor: '#fee2e2',
+          },
+        }}
+      >
+        <MdDelete style={{ fontSize: '16px', color: '#ef4444' }} />
+      </IconButton>
+    </Box>
+  );
 }
 
 export default AttachmentList;

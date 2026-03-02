@@ -1,29 +1,22 @@
-import client from "../config/database.js";
-import { ObjectId } from "mongodb";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+import client from '../config/database.js';
+import { ObjectId } from 'mongodb';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
+import 'dotenv/config';
 
-// Cấu hình multer để lưu file
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = './uploads';
-    // Tạo thư mục nếu chưa tồn tại
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    // Tạo tên file unique: timestamp-random-filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  }
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const storage = multer.memoryStorage();
 
 // Filter chỉ cho phép các loại file nhất định
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|mp4|pdf|doc|docx|xls|xlsx|txt|zip|rar/;
+  const allowedTypes = /jpeg|jpg|png|gif|mp4|pdf|doc|docx|xls|xlsx|txt|webp|zip|rar/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
 
@@ -37,27 +30,40 @@ const fileFilter = (req, file, cb) => {
 export const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 
+    fileSize: 10 * 1024 * 1024,
   },
-  fileFilter: fileFilter
+  fileFilter: fileFilter,
 });
 
-// Upload file endpoint
+// Upload file
 export const uploadFile = async (req, res) => {
   try {
-    if (!req.file) {
+    const file = req.file;
+    if (!file) {
       return res.status(400).json({ error: 'No file have been uploaded' });
     }
 
-    // Trả về URL của file (có thể là relative path hoặc full URL)
-    const fileUrl = `/uploads/${req.file.filename}`;
-    
-    res.json({
-      success: true,
-      url: fileUrl,
-      filename: req.file.originalname,
-      size: req.file.size
-    });
+    const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    const fileName = file.originalname.split('.')[0];
+
+    const fileExt = path.extname(file.originalname).toLowerCase();
+    const isRawFile = /txt|doc|docx|xls|xlsx|zip|rar/.test(fileExt.replace('.', ''));
+    const isPdfFile = fileExt === '.pdf';
+
+    cloudinary.uploader.upload(
+      dataUrl,
+      {
+        public_id: isRawFile ? fileName + fileExt : fileName,
+        resource_type: isRawFile ? 'raw' : isPdfFile ? 'image' : 'auto',
+        access_mode: 'public',      
+      },
+      (err, result) => {
+        if (err) {
+          return res.status(500).json({ error: 'Cloudinary upload failed.', detail: err });
+        }
+        res.json({ message: 'File uploaded successfully.', url: result.secure_url });
+      }
+    );
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -67,8 +73,8 @@ export const uploadFile = async (req, res) => {
 export const getAttachments = async (req, res) => {
   try {
     await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("attachments");
+    const db = client.db('db_pms');
+    const collection = db.collection('attachments');
     const results = await collection.find({}).toArray();
     res.json(results);
   } catch (err) {
@@ -80,17 +86,17 @@ export const getAttachments = async (req, res) => {
 export const createAttachment = async (req, res) => {
   try {
     await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("attachments");
+    const db = client.db('db_pms');
+    const collection = db.collection('attachments');
 
     const { taskId, url, name, type, createdBy } = req.body;
     const newAttachment = {
       url: url,
       name: name,
-      type: type, 
+      type: type,
       taskId: taskId,
       createdBy: createdBy,
-      uploadedAt: new Date()
+      uploadedAt: new Date(),
     };
     const result = await collection.insertOne(newAttachment);
     res.json({ ...newAttachment, _id: result.insertedId });
@@ -103,8 +109,8 @@ export const createAttachment = async (req, res) => {
 export const deleteAttachment = async (req, res) => {
   try {
     await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("attachments");
+    const db = client.db('db_pms');
+    const collection = db.collection('attachments');
     const attachmentId = req.params.id;
 
     // Lấy thông tin attachment trước khi xóa
@@ -113,7 +119,7 @@ export const deleteAttachment = async (req, res) => {
     });
 
     if (!attachment) {
-      return res.status(404).json({ error: "Attachment không tồn tại" });
+      return res.status(404).json({ error: 'Attachment không tồn tại' });
     }
 
     // Nếu là file (không phải link), xóa file khỏi server
@@ -130,10 +136,10 @@ export const deleteAttachment = async (req, res) => {
     });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ error: "Không thể xóa attachment" });
+      return res.status(404).json({ error: 'Không thể xóa attachment' });
     }
 
-    res.json({ success: true, message: "Attachment đã được xóa" });
+    res.json({ success: true, message: 'Attachment đã được xóa' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -143,8 +149,8 @@ export const deleteAttachment = async (req, res) => {
 export const getAttachmentsByTaskId = async (req, res) => {
   try {
     await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("attachments");
+    const db = client.db('db_pms');
+    const collection = db.collection('attachments');
     const taskId = req.params.taskId;
 
     const results = await collection.find({ taskId: taskId }).toArray();

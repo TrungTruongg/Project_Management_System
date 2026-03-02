@@ -16,6 +16,9 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import api from '../api/axiosConfig';
 import { MoreHoriz } from '@mui/icons-material';
@@ -24,28 +27,18 @@ import { useNavigate } from 'react-router-dom';
 const UserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [actionAnchorEl, setActionAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    type: 'success' as 'success' | 'error',
+  });
   const navigate = useNavigate();
 
   const totalUsers = users.length;
   const activeUsers = users.filter((user) => user.active).length;
   const totalLeaders = users.filter((user) => user.role === 'leader').length;
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get('/users');
-      setUsers(response.data);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    }
-  };
-
-  const handleViewProfile = (user: any) => {
-    navigate('/admin/user-profile', { state: { userId: user._id } });
-  };
 
   const usersTotalCards = [
     {
@@ -65,8 +58,59 @@ const UserManagement = () => {
     },
   ];
 
-  const handleOpenAction = (event: React.MouseEvent<HTMLElement>) => {
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/users');
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLockUser = async (userId: string, isLocked: boolean) => {
+    try {
+      if (isLocked) {
+        await api.delete(`/locks/${userId}`);
+        setSnackbar({ open: true, message: 'Access has been restored', type: 'success' });
+      } else {
+        await api.post(`/locks/${userId}`);
+        setSnackbar({
+          open: true,
+          message: 'Access has been temporarily suspended',
+          type: 'success',
+        });
+      }
+      fetchUsers();
+      setActionAnchorEl(null);
+    } catch (error: any) {
+      console.error('Failed to lock/unlock user:', error);
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || 'Action failed',
+        type: 'error',
+      });
+    }
+  };
+
+  const handleViewProfile = (user: any) => {
+    navigate('/admin/user-profile', { state: { userId: user._id } });
+  };
+
+  const handleOpenAction = (event: React.MouseEvent<HTMLElement>, user: any) => {
     setActionAnchorEl(event.currentTarget);
+    setSelectedUser(user);
+  };
+
+  const handleCloseAction = () => {
+    setActionAnchorEl(null);
+    setSelectedUser(null);
   };
 
   return (
@@ -81,33 +125,41 @@ const UserManagement = () => {
           individual users or set app access permissions to control other ways users can access your
           app. Go to app access settings.
         </Typography>
-        <Grid container spacing={2}>
-          {usersTotalCards.map((userCard, index) => (
-            <Grid size={{ xs: 10, md: 4 }} key={index}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #DFE1E6',
-                  borderRadius: 2,
-                }}
-              >
-                <CardContent
-                  sx={{
-                    p: 2,
-                    '&:last-child': { pb: 2 },
-                  }}
-                >
-                  <Typography fontSize="14px" sx={{ color: '#292A2E' }}>
-                    {userCard.title}
-                  </Typography>
-                  <Typography fontSize="20px" sx={{ fontWeight: 500, color: '#292A2E' }}>
-                    {userCard.total}
-                  </Typography>
-                </CardContent>
-              </Card>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            <Grid container spacing={2}>
+              {usersTotalCards.map((userCard, index) => (
+                <Grid size={{ xs: 10, md: 4 }} key={index}>
+                  <Card
+                    elevation={0}
+                    sx={{
+                      border: '1px solid #DFE1E6',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <CardContent
+                      sx={{
+                        p: 2,
+                        '&:last-child': { pb: 2 },
+                      }}
+                    >
+                      <Typography fontSize="14px" sx={{ color: '#292A2E' }}>
+                        {userCard.title}
+                      </Typography>
+                      <Typography fontSize="20px" sx={{ fontWeight: 500, color: '#292A2E' }}>
+                        {userCard.total}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
+          </>
+        )}
       </Box>
 
       <TableContainer>
@@ -161,7 +213,11 @@ const UserManagement = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.length === 0 ? (
+            {loading ? (
+              <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
+                <CircularProgress />
+              </TableCell>
+            ) : users.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
                   <Typography fontStyle="italic" color="text.secondary">
@@ -224,11 +280,14 @@ const UserManagement = () => {
                     </TableCell>
 
                     <TableCell>
-                      <Chip
-                        label={user.active ? 'Active' : 'Inactive'}
-                        color={user.active ? 'success' : 'default'}
-                        size="small"
-                      />
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Chip
+                          label={user.active ? 'Active' : 'Inactive'}
+                          color={user.active ? 'success' : 'default'}
+                          size="small"
+                        />
+                        {user.isLocked && <Chip label="Locked" color="error" size="small" />}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       {new Date(user.lastLogin).toLocaleDateString('en-GB', {
@@ -239,30 +298,9 @@ const UserManagement = () => {
                     </TableCell>
 
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <IconButton onClick={handleOpenAction}>
+                      <IconButton onClick={(e) => handleOpenAction(e, user)}>
                         <MoreHoriz />
                       </IconButton>
-
-                      <Menu
-                        elevation={0}
-                        open={Boolean(actionAnchorEl)}
-                        onClose={() => setActionAnchorEl(null)}
-                        anchorEl={actionAnchorEl}
-                      >
-                        <MenuItem>
-                          <Typography fontSize="14px">Add to group</Typography>
-                        </MenuItem>
-
-                        <MenuItem>
-                          <Typography fontSize="14px">Temporarily suspend access</Typography>
-                        </MenuItem>
-
-                        <MenuItem>
-                          <Typography fontSize="14px" color="warning">
-                            Delete User
-                          </Typography>
-                        </MenuItem>
-                      </Menu>
                     </TableCell>
                   </TableRow>
                 );
@@ -271,6 +309,50 @@ const UserManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Menu
+        elevation={0}
+        open={Boolean(actionAnchorEl)}
+        onClose={handleCloseAction}
+        anchorEl={actionAnchorEl}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem>
+          <Typography fontSize="14px">Add to group</Typography>
+        </MenuItem>
+
+        <MenuItem
+          onClick={() => selectedUser && handleLockUser(selectedUser._id, selectedUser.isLocked)}
+        >
+          <Typography fontSize="14px">
+            {selectedUser?.isLocked ? 'Unlock access' : 'Temporarily suspend access'}
+          </Typography>
+        </MenuItem>
+
+        <MenuItem>
+          <Typography fontSize="14px" color="warning">
+            Delete User
+          </Typography>
+        </MenuItem>
+      </Menu>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.type}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
