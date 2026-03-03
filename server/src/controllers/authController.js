@@ -2,10 +2,6 @@ import client from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import { transporter, generateVerificationCode } from '../utils/helper.js';
 import jwt from 'jsonwebtoken';
-import sgMail from '@sendgrid/mail';
-import 'dotenv/config';
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Login
 export const login = async (req, res) => {
@@ -199,8 +195,8 @@ export const resetPassword = async (req, res) => {
     };
 
     try {
-      //await transporter.sendMail(mailOptions);
-      await sgMail.send(mailOptions);
+      await transporter.sendMail(mailOptions);
+      // await sgMail.send(mailOptions);
 
       res.json({
         success: true,
