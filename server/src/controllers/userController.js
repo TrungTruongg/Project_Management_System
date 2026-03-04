@@ -2,7 +2,7 @@ import client from "../config/database.js";
 import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
-import { transporter, generateVerificationCode } from "../utils/helper.js";
+import { transporter, generateVerificationCode, sendVerificationEmail } from "../utils/helper.js";
 
 export const getUsers = async (req, res) => {
   try {
@@ -177,20 +177,22 @@ export const requestEmailChange = async (req, res) => {
     );
 
     // Gửi email verification code
-    const mailOptions = {
-      from: 'noreply@sandbox8cd4247ad64149e58f2a5a059bb1572c.mailgun.org',
-      to: newEmail.toLowerCase(),
-      subject: "Email Change - Verification Code",
-      html: `
-        <div class="code-box">
-          <div class="code">${verificationCode}</div> 
-        </div>
-        <p><strong>This code will expire in 10 minutes.</strong></p>
-      `,
-    };
+    // const mailOptions = {
+    //   from: 'noreply@sandbox8cd4247ad64149e58f2a5a059bb1572c.mailgun.org',
+    //   to: newEmail.toLowerCase(),
+    //   subject: "Email Change - Verification Code",
+    //   html: `
+    //     <div class="code-box">
+    //       <div class="code">${verificationCode}</div> 
+    //     </div>
+    //     <p><strong>This code will expire in 10 minutes.</strong></p>
+    //   `,
+    // };
 
     try {
-      await transporter.sendMail(mailOptions);
+      //await transporter.sendMail(mailOptions);
+
+      await sendVerificationEmail(newEmail.toLowerCase(), verificationCode);
 
       res.json({
         success: true,

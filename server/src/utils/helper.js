@@ -23,7 +23,7 @@ export const sendVerificationEmail = async (toEmail, verificationCode) => {
   await mg.messages.create(process.env.MAILGUN_DOMAIN, {
     from: `PMS App <mailgun@${process.env.MAILGUN_DOMAIN}>`,
     to: [toEmail],
-    subject: 'Password Reset - Verification Code',
+    subject: 'Verification Code',
     html: `
       <p>Your verification code is: <strong>${verificationCode}</strong></p>
       <p>This code will expire in 10 minutes.</p>
