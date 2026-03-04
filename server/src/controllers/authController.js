@@ -1,6 +1,6 @@
 import client from '../config/database.js';
 import bcrypt from 'bcryptjs';
-import { transporter, generateVerificationCode } from '../utils/helper.js';
+import { generateVerificationCode, sendVerificationEmail } from '../utils/helper.js';
 import jwt from 'jsonwebtoken';
 
 // Login
@@ -182,21 +182,23 @@ export const resetPassword = async (req, res) => {
     );
 
     // Send the password reset email
-    const mailOptions = {
-      to: user.email,
-      from: 'noreply@sandbox8cd4247ad64149e58f2a5a059bb1572c.mailgun.org',
-      subject: 'Password Reset - Verification Code',
-      html: `
-        <div class="code-box">
-          <div class="code">${verificationCode}</div> 
-        </div>
-        <p><strong>This code will expire in 10 minutes.</strong></p>
-      `,
-    };
+    // const mailOptions = {
+    //   to: user.email,
+    //   from: 'noreply@sandbox8cd4247ad64149e58f2a5a059bb1572c.mailgun.org',
+    //   subject: 'Password Reset - Verification Code',
+    //   html: `
+    //     <div class="code-box">
+    //       <div class="code">${verificationCode}</div> 
+    //     </div>
+    //     <p><strong>This code will expire in 10 minutes.</strong></p>
+    //   `,
+    // };
 
     try {
-      await transporter.sendMail(mailOptions);
+      //await transporter.sendMail(mailOptions);
       // await sgMail.send(mailOptions);
+
+      await sendVerificationEmail(user.email, verificationCode);
 
       res.json({
         success: true,
