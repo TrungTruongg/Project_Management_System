@@ -178,7 +178,7 @@ export const requestEmailChange = async (req, res) => {
 
     // Gửi email verification code
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: 'noreply@sandbox8cd4247ad64149e58f2a5a059bb1572c.mailgun.org',
       to: newEmail.toLowerCase(),
       subject: "Email Change - Verification Code",
       html: `
