@@ -183,8 +183,8 @@ export const resetPassword = async (req, res) => {
 
     // Send the password reset email
     const mailOptions = {
-      to: user.email,
       from: process.env.EMAIL_USER,
+      to: user.email,
       subject: 'Password Reset - Verification Code',
       html: `
         <div class="code-box">
@@ -195,6 +195,13 @@ export const resetPassword = async (req, res) => {
     };
 
     try {
+      try {
+        await transporter.verify();
+        console.log('Server is ready to take our messages');
+      } catch (err) {
+        console.error('Verification failed', err);
+      }
+
       await transporter.sendMail(mailOptions);
       // await sgMail.send(mailOptions);
 
