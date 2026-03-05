@@ -80,13 +80,12 @@ function Register() {
         lastName: lastName,
         phone: phone,
         location: location,
+        role: "user",
         avatar: "",
         joinDate: new Date().toISOString().split("T")[0],
       };
 
       const response = await api.post("/auth/register", newUser);
-
-      console.log(response.data)
 
       if (response.data) {
         setUser(response.data);

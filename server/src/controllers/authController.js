@@ -28,7 +28,7 @@ export const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+        message: 'Email or password is incorrect',
       });
     }
 
@@ -49,33 +49,30 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
+      { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
+    const newRefreshToken = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+    
     await collection.updateOne(
       { _id: user._id },
-      {
-        $set: {
-          lastLogin: new Date(),
-        },
-      }
+      { $set: { lastLogin: new Date(), refreshToken: newRefreshToken } }
     );
 
     const { password: _, ...userResponse } = user;
-
-    // if (user.status === "blocked") {
-    //   return res.status(403).json({
-    //     message: "Your account has been blocked. Please contact support.",
-    //   });
-    // }
 
     res.json({
       success: true,
       data: {
         user: userResponse,
         token,
+        refreshToken: newRefreshToken
       },
       message: 'Login successful',
     });
@@ -113,6 +110,7 @@ export const register = async (req, res) => {
       password: hashedPassword,
       phone: phone || null,
       location: location || null,
+      role: 'user',
       active: true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -188,7 +186,7 @@ export const resetPassword = async (req, res) => {
     //   subject: 'Password Reset - Verification Code',
     //   html: `
     //     <div class="code-box">
-    //       <div class="code">${verificationCode}</div> 
+    //       <div class="code">${verificationCode}</div>
     //     </div>
     //     <p><strong>This code will expire in 10 minutes.</strong></p>
     //   `,
@@ -196,8 +194,6 @@ export const resetPassword = async (req, res) => {
 
     try {
       //await transporter.sendMail(mailOptions);
-      // await sgMail.send(mailOptions);
-
       await sendVerificationEmail(user.email, verificationCode);
 
       res.json({
@@ -406,5 +402,36 @@ export const googleAuth = async (req, res, next) => {
   } catch (error) {
     console.error('Google auth error:', error);
     next(error);
+  }
+};
+
+export const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, message: 'Refresh token is required' });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    await client.connect();
+    const db = client.db('db_pms');
+    const user = await db.collection('users').findOne({ _id: new ObjectId(decoded.id) });
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(403).json({ success: false, message: 'Invalid refresh token' });
+    }
+
+    const newAccessToken = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' } 
+    );
+
+    res.json({ success: true, token: newAccessToken });
+  } catch (err) {
+    return res.status(403).json({ success: false, message: 'Refresh token expired or invalid' });
   }
 };

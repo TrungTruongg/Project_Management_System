@@ -34,6 +34,8 @@ export const updateUser = async (req, res) => {
       firstName,
       lastName,
       password,
+      currentPassword, 
+      newPassword,
       phone,
       location
     } = req.body;
@@ -56,9 +58,17 @@ export const updateUser = async (req, res) => {
     if (phone !== undefined) updateFields.phone = phone;
     if (location !== undefined) updateFields.location = location;
 
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updateFields.password = hashedPassword;
+    if (currentPassword && newPassword) {
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ success: false, message: "Current password is incorrect" });
+      }
+      updateFields.password = await bcrypt.hash(newPassword, 10);
+    }
+
+    // Reset Password: 
+    if (password && !currentPassword) {
+      updateFields.password = await bcrypt.hash(password, 10);
     }
 
     const result = await collection.findOneAndUpdate(
@@ -191,7 +201,6 @@ export const requestEmailChange = async (req, res) => {
 
     try {
       //await transporter.sendMail(mailOptions);
-
       await sendVerificationEmail(newEmail.toLowerCase(), verificationCode);
 
       res.json({
@@ -201,7 +210,6 @@ export const requestEmailChange = async (req, res) => {
     } catch (err) {
       console.error("Failed to send email change verification:", err);
 
-      // Xóa verification code nếu gửi email thất bại
       await collection.updateOne(
         { _id: user._id },
         {
@@ -310,10 +318,9 @@ export const verifyEmailChange = async (req, res) => {
       { returnDocument: "after" }
     );
 
-    // Gửi email thông báo email đã được thay đổi (gửi về cả 2 email)
     const confirmationMailOptions = {
-      from: process.env.EMAIL_USER,
-      to: [user.email, newEmail.toLowerCase()], // Gửi cho cả email cũ và mới
+      from: `My-Task <noreply@${process.env.MAILGUN_DOMAIN}>`,
+      to: [user.email, newEmail.toLowerCase()],
       subject: "Email Changed Successfully",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

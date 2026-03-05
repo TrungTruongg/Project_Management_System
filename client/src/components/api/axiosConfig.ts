@@ -1,54 +1,55 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://project-management-system-rb5c.onrender.com/api",
+  baseURL:
+    import.meta.env.VITE_API_URL || 'https://project-management-system-rb5c.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: false,
 });
 
-// Interceptor để tự động thêm token
+// Add a request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor để xử lý response errors
+// Interceptor to handle response errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      const errorMessage = error.response.data?.error || 
-                          error.response.data?.message || "";
-      
-      const isAuthenticationError = 
-        errorMessage.toLowerCase().includes("token") ||
-        errorMessage.toLowerCase().includes("expired") ||
-        errorMessage.toLowerCase().includes("invalid token") ||
-        errorMessage.toLowerCase().includes("not authenticated") ||
-        errorMessage === "Unauthorized"; 
-      
-      if (isAuthenticationError) {
-        localStorage.clear();
-        window.location.href = "/login";
-      } else {
-        console.log("Validation error, staying on page");
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If the error status is 401 and there is no originalRequest._retry flag,
+    // it means the token has expired and we need to refresh it
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const response = await axios.post('/auth/refresh-token', { refreshToken });
+        const { token } = response.data;
+
+        localStorage.setItem('token', token);
+
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return axios(originalRequest);
+      } catch (error) {
+        window.location.href = '/login';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
-
 
 export default api;

@@ -11,22 +11,21 @@ import {
   Snackbar,
   TextField,
   Typography,
-} from "@mui/material";
-import { useState } from "react";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/Visibility";
-import { useUser } from "./context/UserContext";
-import api from "./api/axiosConfig";
-import ChangeEmailAddressDialog from "./auth/ChangeEmailAddressDialog";
+} from '@mui/material';
+import { useState } from 'react';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useUser } from './context/UserContext';
+import api from './api/axiosConfig';
+import ChangeEmailAddressDialog from './auth/ChangeEmailAddressDialog';
 
 const ProfileSettings = () => {
   const { user, setUser } = useUser();
   const [form, setForm] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
   const [newAvatar, setNewAvatar] = useState<string | null>(null);
   const [show, setShow] = useState({
@@ -36,15 +35,13 @@ const ProfileSettings = () => {
   });
   const [snackbar, setSnackbar] = useState({
     open: false,
-    message: "",
-    type: "success" as "success" | "error",
+    message: '',
+    type: 'success' as 'success' | 'error',
   });
   const [openChangeEmailDialog, setOpenChangeEmailDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleAvatarChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -67,8 +64,8 @@ const ProfileSettings = () => {
     if (!form.firstName.trim()) {
       setSnackbar({
         open: true,
-        message: "First name is required",
-        type: "error",
+        message: 'First name is required',
+        type: 'error',
       });
       return;
     }
@@ -76,8 +73,8 @@ const ProfileSettings = () => {
     if (!form.lastName.trim()) {
       setSnackbar({
         open: true,
-        message: "Last name is required",
-        type: "error",
+        message: 'Last name is required',
+        type: 'error',
       });
       return;
     }
@@ -87,8 +84,8 @@ const ProfileSettings = () => {
       if (!form.currentPassword) {
         setSnackbar({
           open: true,
-          message: "Please enter current password",
-          type: "error",
+          message: 'Please enter current password',
+          type: 'error',
         });
         return;
       }
@@ -96,8 +93,8 @@ const ProfileSettings = () => {
       if (!form.newPassword) {
         setSnackbar({
           open: true,
-          message: "Please enter new password",
-          type: "error",
+          message: 'Please enter new password',
+          type: 'error',
         });
         return;
       }
@@ -105,25 +102,24 @@ const ProfileSettings = () => {
       if (form.newPassword !== form.confirmPassword) {
         setSnackbar({
           open: true,
-          message: "New passwords do not match",
-          type: "error",
+          message: 'New passwords do not match',
+          type: 'error',
         });
         return;
       }
 
-      // Check correct current password
-      if (form.currentPassword !== user?.password) {
+      if (form.newPassword === form.currentPassword) {
         setSnackbar({
           open: true,
-          message: "Current password is incorrect",
-          type: "error",
+          message: 'New password must be different from current password',
+          type: 'error',
         });
         return;
       }
     }
 
     return true;
-  }
+  };
 
   const handleUpdate = async () => {
     if (!user) return;
@@ -133,52 +129,50 @@ const ProfileSettings = () => {
 
     setLoading(true);
     try {
-      const updatedData = {
-        ...user,
+      const updatedData: any = {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
-        avatar: newAvatar || user.avatar || "",
-        // ...(form.newPassword && { password: form.newPassword }),
+        avatar: newAvatar || user.avatar || '',
       };
 
       if (form.newPassword) {
-        updatedData.password = form.newPassword;
+        updatedData.currentPassword = form.currentPassword;
+        updatedData.newPassword = form.newPassword;
       }
 
-      const response = await api.put(`/users/update/${user._id}`,
-        updatedData
-      );
+      const response = await api.put(`/users/update/${user._id}`, updatedData);
 
       setUser(response.data.data);
-      localStorage.setItem("user", JSON.stringify(response.data.data));
+      localStorage.setItem('user', JSON.stringify(response.data.data));
 
       if (response.data.success) {
         const updatedUser = response.data.user;
+
         setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        localStorage.setItem('user', JSON.stringify(updatedUser));
 
         // Reset password fields if password changed
         if (form.newPassword) {
           setForm((prev) => ({
             ...prev,
-            currentPassword: "",
-            newPassword: "",
-            confirmPassword: "",
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
           }));
         }
 
         setSnackbar({
           open: true,
-          message: "Profile updated successfully!",
-          type: "success",
+          message: 'Profile updated successfully!',
+          type: 'success',
         });
       }
     } catch (error: any) {
-      console.error("Error updating avatar:", error);
+      console.error('Error updating avatar:', error);
       setSnackbar({
         open: true,
-        message: error.response?.data?.error || "Failed to update profile",
-        type: "error",
+        message: error.response?.data?.message || 'Failed to update profile', 
+        type: 'error',
       });
     } finally {
       setLoading(false);
@@ -196,8 +190,8 @@ const ProfileSettings = () => {
   const handleEmailChangeSuccess = () => {
     setSnackbar({
       open: true,
-      message: "Email changed successfully!",
-      type: "success",
+      message: 'Email changed successfully!',
+      type: 'success',
     });
   };
 
@@ -205,19 +199,19 @@ const ProfileSettings = () => {
     <>
       <Grid
         sx={{
-          width: "60%",
-          display: "flex",
-          flexDirection: "column",
-          justifySelf: "center",
+          width: '60%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifySelf: 'center',
           gap: 3,
         }}
       >
         <Card
           elevation={0}
           sx={{
-            border: "1px solid #e0e0e0",
+            border: '1px solid #e0e0e0',
             borderRadius: 2,
-            transition: "all 0.3s",
+            transition: 'all 0.3s',
           }}
         >
           <CardContent sx={{ p: 3 }}>
@@ -227,73 +221,61 @@ const ProfileSettings = () => {
 
             <Box
               sx={{
-                display: "flex",
-                flexDirection: "column",
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              <TextField
-                fullWidth
-                size="small"
-                name="email"
-                value={user?.email}
-                disabled
-              />       
+              <TextField fullWidth size="small" name="email" value={user?.email} disabled />
             </Box>
 
-             <Button variant="text" onClick={handleOpenChangeEmailDialog} sx={{ mt: 1, textTransform: "none", textDecoration: "underline" }}>
-                Change Email Address
-              </Button>
+            <Button
+              variant="text"
+              onClick={handleOpenChangeEmailDialog}
+              sx={{ mt: 1, textTransform: 'none', textDecoration: 'underline' }}
+            >
+              Change Email Address
+            </Button>
           </CardContent>
         </Card>
 
         <Card
           elevation={0}
           sx={{
-            border: "1px solid #e0e0e0",
+            border: '1px solid #e0e0e0',
             borderRadius: 2,
-            transition: "all 0.3s",
+            transition: 'all 0.3s',
           }}
         >
           <CardContent sx={{ p: 3 }}>
-            {["currentPassword", "newPassword", "confirmPassword"].map(
-              (field, idx) => {
-                const labels = [
-                  "Current Password",
-                  "New Password",
-                  "Confirm New Password",
-                ];
-                const showKey = (["current", "new", "confirm"] as const)[idx];
-                return (
-                  <Box key={field} sx={{ mb: 2 }}>
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                      {labels[idx]}
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      type={show[showKey] ? "text" : "password"}
-                      size="small"
-                      value={(form as any)[field]}
-                      onChange={(e) => handleChange(field, e.target.value)}
-                      slotProps={{
-                        input: {
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton onClick={() => toggleShow(showKey)}>
-                                {show[showKey] ? (
-                                  <Visibility />
-                                ) : (
-                                  <VisibilityOff />
-                                )}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
-                  </Box>
-                );
-              }
-            )}
+            {['currentPassword', 'newPassword', 'confirmPassword'].map((field, idx) => {
+              const labels = ['Current Password', 'New Password', 'Confirm New Password'];
+              const showKey = (['current', 'new', 'confirm'] as const)[idx];
+              return (
+                <Box key={field} sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                    {labels[idx]}
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    type={show[showKey] ? 'text' : 'password'}
+                    size="small"
+                    value={(form as any)[field]}
+                    onChange={(e) => handleChange(field, e.target.value)}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={() => toggleShow(showKey)} size='small' edge="end">
+                              {show[showKey] ? <Visibility /> : <VisibilityOff />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+                </Box>
+              );
+            })}
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle1" sx={{ mb: 1 }}>
@@ -303,8 +285,8 @@ const ProfileSettings = () => {
                 fullWidth
                 size="small"
                 value={form.firstName}
-                onChange={(e) => handleChange("firstName", e.target.value)}
-                sx={{ "& .MuiInputBase-input": { textTransform: "capitalize" } }}
+                onChange={(e) => handleChange('firstName', e.target.value)}
+                sx={{ '& .MuiInputBase-input': { textTransform: 'capitalize' } }}
               />
             </Box>
 
@@ -316,18 +298,18 @@ const ProfileSettings = () => {
                 fullWidth
                 size="small"
                 value={form.lastName}
-                onChange={(e) => handleChange("lastName", e.target.value)}
-                sx={{ "& .MuiInputBase-input": { textTransform: "capitalize" } }}
+                onChange={(e) => handleChange('lastName', e.target.value)}
+                sx={{ '& .MuiInputBase-input': { textTransform: 'capitalize' } }}
               />
             </Box>
 
             <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
               Profile picture
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Avatar
                 src={newAvatar || user?.avatar}
-                sx={{ width: 56, height: 56, textTransform: "uppercase" }}
+                sx={{ width: 56, height: 56, textTransform: 'uppercase' }}
               >
                 {user?.firstName?.[0]}
                 {user?.lastName?.[0]}
@@ -340,10 +322,10 @@ const ProfileSettings = () => {
 
             <Box
               sx={{
-                display: "flex",
+                display: 'flex',
                 gap: 2,
                 mt: 2,
-                justifyContent: "flex-end",
+                justifyContent: 'flex-end',
               }}
             >
               <Button
@@ -351,9 +333,9 @@ const ProfileSettings = () => {
                 color="primary"
                 loading={loading}
                 onClick={handleUpdate}
-                sx={{ textTransform: "none" }}
+                sx={{ textTransform: 'none' }}
               >
-                {loading ? "Saving..." : "Save Changes"}
+                {loading ? 'Saving...' : 'Save Changes'}
               </Button>
             </Box>
           </CardContent>
@@ -370,12 +352,9 @@ const ProfileSettings = () => {
         open={snackbar.open}
         autoHideDuration={5000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.type}
-        >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.type}>
           {snackbar.message}
         </Alert>
       </Snackbar>

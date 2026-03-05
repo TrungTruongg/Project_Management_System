@@ -21,7 +21,7 @@ export const transporter = nodemailer.createTransport({
 
 export const sendVerificationEmail = async (toEmail, verificationCode) => {
   await mg.messages.create(process.env.MAILGUN_DOMAIN, {
-    from: `PMS App <mailgun@${process.env.MAILGUN_DOMAIN}>`,
+    from: `My-Task <noreply@${process.env.MAILGUN_DOMAIN}>`,
     to: [toEmail],
     subject: 'Verification Code',
     html: `
