@@ -45,7 +45,7 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return axios(originalRequest);
       } catch (error) {
-        window.location.href = '/login';
+        
       }
     }
 
