@@ -10,23 +10,23 @@ import {
   Typography,
   useColorScheme,
   Popover,
-} from "@mui/material";
-import TaskIcon from "./icons/TaskIcon";
-import { ArrowBack, ArrowForward, ExpandLess, ExpandMore } from "@mui/icons-material";
-import { useLocation, useNavigate } from "react-router-dom";
-import { menuItems } from "../constants/constants";
-import { useState } from "react";
+} from '@mui/material';
+import TaskIcon from './icons/TaskIcon';
+import { ArrowBack, ArrowForward, ExpandLess, ExpandMore } from '@mui/icons-material';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { menuItems } from '../constants/constants';
+import { useState } from 'react';
 
 const routeMapping: Record<string, string> = {
-  Dashboard: "/",
-  "Project Dashboard": "/",
-  Projects: "/project",
-  Tasks: "/task",
-  Members: "/member",
-  "Members Profile": "/member-profile",
-  "Supports View": "/supports-view",
-  "Supports Detail": "/supports-detail",
-  Attachments: "/attachments",
+  Dashboard: '/',
+  'Project Dashboard': '/',
+  Projects: '/project',
+  Tasks: '/task',
+  Members: '/member',
+  'Members Profile': '/member-profile',
+  'Supports View': '/supports-view',
+  'Supports Detail': '/supports-detail',
+  Attachments: '/attachments',
   // "Locked Users": "/view-locked-users",
 };
 
@@ -44,7 +44,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
 
   const handleModeToggle = () => {
     setMode(mode === 'light' ? 'dark' : 'light');
-  }
+  };
 
   const isMenuActive = (item: any) => {
     if (!item.submenu) {
@@ -86,49 +86,69 @@ function Sidebar({ openMenus, toggleMenu }: any) {
       <Box
         sx={{
           width: isCollapsed ? 100 : 260,
-          backgroundColor: "#484c7f",
-          color: "white",
-          overflowY: "auto",
+          backgroundColor: '#484c7f',
+          color: 'white',
+          overflowY: 'auto',
           p: 3,
-          borderRadius: "1.1rem",
-          height: "calc(100vh - 50px)",
-          margin: "25px",
+          borderRadius: '1.1rem',
+          height: 'calc(100vh - 50px)',
+          margin: '25px',
           order: 1,
           zIndex: 1,
-          transition: "width 0.3s ease",
+          transition: 'width 0.3s ease',
         }}
       >
         <Box
           sx={{
             pt: isCollapsed ? 0 : 2,
             pb: 2,
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
           }}
         >
           {/* Logo */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, justifyContent: isCollapsed ? "center" : "flex-start", pb: 5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              justifyContent: isCollapsed ? 'center' : 'flex-start',
+              pb: 5,
+            }}
+          >
             <Box
               sx={{
-                aligItems: "center",
-                backgroundColor: "white",
-                display: "flex",
-                height: "60px",
-                justifyContent: "center",
-                lineHeight: "60px",
-                minWidth: "60px",
-                borderRadius: "50%",
-                margin: "inherit",
-                alignItems: "center",
+                aligItems: 'center',
+                backgroundColor: 'white',
+                display: 'flex',
+                height: '60px',
+                justifyContent: 'center',
+                lineHeight: '60px',
+                minWidth: '60px',
+                borderRadius: '50%',
+                margin: 'inherit',
+                alignItems: 'center',
               }}
             >
               <TaskIcon />
             </Box>
             {!isCollapsed && (
-              <Typography variant="h5" fontWeight="bold">
-                My-Task
-              </Typography>
+              <Box
+                sx={{
+                  textAlign: 'left',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 0.5,
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Typography variant="h5" fontWeight="bold">
+                  My-Task
+                </Typography>
+                <Typography fontSize="0.8rem">Project Management</Typography>
+              </Box>
             )}
           </Box>
 
@@ -136,12 +156,12 @@ function Sidebar({ openMenus, toggleMenu }: any) {
           <Box
             sx={{
               flex: 1,
-              overflowY: "auto",
-              "&::-webkit-scrollbar": {
-                display: "none",
+              overflowY: 'auto',
+              '&::-webkit-scrollbar': {
+                display: 'none',
               },
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
             }}
           >
             <List sx={{ py: 2, flexGrow: 1 }}>
@@ -163,12 +183,12 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                         }}
                         sx={{
                           borderRadius: 1,
-                          fontSize: "20px",
+                          fontSize: '20px',
                         }}
                       >
                         <ListItemIcon
                           sx={{
-                            color: isActive ? "#FFA726" : "white",
+                            color: isActive ? '#FFA726' : 'white',
                             minWidth: 40,
                           }}
                         >
@@ -178,24 +198,28 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                           primary={
                             <Box
                               sx={{
-                                display: "flex",
-                                alignItems: "center",
+                                display: 'flex',
+                                alignItems: 'center',
                                 gap: 1,
                               }}
                             >
-                              <span>{isCollapsed ? "" : item.text}</span>
+                              <span>{isCollapsed ? '' : item.text}</span>
                             </Box>
                           }
                           slotProps={{
                             primary: {
-                              color: isActive ? "#FFA726" : "white",
-                              fontSize: "18px",
+                              color: isActive ? '#FFA726' : 'white',
+                              fontSize: '18px',
                               fontWeight: 400,
                             },
                           }}
                         />
                         {item.submenu &&
-                          (openMenus[item.id] ? <ExpandLess /> : isCollapsed ? null : <ExpandMore />)}
+                          (openMenus[item.id] ? (
+                            <ExpandLess />
+                          ) : isCollapsed ? null : (
+                            <ExpandMore />
+                          ))}
                       </ListItemButton>
                     </ListItem>
                     {item.submenu && !isCollapsed && (
@@ -212,17 +236,15 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                                   sx={{
                                     pl: 6,
                                     borderRadius: 1,
-                                    color: isSubActive
-                                      ? "#FFA726"
-                                      : "rgba(255,255,255,0.7)",
+                                    color: isSubActive ? '#FFA726' : 'rgba(255,255,255,0.7)',
                                   }}
                                 >
                                   <ListItemText
                                     primary={
                                       <Box
                                         sx={{
-                                          display: "flex",
-                                          alignItems: "center",
+                                          display: 'flex',
+                                          alignItems: 'center',
                                           gap: 1,
                                         }}
                                       >
@@ -231,7 +253,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                                     }
                                     slotProps={{
                                       primary: {
-                                        textAlign: "left",
+                                        textAlign: 'left',
                                         fontWeight: 400,
                                       },
                                     }}
@@ -253,17 +275,16 @@ function Sidebar({ openMenus, toggleMenu }: any) {
           <Box
             sx={{
               py: 2.5,
-              borderTop: "1px solid rgba(255,255,255,0.1)",
+              borderTop: '1px solid rgba(255,255,255,0.1)',
               flexShrink: 0,
-              mt: "auto",
+              mt: 'auto',
             }}
           >
-
             <Box
               sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 mb: 2,
               }}
             >
@@ -273,26 +294,25 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                 size="small"
                 sx={{ mr: 1 }}
               />
-              {!isCollapsed &&
+              {!isCollapsed && (
                 <Typography variant="body2">
                   {mode === 'dark' ? 'Dark Mode' : 'Light Mode'}
                 </Typography>
-              }
+              )}
             </Box>
 
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
               {!isCollapsed ? (
                 <ArrowBack
-                  sx={{ color: "white", opacity: 0.7, cursor: "pointer" }}
+                  sx={{ color: 'white', opacity: 0.7, cursor: 'pointer' }}
                   onClick={() => setIsCollapsed(!isCollapsed)}
                 />
               ) : (
                 <ArrowForward
-                  sx={{ color: "white", opacity: 0.7, cursor: "pointer" }}
+                  sx={{ color: 'white', opacity: 0.7, cursor: 'pointer' }}
                   onClick={() => setIsCollapsed(!isCollapsed)}
                 />
               )}
-
             </Box>
           </Box>
         </Box>
@@ -319,39 +339,41 @@ function Sidebar({ openMenus, toggleMenu }: any) {
           },
         }}
       >
-        <Box sx={{ bgcolor: "#484c7f", p: 1, borderRadius: 1 }}>
-          {popoverMenuId && menuItems.find(item => item.id === popoverMenuId)?.submenu && (
+        <Box sx={{ bgcolor: '#484c7f', p: 1, borderRadius: 1 }}>
+          {popoverMenuId && menuItems.find((item) => item.id === popoverMenuId)?.submenu && (
             <List>
-              {menuItems.find(item => item.id === popoverMenuId)?.submenu?.map((subitem: string, idx: number) => {
-                const subRoute = routeMapping[subitem];
-                const isSubActive = location.pathname === subRoute;
-                return (
-                  <ListItem disablePadding key={idx}>
-                    <ListItemButton
-                      onClick={() => handleSubmenuClick(subitem)}
-                      sx={{
-                        color: isSubActive ? "#FFA726" : "rgba(255,255,255,0.7)",
-                        borderRadius: 1,
-                        px: 2,
-                        py: 0.5,
-                        "&:hover": {
-                          bgcolor: "rgba(255,255,255,0.1)",
-                        },
-                      }}
-                    >
-                      <ListItemText
-                        primary={subitem}
-                        slotProps={{
-                          primary: {
-                            fontSize: "14px",
-                            fontWeight: 400,
+              {menuItems
+                .find((item) => item.id === popoverMenuId)
+                ?.submenu?.map((subitem: string, idx: number) => {
+                  const subRoute = routeMapping[subitem];
+                  const isSubActive = location.pathname === subRoute;
+                  return (
+                    <ListItem disablePadding key={idx}>
+                      <ListItemButton
+                        onClick={() => handleSubmenuClick(subitem)}
+                        sx={{
+                          color: isSubActive ? '#FFA726' : 'rgba(255,255,255,0.7)',
+                          borderRadius: 1,
+                          px: 2,
+                          py: 0.5,
+                          '&:hover': {
+                            bgcolor: 'rgba(255,255,255,0.1)',
                           },
                         }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                );
-              })}
+                      >
+                        <ListItemText
+                          primary={subitem}
+                          slotProps={{
+                            primary: {
+                              fontSize: '14px',
+                              fontWeight: 400,
+                            },
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
             </List>
           )}
         </Box>

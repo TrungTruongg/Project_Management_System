@@ -7,7 +7,7 @@ function SearchInput() {
 
   return (
     <TextField
-      placeholder="Search"
+      placeholder="Search..."
       autoComplete="off"
       name="search"
       variant="outlined"
@@ -33,7 +33,6 @@ function SearchInput() {
               theme.palette.mode === "light" ? "#f0f0f0" : "#2a2a2a",
           },
         },
-
       }}
       slotProps={{
         input: {

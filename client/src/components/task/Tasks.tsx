@@ -530,7 +530,8 @@ function Tasks() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              mb: 2
+              mb: 2,
+              gap: 3
             }}
           >
             {calculateDays <= 0 ? (
@@ -569,7 +570,7 @@ function Tasks() {
                 </Typography>
               )}
 
-            {project && (
+            {!currentProject && (
               <Chip
                 label={project.name}
                 size="small"
@@ -757,7 +758,7 @@ function Tasks() {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
             gap: 3,
           }}
         >

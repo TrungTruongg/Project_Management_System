@@ -121,8 +121,10 @@ function Header() {
         mb: 4,
       }}
     >
-      <SearchInput />
-
+      <Box>
+        <SearchInput />
+      </Box>
+      
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <IconButton>
           <Info color="primary" />
@@ -166,7 +168,7 @@ function Header() {
               )
             }))}
         </AvatarGroup>
-        <IconButton onClick={handleOpenNotification}>
+        <IconButton sx={{ mr: 6 }} onClick={handleOpenNotification}>
           <Badge
             variant="dot"
             color="error"
@@ -175,12 +177,13 @@ function Header() {
             <Notifications />
           </Badge>
         </IconButton>
-        <Box sx={{ textAlign: "right" }}>
+
+        <Box sx={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 0.5 }}>
           <Typography variant="body2" fontWeight="bold" sx={{ textTransform: "capitalize" }}>
-            {user ? `${user.firstName} ${user.lastName}` : "Guest User"}
+            {`${user?.firstName} ${user?.lastName}`}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {user ? user.role : "Visitor"}
+            {user?.email}
           </Typography>
         </Box>
         <Box sx={{ flexShrink: 0 }}>

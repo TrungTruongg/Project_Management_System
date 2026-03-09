@@ -32,7 +32,7 @@ interface AttachmentItem {
   file?: File;
   isExisting: boolean;
   uploadedAt?: string;
-  previewUrl?: string; 
+  previewUrl?: string;
 }
 
 function CreateTaskModal({
@@ -329,6 +329,7 @@ function CreateTaskModal({
         }
 
         onUpdate(updatedData);
+        onClose();
         setSnackbar({
           open: true,
           message: 'Update task successfully!',
@@ -352,6 +353,7 @@ function CreateTaskModal({
         }
 
         onSave(createdData);
+        onClose();
         setSnackbar({
           open: true,
           message: 'Create task successfully!',
@@ -364,7 +366,6 @@ function CreateTaskModal({
 
         let finalUrl = att.url;
 
-        // Nếu là file, upload lên server trước
         if (att.type === 'file' && att.file) {
           try {
             finalUrl = await uploadFile(att.file, taskId);
@@ -387,8 +388,6 @@ function CreateTaskModal({
           console.error('Error saving attachment:', error);
         }
       }
-
-      onClose();
     } catch (error) {
       console.error(error);
     } finally {
@@ -550,11 +549,13 @@ function CreateTaskModal({
                     <MenuItem value="" disabled>
                       Choose Project
                     </MenuItem>
-                    {projects.map((project) => (
-                      <MenuItem key={project._id} value={project._id}>
-                        {project.name}
-                      </MenuItem>
-                    ))}
+                    {projects.map((project) => {
+                      return project.leaderId === user?._id ? (
+                        <MenuItem key={project._id} value={project._id}>
+                          {project.name}
+                        </MenuItem>
+                      ) : null;
+                    })}
                   </Select>
 
                   {showError && !projectId && (
@@ -663,14 +664,16 @@ function CreateTaskModal({
                   </Box>
 
                   {attachments.length > 0 && (
-                    <Box sx={{
+                    <Box
+                      sx={{
                         display: 'flex',
                         gap: 1,
                         overflowX: 'auto',
                         overflowY: 'hidden',
                         padding: '8px 4px',
                         borderRadius: '4px',
-                      }}>
+                      }}
+                    >
                       {attachments.map((att, i) => (
                         <AttachmentList
                           key={i}
@@ -922,9 +925,11 @@ function CreateTaskModal({
           </Box>
         </Box>
       </Modal>
-      
+
       {/* Preview Modal */}
-      {previewAtt && <AttachmentPreviewModal attachment={previewAtt} onClose={() => setPreviewAtt(null)} />}
+      {previewAtt && (
+        <AttachmentPreviewModal attachment={previewAtt} onClose={() => setPreviewAtt(null)} />
+      )}
 
       <Snackbar
         open={snackbar.open}
