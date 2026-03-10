@@ -72,11 +72,11 @@ function App() {
                     <Route element={<Dashboard />}>
                       <Route path="/" element={<DashboardContent />} />
                       <Route path="/project" element={<Projects />} />
-                      <Route path="/task" element={<Tasks />} />
+                      <Route path="/board" element={<Tasks />} />
                       <Route path="/task-detail" element={<TaskDetail />} />
                       <Route path="/member" element={<MemberList />} />
                       <Route path="/member-profile" element={<MemberProfile />} />
-                      <Route path="/supports-view" element={<SupportsView />} />
+                      <Route path="/supports" element={<SupportsView />} />
                       <Route path="/supports-detail" element={<SupportsDetail />} />
                       <Route path="/attachments" element={<AttachmentManagement />} />
                       <Route

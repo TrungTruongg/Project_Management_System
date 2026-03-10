@@ -8,16 +8,14 @@ import { TiAttachment as AttachmentIcon } from "react-icons/ti";
 export const menuItems = [
   { id: "dashboard", text: "Dashboard", icon: <DashboardIcon /> },
   {
-    id: "projects",
-    text: "Projects",
+    id: "board",
+    text: "Board",
     icon: <ProjectIcon />,
-    submenu: ["Projects", "Tasks"],
   },
   {
     id: "supports",
     text: "Supports",
     icon: <TicketIcon />,
-    submenu: ["Supports View", "Supports Detail"],
   },
   {
     id: "members",

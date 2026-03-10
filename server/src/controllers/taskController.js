@@ -19,14 +19,12 @@ export const createTask = async (req, res) => {
     const db = client.db("db_pms");
     const collection = db.collection("tasks");
 
-    const { name, description, startDate, endDate, status, projectId, assignedTo, priority, completion } = req.body;
+    const { name, description, startDate, endDate, status, assignedTo, priority, completion, leaderId } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: "Name is required" });
     }
-    if (!projectId) {
-      return res.status(400).json({ error: "Project is required" });
-    }
+ 
     if (!priority) {
       return res.status(400).json({ error: "Priority is required" });
     }
@@ -39,11 +37,11 @@ export const createTask = async (req, res) => {
       description: description,
       startDate: startDate,
       endDate: endDate,
-      projectId: projectId,
       assignedTo: assignedTo,
       priority: priority,
       status: status || "to-do",
       completion: completion || 0,
+      leaderId: leaderId,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -122,11 +120,11 @@ export const deleteTask = async (req, res) => {
       _id: new ObjectId(taskId),
     });
 
-    if (result.deletedCount === 0) {
-      return res
-        .status(403)
-        .json({ error: "Not authorized to delete this task" });
-    }
+    // if (result.deletedCount === 0) {
+    //   return res
+    //     .status(403)
+    //     .json({ error: "Not authorized to delete this task" });
+    // }
 
     res.json({ success: true, message: "Task deleted successfully" });
   } catch (err) {

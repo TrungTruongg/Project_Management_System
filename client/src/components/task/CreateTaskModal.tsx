@@ -41,11 +41,9 @@ function CreateTaskModal({
   onSave,
   onUpdate,
   selectedTask = null,
-  currentProject,
 }: any) {
   const [isStatusOnly, setIsStatusOnly] = useState(false);
   const [name, setName] = useState('');
-  const [projectId, setProjectId] = useState<string | ''>('');
   const [description, setDescription] = useState('');
   const [attachments, setAttachments] = useState<any[]>([]);
   const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([]);
@@ -64,7 +62,6 @@ function CreateTaskModal({
     type: 'success' as 'success' | 'error',
   });
 
-  const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
 
   const { user } = useUser();
@@ -75,13 +72,11 @@ function CreateTaskModal({
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseProject, responseUser, responseAttachment] = await Promise.all([
-        api.get('/projects'),
+      const [responseUser, responseAttachment] = await Promise.all([
         api.get('/users'),
         api.get('/attachments'),
       ]);
 
-      setProjects(responseProject.data);
       setUsers(responseUser.data);
 
       if (selectedTask) {
@@ -175,33 +170,20 @@ function CreateTaskModal({
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  const getProjectMembers = () => {
-    const selectedProjectId = currentProject?._id || projectId;
-    if (!selectedProjectId) return [];
+  // const getProjectMembers = () => {
+  //   const selectedProjectId = currentProject?._id || projectId;
+  //   if (!selectedProjectId) return [];
 
-    const project = projects.find((p) => p._id === selectedProjectId);
-    if (!project?.members) return [];
+  //   const project = projects.find((p) => p._id === selectedProjectId);
+  //   if (!project?.members) return [];
 
-    return users.filter((u) => project.members.includes(u._id));
-  };
-
-  const handleProjectChange = (newProjectId: string) => {
-    setProjectId(newProjectId);
-    setAssignedTo([]);
-
-    const selectedProject = projects.find((p) => p._id === newProjectId);
-    if (selectedProject) {
-      setStartDate(selectedProject.startDate || '');
-      setEndDate(selectedProject.endDate || '');
-    }
-  };
+  //   return users.filter((u) => project.members.includes(u._id));
+  // };
 
   const validateDates = () => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const now = new Date();
-    const projectStart = currentProject ? new Date(currentProject.startDate) : null;
-    const projectEnd = currentProject ? new Date(currentProject.endDate) : null;
 
     if (start >= end) {
       setSnackbar({
@@ -219,22 +201,7 @@ function CreateTaskModal({
       });
       return;
     }
-    if (projectStart && start < projectStart) {
-      setSnackbar({
-        open: true,
-        message: 'Start Date cannot before Project Start Date',
-        type: 'error',
-      });
-      return;
-    }
-    if (projectEnd && end > projectEnd) {
-      setSnackbar({
-        open: true,
-        message: 'End Date cannot after Project End Date',
-        type: 'error',
-      });
-      return;
-    }
+
     return true;
   };
 
@@ -252,7 +219,7 @@ function CreateTaskModal({
   };
 
   const validateForm = () => {
-    if (!name.trim() || !projectId || !priority || !status) {
+    if (!name.trim() || !priority || !status) {
       setShowError(true);
       return false;
     }
@@ -280,7 +247,6 @@ function CreateTaskModal({
       }
 
       const taskData = {
-        projectId: isUpdate ? selectedTask.projectId : currentProject?._id || projectId,
         name,
         description,
         startDate,
@@ -289,6 +255,7 @@ function CreateTaskModal({
         priority: priority.toLowerCase(),
         status,
         completion,
+        leaderId: user?._id
       };
 
       let taskId: string;
@@ -402,17 +369,15 @@ function CreateTaskModal({
 
       if (selectedTask) {
         // Check if current user is project leader
-        const project = projects.find((p) => p._id === selectedTask.projectId);
-        const isLeader = project?.leaderId === user?._id;
+        // const isLeader = project?.leaderId === user?._id;
         const isAssigned = Array.isArray(selectedTask.assignedTo)
           ? selectedTask.assignedTo.includes(user?._id)
           : selectedTask.assignedTo === user?._id;
 
         // Status-only mode if not leader but assigned to task
-        setIsStatusOnly(!isLeader && isAssigned);
+        // setIsStatusOnly(!isLeader && isAssigned);
 
         setName(selectedTask.name || '');
-        setProjectId(selectedTask.projectId || '');
         setDescription(selectedTask.description || '');
         setStartDate(selectedTask.startDate || '');
         setEndDate(selectedTask.endDate || '');
@@ -422,20 +387,18 @@ function CreateTaskModal({
       } else {
         setIsStatusOnly(false);
         setName('');
-        setProjectId(currentProject?._id || '');
         setDescription('');
         setAttachments([]);
-        setStartDate(currentProject?.startDate || '');
-        setEndDate(currentProject?.endDate || '');
+        setStartDate('');
+        setEndDate('');
         setPriority('');
         setAssignedTo([]);
         setStatus('to-do');
       }
       setDeletedAttachmentIds([]);
     }
-  }, [open, selectedTask, currentProject]);
+  }, [open, selectedTask]);
 
-  const projectMembers = getProjectMembers();
 
   return (
     <>
@@ -522,7 +485,7 @@ function CreateTaskModal({
                 </Box>
 
                 {/* Project */}
-                <Box>
+                {/* <Box>
                   <Typography
                     sx={{
                       fontSize: '14px',
@@ -563,7 +526,7 @@ function CreateTaskModal({
                       Project name is required
                     </Typography>
                   )}
-                </Box>
+                </Box> */}
 
                 <Box className="gap-4">
                   <Typography
@@ -754,7 +717,7 @@ function CreateTaskModal({
                     fullWidth
                     size="small"
                     displayEmpty
-                    disabled={!projectId && !currentProject}
+                    // disabled={!projectId && !currentProject}
                     multiple
                     onChange={(e) => setAssignedTo(e.target.value as [])}
                     value={assignedTo}
@@ -783,14 +746,14 @@ function CreateTaskModal({
                       textTransform: 'capitalize',
                     }}
                   >
-                    {projectMembers.length === 0 ? (
-                      <MenuItem disabled>No members in project</MenuItem>
+                    {users.length === 0 ? (
+                      <MenuItem disabled>No members available</MenuItem>
                     ) : (
-                      projectMembers.map((member: any) => (
-                        <MenuItem value={member._id} key={member._id}>
+                      users.map((user: any) => (
+                        <MenuItem value={user._id} key={user._id}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Avatar
-                              src={member.avatar}
+                              src={user.avatar}
                               sx={{
                                 width: 32,
                                 height: 32,
@@ -800,14 +763,14 @@ function CreateTaskModal({
                                 fontWeight: 600,
                                 textTransform: 'uppercase',
                               }}
-                              title={`${member.firstName} ${member.lastName}`}
+                              title={`${user.firstName} ${user.lastName}`}
                             >
-                              {member.firstName?.[0]}
-                              {member.lastName?.[0]}
+                              {user.firstName?.[0]}
+                              {user.lastName?.[0]}
                             </Avatar>
                             <ListItemText
-                              primary={`${member.firstName} ${member.lastName}`}
-                              secondary={member.email.toLowerCase()}
+                              primary={`${user.firstName} ${user.lastName}`}
+                              secondary={user.email.toLowerCase()}
                             />
                           </Box>
                         </MenuItem>

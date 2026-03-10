@@ -9,7 +9,6 @@ import {
   Switch,
   Typography,
   useColorScheme,
-  Popover,
 } from '@mui/material';
 import TaskIcon from './icons/TaskIcon';
 import { ArrowBack, ArrowForward, ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -20,22 +19,17 @@ import { useState } from 'react';
 const routeMapping: Record<string, string> = {
   Dashboard: '/',
   'Project Dashboard': '/',
-  Projects: '/project',
-  Tasks: '/task',
+  Board: '/board',
   Members: '/member',
   'Members Profile': '/member-profile',
-  'Supports View': '/supports-view',
-  'Supports Detail': '/supports-detail',
+  Supports: '/supports',
   Attachments: '/attachments',
-  // "Locked Users": "/view-locked-users",
 };
 
-function Sidebar({ openMenus, toggleMenu }: any) {
+function Sidebar({ openMenus }: any) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [popoverMenuId, setPopoverMenuId] = useState<null | string>(null);
 
   const { mode, setMode } = useColorScheme();
   if (!mode) {
@@ -65,22 +59,6 @@ function Sidebar({ openMenus, toggleMenu }: any) {
     }
   };
 
-  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>, menuId: string) => {
-    setAnchorEl(event.currentTarget);
-    setPopoverMenuId(menuId);
-  };
-
-  const handlePopoverClose = () => {
-    setAnchorEl(null);
-    setPopoverMenuId(null);
-  };
-
-  const handleSubmenuClick = (subitem: string) => {
-    handleMenuClick(subitem);
-    handlePopoverClose();
-  };
-
-  const open = Boolean(anchorEl);
   return (
     <>
       <Box
@@ -172,15 +150,7 @@ function Sidebar({ openMenus, toggleMenu }: any) {
                   <Box key={item.id}>
                     <ListItem disablePadding sx={{ mb: 0.5 }}>
                       <ListItemButton
-                        onClick={(e) => {
-                          if (item?.submenu && isCollapsed) {
-                            handlePopoverOpen(e as React.MouseEvent<HTMLElement>, item.id);
-                          } else if (item?.submenu) {
-                            toggleMenu(item?.id);
-                          } else {
-                            handleMenuClick(item?.text);
-                          }
-                        }}
+                        onClick={() => {handleMenuClick(item?.text)}}
                         sx={{
                           borderRadius: 1,
                           fontSize: '20px',
@@ -317,67 +287,6 @@ function Sidebar({ openMenus, toggleMenu }: any) {
           </Box>
         </Box>
       </Box>
-
-      {/* Popover for collapsed submenu */}
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={handlePopoverClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        slotProps={{
-          paper: {
-            sx: {
-              marginLeft: '25px',
-            },
-          },
-        }}
-      >
-        <Box sx={{ bgcolor: '#484c7f', p: 1, borderRadius: 1 }}>
-          {popoverMenuId && menuItems.find((item) => item.id === popoverMenuId)?.submenu && (
-            <List>
-              {menuItems
-                .find((item) => item.id === popoverMenuId)
-                ?.submenu?.map((subitem: string, idx: number) => {
-                  const subRoute = routeMapping[subitem];
-                  const isSubActive = location.pathname === subRoute;
-                  return (
-                    <ListItem disablePadding key={idx}>
-                      <ListItemButton
-                        onClick={() => handleSubmenuClick(subitem)}
-                        sx={{
-                          color: isSubActive ? '#FFA726' : 'rgba(255,255,255,0.7)',
-                          borderRadius: 1,
-                          px: 2,
-                          py: 0.5,
-                          '&:hover': {
-                            bgcolor: 'rgba(255,255,255,0.1)',
-                          },
-                        }}
-                      >
-                        <ListItemText
-                          primary={subitem}
-                          slotProps={{
-                            primary: {
-                              fontSize: '14px',
-                              fontWeight: 400,
-                            },
-                          }}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })}
-            </List>
-          )}
-        </Box>
-      </Popover>
     </>
   );
 }
