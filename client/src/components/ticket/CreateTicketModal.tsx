@@ -25,8 +25,8 @@ function CreateTicketModal({
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("pending");
   const [priority, setPriority] = useState("medium");
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +37,7 @@ function CreateTicketModal({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !description.trim() || !selectedProject) {
+    if (!name.trim() || !description.trim() || !selectedTask) {
       setShowError(true);
       return;
     }
@@ -50,7 +50,7 @@ function CreateTicketModal({
           ...selectedTicket,
           name,
           description,
-          projectId: selectedProject?._id,
+          taskId: selectedTask?._id,
           status,
           priority,
         };
@@ -67,7 +67,7 @@ function CreateTicketModal({
           name,
           description,
           assignedBy: user?._id,
-          projectId: selectedProject?._id,
+          projectId: selectedTask?._id,
           status,
           priority,
           createdDate: new Date().toISOString().split("T")[0],
@@ -78,9 +78,9 @@ function CreateTicketModal({
         );
 
         //Send notify to project leader only
-        if (selectedProject?.leaderId) {
+        if (selectedTask?.leaderId) {
           await createNotification({
-            userId: [selectedProject.leaderId],
+            userId: [selectedTask.leaderId],
             type: "support",
             title: `New Support Ticket`,
             description: `created ticket ${name}`,
@@ -100,37 +100,37 @@ function CreateTicketModal({
 
   useEffect(() => {
     if (open) {
-      const fetchProjects = async () => {
+      const fetchTasks = async () => {
         try {
-          const projectsRes = await api.get("/projects");
-          const allProjects = projectsRes.data;
+          const taskRes = await api.get("/tasks");
+          const allTasks = taskRes.data;
 
-          // Filter projects where user is not the leader
-          const availableProjects = allProjects.filter(
-            (p: any) => p.leaderId !== user?._id
+          // Filter tasks where user is not the leader
+          const availableTasks = allTasks.filter(
+            (t: any) => t.leaderId === user?._id
           );
-          setProjects(availableProjects);
+          setTasks(availableTasks);
         } catch (error) {
-          console.error("Error fetching projects:", error);
+          console.error("Error fetching tasks:", error);
         }
       };
 
-      fetchProjects();
+      fetchTasks();
 
       if (selectedTicket) {
         setName(selectedTicket.name || "");
         setDescription(selectedTicket.description || "");
         setStatus(selectedTicket.status || "pending");
         setPriority(selectedTicket.priority || "medium");
-        setSelectedProject(
-          selectedTicket.projectId ? { _id: selectedTicket.projectId } : null
+        setSelectedTask(
+          selectedTicket.taskId ? { _id: selectedTicket.taskId } : null
         );
       } else {
         setName("");
         setDescription("");
         setStatus("pending");
         setPriority("medium");
-        setSelectedProject(null);
+        setSelectedTask(null);
       }
       setShowError(false);
       setLoading(false);
@@ -217,37 +217,37 @@ function CreateTicketModal({
 
           <Box>
             <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 0.5 }}>
-              Project <span className="text-red-500">*</span>
+              Task <span className="text-red-500">*</span>
             </Typography>
             <Select
               fullWidth
               displayEmpty
               size="small"
-              value={selectedProject?._id || ""}
+              value={selectedTask?._id || ""}
               onChange={(e) => {
-                const project = projects.find(
-                  (p: any) => p._id === e.target.value
+                const task = tasks.find(
+                  (t: any) => t._id === e.target.value
                 );
-                setSelectedProject(project);
+                setSelectedTask(task);
               }}
               sx={{ fontSize: "14px", textTransform: "capitalize" }}
             >
               <MenuItem value="" disabled>
-                Select project
+                Select task
               </MenuItem>
-              {projects.map((project) => (
+              {tasks.map((task) => (
                 <MenuItem
-                  key={project._id}
-                  value={project._id}
+                  key={task._id}
+                  value={task._id}
                   sx={{ textTransform: "capitalize" }}
                 >
-                  {project.name}
+                  {task.name}
                 </MenuItem>
               ))}
             </Select>
-            {showError && !selectedProject && (
+            {showError && !selectedTask && (
               <Typography sx={{ fontSize: "12px", color: "#ef4444", mt: 0.5 }}>
-                Project is required
+                Task is required
               </Typography>
             )}
           </Box>

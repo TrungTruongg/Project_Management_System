@@ -1,11 +1,11 @@
 import client from "../config/database.js";
 import { ObjectId } from "mongodb";
 
+const getDB = () => client.db("db_pms");
+
 export const getReplies = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("replies");
+    const collection = getDB().collection("replies");
     const results = await collection.find({}).toArray();
     res.json(results);
   } catch (err) {
@@ -15,9 +15,7 @@ export const getReplies = async (req, res) => {
 
 export const createReply = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("replies");
+    const collection = getDB().collection("replies");
 
     const { taskId, userId, commentId, content, } = req.body;
 
@@ -39,9 +37,7 @@ export const createReply = async (req, res) => {
 // Update task
 export const updateReply = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("replies");
+    const collection = getDB().collection("replies");
     const { id } = req.params;
     const { content } = req.body;
 
@@ -69,9 +65,7 @@ export const updateReply = async (req, res) => {
 // Delete task
 export const deleteReply = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("replies");
+    const collection = getDB().collection("replies");
     const replyId = req.params.id;
 
     const result = await collection.deleteOne({

@@ -1,11 +1,11 @@
 import client from "../config/database.js";
 import { ObjectId } from "mongodb";
 
+const getDB = () => client.db("db_pms");
+
 export const getTasks = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("tasks");
+    const collection = getDB().collection("tasks");
     const results = await collection.find({}).toArray();
     res.json(results);
   } catch (err) {
@@ -15,9 +15,7 @@ export const getTasks = async (req, res) => {
 
 export const createTask = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("tasks");
+    const collection = getDB().collection("tasks");
 
     const { name, description, startDate, endDate, status, assignedTo, priority, completion, leaderId } = req.body;
 
@@ -55,9 +53,7 @@ export const createTask = async (req, res) => {
 // Update task
 export const updateTask = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("tasks");
+    const collection = getDB().collection("tasks");
     const { id } = req.params;
     const {
       name,
@@ -111,20 +107,12 @@ export const updateTask = async (req, res) => {
 // Delete task
 export const deleteTask = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("tasks");
+    const collection = getDB().collection("tasks");
     const taskId = req.params.id;
 
     const result = await collection.deleteOne({
       _id: new ObjectId(taskId),
     });
-
-    // if (result.deletedCount === 0) {
-    //   return res
-    //     .status(403)
-    //     .json({ error: "Not authorized to delete this task" });
-    // }
 
     res.json({ success: true, message: "Task deleted successfully" });
   } catch (err) {

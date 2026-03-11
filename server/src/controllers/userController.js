@@ -4,11 +4,11 @@ import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
 import { transporter, generateVerificationCode, sendVerificationEmail } from "../utils/helper.js";
 
+const getDB = () => client.db("db_pms");
+
 export const getUsers = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("users");
+    const collection = getDB().collection("users");
     const results = await collection
       .find({}, { projection: { password: 0 } })
       .toArray();
@@ -26,9 +26,7 @@ export const getUsers = async (req, res) => {
 // Update user profile
 export const updateUser = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("users");
+    const collection = getDB().collection("users");
     const { id } = req.params;
     const {
       firstName,
@@ -95,9 +93,7 @@ export const updateUser = async (req, res) => {
 
 export const requestEmailChange = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("users");
+    const collection = getDB().collection("users");
     const { userId, newEmail, currentPassword } = req.body;
 
     // Validation
@@ -239,9 +235,7 @@ export const requestEmailChange = async (req, res) => {
 //Verify Email Change
 export const verifyEmailChange = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("users");
+    const collection = getDB().collection("users");
     const { userId, newEmail, verificationCode } = req.body;
 
     // Validation

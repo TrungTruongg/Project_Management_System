@@ -1,11 +1,11 @@
 import client from "../config/database.js";
 import { ObjectId } from "mongodb";
 
+const getDB = () => client.db("db_pms");
+
 export const getTickets = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("support_tickets");
+    const collection = getDB().collection("support_tickets");
     const results = await collection.find({}).toArray();
     res.json(results);
   } catch (err) {
@@ -15,9 +15,7 @@ export const getTickets = async (req, res) => {
 
 export const createTicket = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("support_tickets");
+    const collection = getDB().collection("support_tickets");
 
     const { name, description, assignedBy, projectId, status, priority } = req.body;
 
@@ -41,9 +39,7 @@ export const createTicket = async (req, res) => {
 // Update ticket
 export const updateTicket = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("support_tickets");
+    const collection = getDB().collection("support_tickets");
     const { id } = req.params;
     const { name, description, assignedBy, projectId, status, priority } = req.body;
 
@@ -76,9 +72,7 @@ export const updateTicket = async (req, res) => {
 // Delete ticket
 export const deleteTicket = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("support_tickets");
+    const collection = getDB().collection("support_tickets");
     const ticketId = req.params.id;
 
     const result = await collection.deleteOne({

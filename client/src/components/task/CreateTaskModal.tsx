@@ -369,13 +369,13 @@ function CreateTaskModal({
 
       if (selectedTask) {
         // Check if current user is project leader
-        // const isLeader = project?.leaderId === user?._id;
+        const isLeader = selectedTask?.leaderId === user?._id;
         const isAssigned = Array.isArray(selectedTask.assignedTo)
           ? selectedTask.assignedTo.includes(user?._id)
           : selectedTask.assignedTo === user?._id;
 
         // Status-only mode if not leader but assigned to task
-        // setIsStatusOnly(!isLeader && isAssigned);
+        setIsStatusOnly(!isLeader && isAssigned);
 
         setName(selectedTask.name || '');
         setDescription(selectedTask.description || '');

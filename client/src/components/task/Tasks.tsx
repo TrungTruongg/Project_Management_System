@@ -7,12 +7,18 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Divider,
+  Fade,
   IconButton,
+  Menu,
+  MenuItem,
   Typography,
 } from '@mui/material';
 import { GoPlusCircle as AddTaskIcon } from 'react-icons/go';
-import { CalendarToday, Delete, Edit, Refresh as RefreshIcon } from '@mui/icons-material';
+import {
+  CalendarToday,
+  MoreHoriz,
+  Refresh as RefreshIcon,
+} from '@mui/icons-material';
 import { useEffect, useMemo, useState } from 'react';
 import TaskFilters, { type FilterState } from './TaskFilters';
 import CreateTaskModal from './CreateTaskModal';
@@ -21,14 +27,7 @@ import { useUser } from '../context/UserContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSearch } from '../context/SearchContext';
 import api from '../api/axiosConfig';
-
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.toLocaleDateString('en-US', { month: 'short' });
-  const year = date.getFullYear();
-  return `${day} ${month}, ${year}`;
-};
+import { formatDate } from '../helper/helper';
 
 function Tasks() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,6 +41,7 @@ function Tasks() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { searchTerm } = useSearch();
+  const [menuOpenTaskId, setMenuOpenTaskId] = useState<string | null>(null);
 
   // Get filter params from URL
   const projectId = searchParams.get('id');
@@ -101,13 +101,7 @@ function Tasks() {
     return diffDays;
   };
 
-  const isTaskExpired = (dateEnd: string) => {
-    const endDate = new Date(dateEnd);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
-    return endDate < today;
-  };
+
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -257,6 +251,13 @@ function Tasks() {
     navigate(`/task-detail?id=${taskId}`);
   };
 
+  const handleOpenMenu = (taskId: string) => {
+    setMenuOpenTaskId(taskId);
+  };
+  const handleCloseMenu = () => {
+    setMenuOpenTaskId(null);
+  };
+
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
 
@@ -283,16 +284,17 @@ function Tasks() {
           mb: 2,
           cursor: 'pointer',
           boxShadow: 1,
+          borderRadius: 2,
           border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
         }}
         onClick={() => handleViewTask(task._id)}
       >
-        <CardContent>
+        <CardContent sx={{ p: 2 }}>
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
-              mb: 2,
+              mb: 1,
             }}
           >
             <Chip
@@ -307,6 +309,38 @@ function Tasks() {
             />
             <Box sx={{ display: 'flex', gap: 1 }} onClick={(e) => e.stopPropagation()}>
               <IconButton
+                id={`fade-button-${task._id}`}
+                aria-controls={menuOpenTaskId === task._id ? `fade-menu-${task._id}` : undefined}
+                aria-haspopup="true"
+                aria-expanded={menuOpenTaskId === task._id ? 'true' : undefined}
+                onClick={() => handleOpenMenu(task._id)}
+              >
+                <MoreHoriz fontSize="small" />
+              </IconButton>
+              <Menu
+                id={`fade-menu-${task._id}`}
+                slotProps={{
+                  list: {
+                    'aria-labelledby': `fade-button-${task._id}`,
+                  },
+                }}
+                slots={{ transition: Fade }}
+                anchorEl={
+                  menuOpenTaskId === task._id
+                    ? document.getElementById(`fade-button-${task._id}`)
+                    : null
+                }
+                open={menuOpenTaskId === task._id}
+                onClose={handleCloseMenu}
+              >
+                <MenuItem onClick={() => handleEditTask(task)}>
+                  <Typography>Edit</Typography>
+                </MenuItem>
+                <MenuItem onClick={() => handleOpenDeleteDialog(task)}>
+                  <Typography color="error">Delete</Typography>
+                </MenuItem>
+              </Menu>
+              {/* <IconButton
                 size="small"
                 sx={{ color: '#4CAF50' }}
                 onClick={() => handleEditTask(task)}
@@ -319,7 +353,7 @@ function Tasks() {
                 onClick={() => handleOpenDeleteDialog(task)}
               >
                 <Delete fontSize="small" />
-              </IconButton>
+              </IconButton> */}
               {/* : isTaskAssignedToMe ? (
                 <IconButton
                   size="small"
@@ -347,7 +381,14 @@ function Tasks() {
               variant="body2"
               fontSize="0.75rem"
               color="text.secondary"
-              sx={{ lineHeight: '1rem' }}
+              sx={{
+                lineHeight: '1rem',
+                mb: 2,
+                WebkitLineClamp: 2,
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
             >
               {task.description}
             </Typography>

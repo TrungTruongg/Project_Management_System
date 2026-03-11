@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from 'url';
+import { connectDB } from "./src/config/database.js";
 
 // Import routes
 import userRoutes from "./src/routes/userRoutes.js";
@@ -55,6 +56,12 @@ app.use("/api/replies", replyRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use("/api/locks", lockRoutes);
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+app.listen(port, async () => {
+  try {
+    await connectDB();
+    console.log(`Server running at http://localhost:${port}`);
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
 });

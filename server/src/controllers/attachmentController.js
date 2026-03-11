@@ -6,6 +6,8 @@ import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import 'dotenv/config';
 
+const getDB = () => client.db('db_pms');
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -72,9 +74,7 @@ export const uploadFile = async (req, res) => {
 // Get all attachments
 export const getAttachments = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('attachments');
+    const collection = getDB().collection('attachments');
     const results = await collection.find({}).toArray();
     res.json(results);
   } catch (err) {
@@ -85,9 +85,7 @@ export const getAttachments = async (req, res) => {
 // Create attachment
 export const createAttachment = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('attachments');
+    const collection = getDB().collection('attachments');
 
     const { taskId, url, name, type, createdBy } = req.body;
     const newAttachment = {
@@ -108,9 +106,7 @@ export const createAttachment = async (req, res) => {
 // Delete attachment
 export const deleteAttachment = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('attachments');
+    const collection = getDB().collection('attachments');
     const attachmentId = req.params.id;
 
     // Lấy thông tin attachment trước khi xóa
@@ -148,9 +144,7 @@ export const deleteAttachment = async (req, res) => {
 // Get attachments by task ID
 export const getAttachmentsByTaskId = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('attachments');
+    const collection = getDB().collection('attachments');
     const taskId = req.params.taskId;
 
     const results = await collection.find({ taskId: taskId }).toArray();

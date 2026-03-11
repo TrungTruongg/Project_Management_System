@@ -1,11 +1,11 @@
 import client from "../config/database.js";
 import { ObjectId } from "mongodb";
 
+const getDB = () => client.db("db_pms");
+
 export const getNotifications = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("notifications");
+    const collection = getDB().collection("notifications");
     const results = await collection.find({}).toArray();
     res.json(results);
   } catch (err) {
@@ -15,9 +15,7 @@ export const getNotifications = async (req, res) => {
 
 export const createNotification = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("notifications");
+    const collection = getDB().collection("notifications");
 
     const { userId, type, title, description, createdBy } = req.body;
     const newNotification = {
@@ -38,9 +36,7 @@ export const createNotification = async (req, res) => {
 // Delete 
 export const deleteNotification = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("notifications");
+    const collection = getDB().collection("notifications");
     const taskId = req.params.id;
 
     const result = await collection.deleteOne({

@@ -1,11 +1,11 @@
 import client from "../config/database.js";
 import { ObjectId } from "mongodb";
 
+const getDB = () => client.db("db_pms");
+
 export const getProjects = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("projects");
+    const collection = getDB().collection("projects");
     const results = await collection.find({}).toArray();
     res.json(results);
   } catch (err) {
@@ -16,9 +16,7 @@ export const getProjects = async (req, res) => {
 export const createProject = async (req, res) => {
   try {
     const { name, description, startDate, endDate, leaderId, priority, members, completion } = req.body;
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("projects");
+    const collection = getDB().collection("projects");
 
     const newProject = {
       name: name,
@@ -40,9 +38,7 @@ export const createProject = async (req, res) => {
 // Update project
 export const updateProject = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("projects");
+    const collection = getDB().collection("projects");
     const { id } = req.params;
     const {
       name,
@@ -90,9 +86,7 @@ export const updateProject = async (req, res) => {
 // Delete project
 export const deleteProject = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("projects");
+    const collection = getDB().collection("projects");
     const projectId = req.params.id;
 
     const result = await collection.deleteOne({

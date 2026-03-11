@@ -2,13 +2,14 @@ import client from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import { generateVerificationCode, sendVerificationEmail } from '../utils/helper.js';
 import jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
+
+const getDB = () => client.db('db_pms');
 
 // Login
 export const login = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('users');
+    const collection = getDB().collection('users');
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -84,9 +85,7 @@ export const login = async (req, res) => {
 // Register
 export const register = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('users');
+    const collection = getDB().collection('users');
     const { firstName, lastName, email, password, phone, location } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -134,9 +133,7 @@ export const register = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('users');
+    const collection = getDB().collection('users');
     const { email } = req.body;
 
     if (!email) {
@@ -231,9 +228,7 @@ export const resetPassword = async (req, res) => {
 
 export const verifyResetCode = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('users');
+    const collection = getDB().collection('users');
     const { email, verificationCode } = req.body;
 
     if (!email || !verificationCode) {
@@ -316,9 +311,7 @@ export const verifyResetCode = async (req, res) => {
 //Google Login
 export const googleAuth = async (req, res, next) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('users');
+    const collection = getDB().collection('users');
 
     const { email, name, picture, family_name, given_name } = req.body;
 
@@ -416,9 +409,7 @@ export const refreshToken = async (req, res) => {
     // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
-    await client.connect();
-    const db = client.db('db_pms');
-    const user = await db.collection('users').findOne({ _id: new ObjectId(decoded.id) });
+    const user = await getDB().collection('users').findOne({ _id: new ObjectId(decoded.id) });
 
     if (!user || user.refreshToken !== refreshToken) {
       return res.status(403).json({ success: false, message: 'Invalid refresh token' });

@@ -1,12 +1,12 @@
 import { ObjectId } from 'mongodb';
 import client from '../config/database.js';
 
+const getDB = () => client.db('db_pms');
+
 // lock user account
 export const lockUser = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('users');
+    const collection = getDB().collection('users');
 
     const { userId } = req.params;
 
@@ -50,9 +50,7 @@ export const lockUser = async (req, res) => {
 // unlock user account
 export const unlockUser = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db('db_pms');
-    const collection = db.collection('users');
+    const collection = getDB().collection('users');
 
     const { userId } = req.params;
 
@@ -88,9 +86,7 @@ export const unlockUser = async (req, res) => {
 
 export const getLockedUser = async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("db_pms");
-    const collection = db.collection("users");
+    const collection = getDB().collection("users");
     const results = await collection
       .find({ isLocked: true })
       .toArray();
