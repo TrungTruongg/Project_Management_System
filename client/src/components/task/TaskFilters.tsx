@@ -69,7 +69,7 @@ function TaskFilters({ users, currentUser, onFilterChange, initialFilters }: Tas
     const statusOptions = [
         { value: 'to-do', label: 'TO DO', color: '#616161' },
         { value: 'in-progress', label: 'IN PROGRESS', color: '#1976d2' },
-        { value: 'completed', label: 'COMPLETED', color: '#2e7d32' },
+        { value: 'done', label: 'DONE', color: '#2e7d32' },
     ];
 
     const priorityOptions = [

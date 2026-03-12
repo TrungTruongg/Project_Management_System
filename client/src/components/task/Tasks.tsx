@@ -1,4 +1,5 @@
 import {
+  Alert,
   Avatar,
   AvatarGroup,
   Box,
@@ -11,14 +12,11 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Snackbar,
   Typography,
 } from '@mui/material';
 import { GoPlusCircle as AddTaskIcon } from 'react-icons/go';
-import {
-  CalendarToday,
-  MoreHoriz,
-  Refresh as RefreshIcon,
-} from '@mui/icons-material';
+import { CalendarToday, MoreHoriz, Refresh as RefreshIcon } from '@mui/icons-material';
 import { useEffect, useMemo, useState } from 'react';
 import TaskFilters, { type FilterState } from './TaskFilters';
 import CreateTaskModal from './CreateTaskModal';
@@ -42,9 +40,14 @@ function Tasks() {
   const { user } = useUser();
   const { searchTerm } = useSearch();
   const [menuOpenTaskId, setMenuOpenTaskId] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    type: 'success' as 'success' | 'error',
+  });
 
   // Get filter params from URL
-  const projectId = searchParams.get('id');
+  const taskId = searchParams.get('id');
 
   const [activeFilters, setActiveFilters] = useState<FilterState>({
     assignee: [],
@@ -101,8 +104,6 @@ function Tasks() {
     return diffDays;
   };
 
-
-
   const fetchAllData = async () => {
     setLoading(true);
     try {
@@ -121,8 +122,8 @@ function Tasks() {
   };
 
   const filteredTasks = taskList.filter((task: any) => {
-    // Filter by project
-    if (projectId && task.projectId !== projectId) {
+    // Filter by task ID
+    if (taskId && task._id !== taskId) {
       return false;
     }
 
@@ -187,7 +188,15 @@ function Tasks() {
   const handleEditTask = (task: any) => {
     setSelectedTask(task);
     setOpenCreateTaskModal(true);
+    setMenuOpenTaskId(null);
   };
+
+  const tasksByStatus = useMemo(() => {
+    const todo = filteredTasks.filter((t) => t.status === 'to-do');
+    const inProgress = filteredTasks.filter((t) => t.status === 'in-progress');
+    const done = filteredTasks.filter((t) => t.status === 'done');
+    return { todo, inProgress, done };
+  }, [filteredTasks]);
 
   // New task
   const handleSaveTask = async (newTask: any) => {
@@ -230,6 +239,11 @@ function Tasks() {
       setTaskList(taskList.filter((task: any) => task._id !== selectedTask._id));
 
       handleCloseDeleteDialog();
+      setSnackbar({
+        open: true,
+        message: 'Deleted task successfully!',
+        type: 'success',
+      });
     } catch (error) {
       console.error('Error deleting task:', error);
     } finally {
@@ -240,6 +254,7 @@ function Tasks() {
   const handleOpenDeleteDialog = (task: any) => {
     setSelectedTask(task);
     setDeleteDialogOpen(true);
+    setMenuOpenTaskId(null);
   };
 
   const handleCloseDeleteDialog = () => {
@@ -260,10 +275,6 @@ function Tasks() {
 
   const renderTaskCard = (task: any) => {
     const priorityConfig = getPriorityChip(task.priority);
-
-    const isTaskAssignedToMe = Array.isArray(task.assignedTo)
-      ? task.assignedTo.includes(user?._id)
-      : task.assignedTo === user?._id;
 
     const assignedUserIds = Array.isArray(task.assignedTo)
       ? task.assignedTo
@@ -286,6 +297,8 @@ function Tasks() {
           boxShadow: 1,
           borderRadius: 2,
           border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
+          width: '100%',
+          overflowY: 'auto'
         }}
         onClick={() => handleViewTask(task._id)}
       >
@@ -340,30 +353,6 @@ function Tasks() {
                   <Typography color="error">Delete</Typography>
                 </MenuItem>
               </Menu>
-              {/* <IconButton
-                size="small"
-                sx={{ color: '#4CAF50' }}
-                onClick={() => handleEditTask(task)}
-              >
-                <Edit fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                sx={{ color: '#EF5350' }}
-                onClick={() => handleOpenDeleteDialog(task)}
-              >
-                <Delete fontSize="small" />
-              </IconButton> */}
-              {/* : isTaskAssignedToMe ? (
-                <IconButton
-                  size="small"
-                  sx={{ color: "#4CAF50" }}
-                  onClick={handleStatusUpdate}
-                  title="Change status"
-                >
-                  <CheckStatusIcon fontSize="small" />
-                </IconButton>
-              ) : null} */}
             </Box>
           </Box>
 
@@ -384,10 +373,12 @@ function Tasks() {
               sx={{
                 lineHeight: '1rem',
                 mb: 2,
-                WebkitLineClamp: 2,
+                WebkitLineClamp: 1,
                 display: '-webkit-box',
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
               }}
             >
               {task.description}
@@ -514,7 +505,7 @@ function Tasks() {
                 display: 'block',
               }}
             >
-              {task.completion}% Complete
+              {task.completion}% Done
             </Typography>
           </Box> */}
         </CardContent>
@@ -601,28 +592,77 @@ function Tasks() {
       ) : filteredTasks.length === 0 ? (
         <Typography fontStyle="italic">No tasks available!</Typography>
       ) : (
+        // <Box
+        //   sx={{
+        //     display: 'grid',
+        //     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        //     gap: 3,
+        //   }}
+        // >
+        //   {filteredTasks.map(renderTaskCard)}
+        // </Box>
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: 3,
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 2,
+            alignItems: 'start',
           }}
         >
-          {filteredTasks.map(renderTaskCard)}
-
-          {/* <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                In Progress ({tasksByStatus().inProgress.length})
+          <Box sx={{ bgcolor: '#f4f5f7', borderRadius: 2, p: 2 }}>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}
+            >
+              <Typography
+                fontWeight={700}
+                fontSize="0.85rem"
+                textTransform="uppercase"
+                color="text.secondary"
+                textAlign="left"
+                width="100%"
+              >
+                To Do ({tasksByStatus.todo.length})
               </Typography>
-              {tasksByStatus().inProgress.map(renderTaskCard)}
-            </Grid>
 
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Completed ({tasksByStatus().completed.length})
+              {tasksByStatus.todo.map(renderTaskCard)}
+            </Box>
+          </Box>
+
+          <Box sx={{ bgcolor: '#f4f5f7', borderRadius: 2, p: 2 }}>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}
+            >
+              <Typography
+                fontWeight={700}
+                fontSize="0.85rem"
+                textTransform="uppercase"
+                color="text.secondary"
+                textAlign="left"
+                width="100%"
+              >
+                In Progress ({tasksByStatus.inProgress.length})
               </Typography>
-              {tasksByStatus().completed.map(renderTaskCard)}
-            </Grid> */}
+              {tasksByStatus.inProgress.map(renderTaskCard)}
+            </Box>
+          </Box>
+
+          <Box sx={{ bgcolor: '#f4f5f7', borderRadius: 2, p: 2 }}>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}
+            >
+              <Typography
+                fontWeight={700}
+                fontSize="0.85rem"
+                textTransform="uppercase"
+                color="text.secondary"
+                textAlign="left"
+                width="100%"
+              >
+                Done ({tasksByStatus.done.length})
+              </Typography>
+              {tasksByStatus.done.map(renderTaskCard)}
+            </Box>
+          </Box>
         </Box>
       )}
 
@@ -643,6 +683,17 @@ function Tasks() {
         selected={selectedTask ? selectedTask.name : ''}
         loading={deleteLoading}
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={5000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        sx={{ mt: 10 }}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.type}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

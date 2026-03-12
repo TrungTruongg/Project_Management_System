@@ -242,7 +242,7 @@ function CreateTaskModal({
         completion = 0;
       } else if (status === 'in-progress') {
         completion = 50;
-      } else if (status === 'completed') {
+      } else if (status === 'done') {
         completion = 100;
       }
 
@@ -862,7 +862,7 @@ function CreateTaskModal({
                 </MenuItem>
                 <MenuItem value="to-do">To Do</MenuItem>
                 <MenuItem value="in-progress">In progress</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="done">Done</MenuItem>
               </Select>
               {showError && !status && (
                 <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>

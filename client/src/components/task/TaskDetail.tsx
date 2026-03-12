@@ -1,40 +1,35 @@
 import {
   Avatar,
   Box,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
+  Divider,
   IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  MenuItem,
+  Select,
   Typography,
-} from "@mui/material";
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+} from '@mui/material';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import {
-  Person as PersonIcon,
-  Loop as StatusIcon,
-  AttachFile as AttachmentIcon,
-  ArrowBack,
-} from "@mui/icons-material";
-import CommentSection from "../comment/CommentSection";
-import api from "../api/axiosConfig";
+import { AttachFile as AttachmentIcon, Add as AddIcon, ArrowBack } from '@mui/icons-material';
+import CommentSection from '../comment/CommentSection';
+import api from '../api/axiosConfig';
+import MediumPriority from '../../assets/MediumPriority';
+import HighPriority from '../../assets/HighPriority';
+import LowPriority from '../../assets/LowPriority';
 
 function TaskDetail() {
   const [searchParams] = useSearchParams();
-  const taskId = searchParams.get("id");
+  const taskId = searchParams.get('id');
 
   const [task, setTask] = useState<any>(null);
   const [assignedUsers, setAssignedUsers] = useState<any[]>([]);
-  const [project, setProject] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [status, setStatus] = useState('');
 
   const navigate = useNavigate();
 
@@ -43,19 +38,16 @@ function TaskDetail() {
 
     setLoading(true);
     try {
-      const [tasksRes, usersRes, projectsRes, commentsRes, repliesRes, attachmentsRes] =
-        await Promise.all([
-          api.get("/tasks"),
-          api.get("/users"),
-          api.get("/projects"),
-          api.get("/comments"),
-          api.get("/replies"),
-          api.get("/attachments"),
-        ]);
+      const [tasksRes, usersRes, commentsRes, repliesRes, attachmentsRes] = await Promise.all([
+        api.get('/tasks'),
+        api.get('/users'),
+        api.get('/comments'),
+        api.get('/replies'),
+        api.get('/attachments'),
+      ]);
 
       const tasks = tasksRes.data;
       const users = usersRes.data;
-      const projects = projectsRes.data;
       const allComments = commentsRes.data || [];
       const allReplies = repliesRes.data || [];
       const attachments = attachmentsRes.data;
@@ -73,36 +65,20 @@ function TaskDetail() {
             ? [foundTask.assignedTo]
             : [];
 
-        const assigned = users.filter((u: any) =>
-          assignedUserIds.includes(u._id)
-        );
+        const assigned = users.filter((u: any) => assignedUserIds.includes(u._id));
         setAssignedUsers(assigned);
 
-        const taskProject = projects.find(
-          (p: any) => p._id === foundTask.projectId
-        );
-        setProject(taskProject);
+        const taskComments = allComments.filter((c: any) => c.taskId === foundTask._id);
 
-        const taskComments = allComments.filter(
-          (c: any) => c.taskId === foundTask._id
-        );
+        const taskReplies = allReplies.filter((r: any) => r.taskId === foundTask._id);
 
-        const taskReplies = allReplies.filter(
-          (r: any) => r.taskId === foundTask._id
-        );
-
-        const mergedComments = [
-          ...taskComments,
-          ...taskReplies
-        ];
+        const mergedComments = [...taskComments, ...taskReplies];
         setComments(mergedComments);
 
-        setAttachments(
-          attachments.filter((att: any) => att.taskId === foundTask._id)
-        );
+        setAttachments(attachments.filter((att: any) => att.taskId === foundTask._id));
       }
     } catch (error) {
-      console.error("Error fetching task detail:", error);
+      console.error('Error fetching task detail:', error);
     } finally {
       setLoading(false);
     }
@@ -112,80 +88,112 @@ function TaskDetail() {
     fetchTaskDetail();
   }, [taskId]);
 
+  // Initialize status when task loads
+  useEffect(() => {
+    if (task) {
+      setStatus(task.status);
+    }
+  }, [task?._id]);
+
   const handleSubmitComment = (newComment: any) => {
     setComments([...comments, newComment]);
   };
 
   const handleUpdateComment = (commentId: string, newContent: string) => {
-    setComments(comments.map((c: any) =>
-      c._id === commentId
-        ? { ...c, content: newContent, updatedAt: new Date().toISOString() }
-        : c
-    ));
+    setComments(
+      comments.map((c: any) =>
+        c._id === commentId ? { ...c, content: newContent, updatedAt: new Date().toISOString() } : c
+      )
+    );
   };
 
   const handleDeleteComment = (commentId: number) => {
     setComments(comments.filter((c) => c._id !== commentId));
   };
 
-  const getStatusChip = (status: string) => {
+  const handleStatusChange = async (newStatus: string) => {
+    setStatus(newStatus);
+    setTask({ ...task, status: newStatus });
+    const taskData = {
+      name: task.name,
+      priority: task.priority,
+      status: newStatus,
+    };
+    try {
+      await api.put(`/tasks/update/${taskId}`, taskData);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      setStatus(task.status);
+      setTask(task);
+    }
+  };
+
+  const statusOptions = [
+    { value: 'to-do', label: 'To Do', bg: '#DFE1E6', color: '#42526E' },
+    { value: 'in-progress', label: 'In Progress', bg: '#DEEBFF', color: '#0052CC' },
+    { value: 'done', label: 'Done', bg: '#E3FCEF', color: '#006644' },
+  ];
+
+  const getStatusOption = (status: string) => {
     const config: any = {
-      completed: { label: "Completed", bgcolor: "#4CAF50" },
-      "in-progress": { label: "In Progress", bgcolor: "#FF9800" },
-      "to-do": { label: "To Do", bgcolor: "#F44336" },
+      done: { label: 'DONE', bgcolor: '#4CAF50' },
+      'in-progress': { label: 'IN PROGRESS', bgcolor: '#FF9800' },
+      'to-do': { label: 'TO DO', bgcolor: '#F44336' },
     };
 
     const statusConfig = config[status] || config.pending;
 
     return (
-      <Chip
-        label={statusConfig.label}
+      <Select
+        value={status}
+        defaultValue={statusConfig.label}
+        onChange={(e) => handleStatusChange(e.target.value)}
         size="small"
         sx={{
-          bgcolor: statusConfig.bgcolor,
-          color: "white",
-          fontWeight: 600,
-          fontSize: "0.85rem",
-          height: 28,
-          px: 1,
+          height: 32,
+          fontSize: '0.8rem',
+          fontWeight: 700,
+          bgcolor: currentStatus.bg,
+          color: currentStatus.color,
+          '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+          '& .MuiSelect-icon': { color: currentStatus.color },
+          borderRadius: 1,
+          px: 0.5,
         }}
-      />
+      >
+        {statusOptions.map((opt) => (
+          <MenuItem key={opt.value} value={opt.value}>
+            <Typography fontSize="0.8rem" fontWeight={700}>
+              {opt.label}
+            </Typography>
+          </MenuItem>
+        ))}
+      </Select>
     );
   };
 
-  const getPriorityChip = (priority: string) => {
-    const config: any = {
-      high: { label: "High", bgcolor: "#EF5350" },
-      medium: { label: "Medium", bgcolor: "#FF9800" },
-      low: { label: "Low", bgcolor: "#66BB6A" },
-    };
-
-    const priorityConfig = config[priority] || config.medium;
-
-    return (
-      <Chip
-        label={priorityConfig.label}
-        size="small"
-        sx={{
-          bgcolor: priorityConfig.bgcolor,
-          color: "white",
-          fontWeight: 600,
-          fontSize: "0.85rem",
-          height: 28,
-          px: 1,
-        }}
-      />
-    );
+  const priorityConfig: any = {
+    high: { label: 'High', color: '#DE350B', icon: <HighPriority /> },
+    medium: { label: 'Medium', color: '#FF991F', icon: <MediumPriority /> },
+    low: { label: 'Low', color: '#0065FF', icon: <LowPriority /> },
   };
+
+  const currentStatus = statusOptions.find((s) => s.value === status) ?? {
+    value: status,
+    label: status,
+    bg: '#DFE1E6',
+    color: '#42526E',
+  };
+  const currentPriority = priorityConfig[task?.priority] || priorityConfig.medium;
 
   if (loading) {
     return (
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "60vh",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '60vh',
         }}
       >
         <CircularProgress />
@@ -195,7 +203,7 @@ function TaskDetail() {
 
   if (!task) {
     return (
-      <Box sx={{ py: 10, textAlign: "center" }}>
+      <Box sx={{ py: 10, textAlign: 'center' }}>
         <Typography variant="h5" color="text.secondary">
           Task not found
         </Typography>
@@ -203,312 +211,337 @@ function TaskDetail() {
     );
   }
 
-  return (
-    <Box>
-      <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
-        <IconButton onClick={() => navigate(-1)}>
-          <ArrowBack />
-        </IconButton>
-        <Typography fontSize="1.5rem" fontWeight="700">
-          Task Detail
-        </Typography>
-      </Box>
+  const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', py: 1, gap: 3 }}>
+      <Typography
+        sx={{
+          minWidth: 110,
+          fontSize: '0.8rem',
+          color: 'text.secondary',
+          fontWeight: 500,
+          pt: 0.3,
+        }}
+      >
+        {label}
+      </Typography>
+      <Box sx={{ flex: 1 }}>{children}</Box>
+    </Box>
+  );
 
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        width: '100%',
+        overflow: 'hidden',
+        gap: 2,
+        bgcolor: (theme) => theme.palette.background.default,
+      }}
+    >
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          maxWidth: '100%',
+        }}
+      >
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton onClick={() => navigate(-1)}>
+              <ArrowBack />
+            </IconButton>
+            <Typography fontSize="1.5rem" fontWeight="700">
+              Task Detail
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Title */}
+        <Typography
+          variant="h5"
+          fontWeight={600}
+          sx={{
+            mb: 3,
+            fontSize: '1.4rem',
+            lineHeight: 1.4,
+            color: 'text.primary',
+            textTransform: 'capitalize',
+          }}
+        >
+          {task.name}
+        </Typography>
+
+        {/* Description */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'text.primary' }}>
+            Description
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              lineHeight: 1.8,
+              whiteSpace: 'pre-wrap',
+              minHeight: 40,
+              p: 1.5,
+              display: '-webkit-box',
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+            }}
+          >
+            {task.description || (
+              <span style={{ fontStyle: 'italic', opacity: 0.5 }}>No description</span>
+            )}
+          </Typography>
+        </Box>
+
+        {/* Attachments */}
+        {attachments && attachments.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: 1.5,
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight={600}>
+                Attachments
+                <Chip
+                  label={attachments.length}
+                  size="small"
+                  sx={{ ml: 1, height: 18, fontSize: '0.7rem' }}
+                />
+              </Typography>
+              <IconButton size="small">
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              {attachments.map((att: any, index: number) => {
+                let url = att.url;
+                if (url.startsWith('/uploads/')) {
+                  url = import.meta.env.VITE_SERVER_URL + url;
+                }
+                const filename = att.url.split('/').pop();
+                const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(filename);
+
+                return (
+                  <Box
+                    key={att._id || index}
+                    component="a"
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      width: 160,
+                      border: (t) => `1px solid ${t.palette.divider}`,
+                      borderRadius: 1.5,
+                      overflow: 'hidden',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      transition: 'box-shadow 0.2s',
+                      '&:hover': { boxShadow: 3 },
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        height: 90,
+                        bgcolor: '#f4f5f7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {isImage ? (
+                        <Box
+                          component="img"
+                          src={url}
+                          alt={filename}
+                          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <AttachmentIcon sx={{ fontSize: 36, color: '#2196F3' }} />
+                      )}
+                    </Box>
+                    <Box sx={{ p: 1 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          fontWeight: 600,
+                          wordBreak: 'break-all',
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {filename.length > 20 ? filename.slice(0, 20) + '…' : filename}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.65rem' }}
+                      >
+                        {new Date(att.uploadedAt).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+
+        {/* Comments Section */}
+        <CommentSection
+          taskId={task._id}
+          comments={comments}
+          onSubmit={handleSubmitComment}
+          onDelete={handleDeleteComment}
+          onUpdate={handleUpdateComment}
+          assignedUsers={allUsers}
+        />
+      </Box>
 
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: 3,
-          mb: 4,
+          width: '100%',
+          maxWidth: '40%',
+          flexShrink: 0,
+          borderLeft: (t) => `1px solid ${t.palette.divider}`,
+          overflowY: 'auto',
+          py: 3,
+          px: 2.5,
+          bgcolor: (t) => (t.palette.mode === 'dark' ? '#1a1a1a' : '#fafafa'),
         }}
       >
-        {/* Status Card */}
-        <Card
-          sx={{
-            boxShadow: 2,
-            borderRadius: 2,
-            transition: "all 0.3s",
-          }}
-        >
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 2,
-                  bgcolor: "#FFF9C4",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <StatusIcon sx={{ fontSize: 32, color: "#F57F17" }} />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ fontWeight: 600 }}
-                >
-                  Status
-                </Typography>
-                <Box sx={{ mt: 0.5 }}>{getStatusChip(task.status)}</Box>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Assigned Users Card */}
-        <Card
-          sx={{
-            boxShadow: 2,
-            borderRadius: 2,
-            transition: "all 0.3s",
-          }}
-        >
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 2,
-                  bgcolor: "#B3E5FC",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <PersonIcon sx={{ fontSize: 32, color: "#0277BD" }} />
-              </Box>
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ fontWeight: 600 }}
-                >
-                  Assigned To
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mt: 0.5,
-                  }}
-                >
-                  {assignedUsers.length > 0 ? (
-                    assignedUsers.map((assignedUser) => (
-                      <Box
-                        key={assignedUser._id}
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        <Avatar
-                          src={assignedUser?.avatar}
-                          sx={{
-                            width: 28,
-                            height: 28,
-                            fontSize: "0.75rem",
-                            bgcolor: "#E0E0E0",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          {assignedUser?.firstName?.[0]}
-                          {assignedUser?.lastName?.[0]}
-                        </Avatar>
-                        <Typography fontSize="13px">
-                          {assignedUser.firstName} {assignedUser.lastName}
-                        </Typography>
-                      </Box>
-                    ))
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      Unassigned
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* Task Content */}
-      <Card
-        sx={{
-          boxShadow: 2,
-          borderRadius: 2,
-          mb: 4,
-        }}
-      >
-        <CardContent sx={{ p: 4 }}>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
-              pb: 2,
-              borderBottom: "1px solid #e0e0e0",
-            }}
-          >
-            <Box>
-              {project && (
-                <Chip
-                  label={project.name}
-                  size="small"
-                  sx={{
-                    bgcolor: "#F3E5F5",
-                    color: "#7B1FA2",
-                    fontSize: "0.75rem",
-                    mb: 1,
-                    textTransform: "capitalize",
-                  }}
-                />
-              )}
-              {
-                task.startDate && task.endDate ?
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontSize: "0.85rem" }}
-                  >
-                    {new Date(task.startDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}{" "}
-                    -{" "}
-                    {new Date(task.endDate).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </Typography>
-                  : <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontSize: "0.85rem" }}
-                  >No deadline</Typography>
-              }
-
-            </Box>
+        {/* Details Section */}
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+            {getStatusOption(task.status)}
           </Box>
 
-          {/* Title */}
-          <Typography variant="h5" fontWeight="700">
-            {task.name.toUpperCase()}
+          <Typography variant="h5" fontWeight={700} sx={{ mb: 1.5 }}>
+            Details
           </Typography>
 
-          {/* Description */}
-          <Box>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                lineHeight: 1.8,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {task.description || "No description provided"}
-            </Typography>
-          </Box>
+          <DetailRow label="Assignee">
+            {assignedUsers.length > 0 ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                {assignedUsers.map((u) => (
+                  <Box key={u._id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar src={u.avatar} sx={{ width: 24, height: 24, fontSize: '0.65rem' }}>
+                      {u.firstName?.[0]}
+                      {u.lastName?.[0]}
+                    </Avatar>
+                    <Typography fontSize="0.82rem">
+                      {u.firstName} {u.lastName}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            ) : (
+              <Typography fontSize="0.82rem" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                Unassigned
+              </Typography>
+            )}
+          </DetailRow>
 
-          {/* Additional Info */}
-          <Box
-            sx={{
-              mt: 4,
-              pt: 3,
-              borderTop: "1px solid #e0e0e0",
-              display: "flex",
-              gap: 4,
-              flexWrap: "wrap",
-            }}
-          >
-            <Box>
+          <DetailRow label="Priority">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ fontWeight: 600, display: "block", mb: 0.5 }}
+                sx={{ color: currentPriority.color, fontWeight: 700, fontSize: '0.9rem' }}
               >
-                Priority
+                {currentPriority.icon}
               </Typography>
-              {getPriorityChip(task.priority)}
+              <Typography fontSize="0.82rem" sx={{ color: currentPriority.color, fontWeight: 600 }}>
+                {currentPriority.label}
+              </Typography>
             </Box>
-          </Box>
+          </DetailRow>
 
-          {attachments && attachments.length > 0 && (
-            <Box sx={{ mt: 3 }}>
-              <Typography fontSize="12">
-                Attachments
-              </Typography>
-              <List>
-                {attachments.map((att: any, index: number) => {
-                  let processedUrl = att.url;
-                  if (processedUrl.startsWith('/uploads/')) {
-                    const baseURL = import.meta.env.VITE_SERVER_URL;
-                    processedUrl = baseURL + processedUrl;
-                  }
+          <DetailRow label="Start date">
+            <Typography fontSize="0.82rem" color="text.secondary">
+              {task.startDate
+                ? new Date(task.startDate).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : 'None'}
+            </Typography>
+          </DetailRow>
 
-                  return (
-                    <ListItem
-                      key={att._id || index}
-                      component="a"
-                      href={processedUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{
-                        border: (theme) =>
-                          `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
-                        borderRadius: 1,
-                        mb: 1,
-                        textDecoration: "none",
-                        "&:hover": {
-                          bgcolor: "action.hover",
-                        },
-                      }}
-                    >
-                      <ListItemIcon>
-                        <AttachmentIcon sx={{ color: "#2196F3" }} />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Typography
-                            sx={{
-                              color: "#2196F3",
-                              wordBreak: "break-all",
-                            }}
-                          >
-                            {att.url.split("/").pop()}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="text.secondary">
-                            Uploaded at:{" "}
-                            {new Date(att.uploadedAt).toLocaleString()}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                  );
+          <DetailRow label="Due date">
+            {task.endDate ? (
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  bgcolor: new Date(task.endDate) < new Date() ? '#FFEBE6' : 'transparent',
+                  color: new Date(task.endDate) < new Date() ? '#DE350B' : 'text.secondary',
+                  px: new Date(task.endDate) < new Date() ? 1 : 0,
+                  py: 0.3,
+                  borderRadius: 1,
+                  fontSize: '0.82rem',
+                  fontWeight: new Date(task.endDate) < new Date() ? 600 : 400,
+                }}
+              >
+                {new Date(task.endDate) < new Date() && '⚠ '}
+                {new Date(task.endDate).toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
                 })}
-              </List>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+              </Box>
+            ) : (
+              <Typography fontSize="0.82rem" color="text.secondary">
+                None
+              </Typography>
+            )}
+          </DetailRow>
+        </Box>
 
-      {/* Comments Section */}
-      <CommentSection
-        taskId={task._id}
-        comments={comments}
-        onSubmit={handleSubmitComment}
-        onDelete={handleDeleteComment}
-        onUpdate={handleUpdateComment}
-        assignedUsers={allUsers}
-      />
+        <Divider sx={{ my: 2 }} />
+
+        {/* Created / Updated */}
+        <Box>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+            Created{' '}
+            {task.createdAt
+              ? new Date(task.createdAt).toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })
+              : '—'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+            Updated{' '}
+            {task.updatedAt
+              ? new Date(task.updatedAt).toLocaleDateString('en-GB', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                })
+              : '—'}
+          </Typography>
+        </Box>
+      </Box>
     </Box>
   );
 }
