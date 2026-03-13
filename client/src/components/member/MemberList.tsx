@@ -23,8 +23,8 @@ import api from "../api/axiosConfig";
 
 function MemberList() {
   const [users, setUsers] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { searchTerm, setSearchTerm } = useSearch();
@@ -40,13 +40,13 @@ function MemberList() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [userRes, projectRes] = await Promise.all([
+      const [taskRes, userRes] = await Promise.all([
+        api.get("/tasks"),
         api.get("/users"),
-        api.get("/projects")
       ]);
 
       setUsers(userRes.data);
-      setProjects(projectRes.data);
+      setTasks(taskRes.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -60,29 +60,29 @@ function MemberList() {
     }
   }, [user]);
 
-  // Get projects where the user is the leader
-  const getLeaderProjects = () => {
+  // Get tasks where the user is the leader
+  const getTaskLeader = () => {
     if (!user) return [];
-    return projects.filter((p) => p.leaderId === user._id);
+    return tasks.filter((task) => task.leaderId === user._id);
   };
 
-  // Get projects where the user is a member or leader
-  const getUserProjects = () => {
+  // Get tasks where the user is a member 
+  const getTaskMemebers = () => {
     if (!user) return [];
-    return projects.filter(
-      (p) => p.leaderId === user._id || p.members?.includes(user._id)
+    return tasks.filter(
+      (task) => task.leaderId === user._id || task.assignedTo?.includes(user._id)
     );
   };
 
-  const leaderProjects = getLeaderProjects();
-  const userProjects = getUserProjects();
+  const taskLeader = getTaskLeader();
+  const taskMembers = getTaskMemebers();
 
   // Get workspace members (Leaders only)
   const getWorkspaceMembers = () => {
     const leadersSet = new Set<number>();
 
-    userProjects.forEach((project) => {
-      leadersSet.add(project.leaderId);
+    taskMembers.forEach((task) => {
+      leadersSet.add(task.leaderId);
     });
 
     return Array.from(leadersSet).map((leaderId) => {
@@ -91,13 +91,13 @@ function MemberList() {
     }).filter(Boolean);
   };
 
-  // Get guests (Project members who are not leaders)
+  // Get guests (Tasks members who are not leaders)
   const getGuests = () => {
-    const leaderIds = new Set(userProjects.map((p) => p.leaderId));
+    const leaderIds = new Set(taskLeader.map((t) => t.leaderId));
     const guestsMap = new Map<number, any>();
 
-    userProjects.forEach((project) => {
-      project.members?.forEach((memberId: number) => {
+    taskMembers.forEach((task) => {
+      task.assignedTo?.forEach((memberId: number) => {
         if (!leaderIds.has(memberId) && !guestsMap.has(memberId)) {
           const member = users.find((u) => u._id === memberId);
           if (member) {
@@ -120,9 +120,9 @@ function MemberList() {
 
     return members.filter((member: any) => {
       const fullName = `${member.firstName} ${member.lastName}`.toLowerCase();
-      const username = member.username?.toLowerCase() || '';
+      const email = member.email?.toLowerCase() || '';
       return fullName.includes(searchTerm.toLowerCase()) ||
-        username.includes(searchTerm.toLowerCase());
+        email.includes(searchTerm.toLowerCase());
     });
   };
 
@@ -159,21 +159,21 @@ function MemberList() {
     e.stopPropagation();
 
     try {
-      const memberProjects = userProjects.filter((project) =>
-        project.members?.includes(memberId)
+      const memberTasks = taskMembers.filter((task) =>
+        task.assignedTo?.includes(memberId)
       );
 
       // Remove member 
-      for (const project of memberProjects) {
-        const updatedMembers = project.members.filter((id: string) => id !== memberId);
+      for (const task of memberTasks) {
+        const updatedMembers = task.assignedTo.filter((id: string) => id !== memberId);
 
-        await api.put(`/projects/update/${project._id}`, {
-          name: project.name,
-          description: project.description,
-          startDate: project.startDate,
-          endDate: project.endDate,
-          leaderId: project.leaderId,
-          members: updatedMembers,
+        await api.put(`/tasks/update/${task._id}`, {
+          name: task.name,
+          description: task.description,
+          startDate: task.startDate,
+          endDate: task.endDate,
+          leaderId: task.leaderId,
+          assignedTo: updatedMembers,
         });
       }
 
@@ -225,7 +225,7 @@ function MemberList() {
               size="medium"
               startIcon={<AddIcon />}
               onClick={handleOpenAddMemberModal}
-              disabled={leaderProjects.length === 0}
+              disabled={taskLeader.length === 0}
               sx={{
                 backgroundColor: "#484c7f",
                 color: "white",
@@ -244,7 +244,7 @@ function MemberList() {
             <Tab
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Leader of project
+                  Task Leaders
                   <Chip
                     label={workspaceMembers.length}
                     size="small"
@@ -257,7 +257,7 @@ function MemberList() {
             <Tab
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Project Members
+                  Task Members
                   <Chip
                     label={guests.length}
                     size="small"
@@ -273,8 +273,8 @@ function MemberList() {
         {/* Description */}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {tabValue === 0
-            ? "Leaders can view and participate in all visible projects and create new project."
-            : "Members can only view and edit projects they've been added to.."
+            ? "Leaders can view and participate in all visible tasks and create new tasks."
+            : "Members can only view and edit tasks they've been added to.."
           }
         </Typography>
 
@@ -291,9 +291,9 @@ function MemberList() {
         >
           <CircularProgress />
         </Box>
-      ) : userProjects.length === 0 ? (
+      ) : taskMembers.length === 0 ? (
         <Typography fontStyle="italic">
-          You are not part of any projects yet.
+          You are not part of any tasks yet.
         </Typography>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -347,7 +347,7 @@ function MemberList() {
                     {member.firstName} {member.lastName}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    @{member.email?.split('@')[0]}
+                    {member.email}
                   </Typography>
                 </Box>
 
@@ -389,9 +389,9 @@ function MemberList() {
         open={open}
         onClose={handleCloseModal}
         onSave={handleAddMember}
-        leaderProjects={leaderProjects}
+        taskLeader={taskLeader}
         allUsers={users}
-        allProjects={projects}
+        allTasks={tasks}
       />
 
       <Snackbar

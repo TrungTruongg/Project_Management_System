@@ -128,6 +128,18 @@ function TaskDetail() {
     }
   };
 
+  const calculateDeadline = (dateStart: string, dateEnd: string) => {
+    const startDate = new Date(dateStart);
+    const endDate = new Date(dateEnd);
+
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  };
+
+  const calculateDays = calculateDeadline(task?.startDate, task?.endDate);
+
   const statusOptions = [
     { value: 'to-do', label: 'To Do', bg: '#DFE1E6', color: '#42526E' },
     { value: 'in-progress', label: 'In Progress', bg: '#DEEBFF', color: '#0052CC' },
@@ -212,14 +224,13 @@ function TaskDetail() {
   }
 
   const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', py: 1, gap: 3 }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', py: 1, gap: 3 }}>
       <Typography
         sx={{
           minWidth: 110,
           fontSize: '0.8rem',
           color: 'text.secondary',
           fontWeight: 500,
-          pt: 0.3,
         }}
       >
         {label}
@@ -229,320 +240,318 @@ function TaskDetail() {
   );
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        width: '100%',
-        overflow: 'hidden',
-        gap: 2,
-        bgcolor: (theme) => theme.palette.background.default,
-      }}
-    >
+    <>
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <IconButton onClick={() => navigate(-1)}>
+          <ArrowBack />
+        </IconButton>
+        <Typography fontSize="1.5rem" fontWeight="700">
+          Task Detail
+        </Typography>
+      </Box>
+
       <Box
         sx={{
-          flex: 1,
-          overflowY: 'auto',
-          maxWidth: '100%',
+          display: 'flex',
+          width: '100%',
+          height: '80vh',
+          gap: 2,
+          bgcolor: (theme) => theme.palette.background.default,
         }}
       >
         <Box
           sx={{
-            width: '100%',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton onClick={() => navigate(-1)}>
-              <ArrowBack />
-            </IconButton>
-            <Typography fontSize="1.5rem" fontWeight="700">
-              Task Detail
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Title */}
-        <Typography
-          variant="h5"
-          fontWeight={600}
-          sx={{
+            flex: 1,
+            maxWidth: '100%',
+            overflowY: 'auto',
             mb: 3,
-            fontSize: '1.4rem',
-            lineHeight: 1.4,
-            color: 'text.primary',
-            textTransform: 'capitalize',
           }}
         >
-          {task.name}
-        </Typography>
-
-        {/* Description */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'text.primary' }}>
-            Description
-          </Typography>
+          {/* Title */}
           <Typography
-            variant="body2"
-            color="text.secondary"
+            variant="h5"
+            fontWeight={600}
             sx={{
-              lineHeight: 1.8,
-              whiteSpace: 'pre-wrap',
-              minHeight: 40,
-              p: 1.5,
-              display: '-webkit-box',
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              wordBreak: 'break-word',
-              overflowWrap: 'break-word',
+              mb: 3,
+              fontSize: '1.4rem',
+              lineHeight: 1.4,
+              color: 'text.primary',
+              textTransform: 'capitalize',
             }}
           >
-            {task.description || (
-              <span style={{ fontStyle: 'italic', opacity: 0.5 }}>No description</span>
-            )}
+            {task.name}
           </Typography>
-        </Box>
 
-        {/* Attachments */}
-        {attachments && attachments.length > 0 && (
+          {/* Description */}
           <Box sx={{ mb: 4 }}>
-            <Box
+            <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'text.primary' }}>
+              Description
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                mb: 1.5,
+                lineHeight: 1.8,
+                whiteSpace: 'pre-wrap',
+                minHeight: 40,
+                p: 1.5,
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
               }}
             >
-              <Typography variant="subtitle2" fontWeight={600}>
-                Attachments
-                <Chip
-                  label={attachments.length}
-                  size="small"
-                  sx={{ ml: 1, height: 18, fontSize: '0.7rem' }}
-                />
-              </Typography>
-              <IconButton size="small">
-                <AddIcon fontSize="small" />
-              </IconButton>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-              {attachments.map((att: any, index: number) => {
-                let url = att.url;
-                if (url.startsWith('/uploads/')) {
-                  url = import.meta.env.VITE_SERVER_URL + url;
-                }
-                const filename = att.url.split('/').pop();
-                const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(filename);
+              {task.description || (
+                <span style={{ fontStyle: 'italic', opacity: 0.5 }}>No description</span>
+              )}
+            </Typography>
+          </Box>
 
-                return (
-                  <Box
-                    key={att._id || index}
-                    component="a"
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      width: 160,
-                      border: (t) => `1px solid ${t.palette.divider}`,
-                      borderRadius: 1.5,
-                      overflow: 'hidden',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'box-shadow 0.2s',
-                      '&:hover': { boxShadow: 3 },
-                    }}
-                  >
+          {/* Attachments */}
+          {attachments && attachments.length > 0 && (
+            <Box sx={{ mb: 4 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 1.5,
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight={600}>
+                  Attachments
+                  <Chip
+                    label={attachments.length}
+                    size="small"
+                    sx={{ ml: 1, height: 18, fontSize: '0.7rem' }}
+                  />
+                </Typography>
+                <IconButton size="small">
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                {attachments.map((att: any, index: number) => {
+                  let url = att.url;
+
+                  const filename = att.url.split('/').pop();
+                  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(filename);
+
+                  return (
                     <Box
+                      key={att._id || index}
+                      component="a"
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       sx={{
-                        height: 90,
-                        bgcolor: '#f4f5f7',
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        width: 160,
+                        border: (t) => `1px solid ${t.palette.divider}`,
+                        borderRadius: 1.5,
                         overflow: 'hidden',
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        transition: 'box-shadow 0.2s',
+                        '&:hover': { boxShadow: 3 },
                       }}
                     >
-                      {isImage ? (
-                        <Box
-                          component="img"
-                          src={url}
-                          alt={filename}
-                          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      ) : (
-                        <AttachmentIcon sx={{ fontSize: 36, color: '#2196F3' }} />
-                      )}
-                    </Box>
-                    <Box sx={{ p: 1 }}>
-                      <Typography
-                        variant="caption"
+                      <Box
                         sx={{
-                          display: 'block',
-                          fontWeight: 600,
-                          wordBreak: 'break-all',
-                          lineHeight: 1.3,
+                          height: 90,
+                          bgcolor: '#f4f5f7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
                         }}
                       >
-                        {filename.length > 20 ? filename.slice(0, 20) + '…' : filename}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontSize: '0.65rem' }}
-                      >
-                        {new Date(att.uploadedAt).toLocaleDateString()}
+                        {isImage ? (
+                          <Box
+                            component="img"
+                            src={url}
+                            alt={filename}
+                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <AttachmentIcon sx={{ fontSize: 36, color: '#2196F3' }} />
+                        )}
+                      </Box>
+                      <Box sx={{ p: 1 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: 'block',
+                            fontWeight: 600,
+                            wordBreak: 'break-all',
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {filename.length > 20 ? filename.slice(0, 20) + '…' : filename}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: '0.65rem' }}
+                        >
+                          {new Date(att.uploadedAt).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+
+          {/* Comments Section */}
+          <CommentSection
+            taskId={task._id}
+            comments={comments}
+            onSubmit={handleSubmitComment}
+            onDelete={handleDeleteComment}
+            onUpdate={handleUpdateComment}
+            assignedUsers={allUsers}
+          />
+        </Box>
+
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: '40%',
+            flexShrink: 0,
+            borderLeft: (t) => `1px solid ${t.palette.divider}`,
+            overflowY: 'auto',
+            py: 3,
+            px: 2.5,
+            bgcolor: (t) => (t.palette.mode === 'dark' ? '#1a1a1a' : '#fafafa'),
+          }}
+        >
+          {/* Details Section */}
+          <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+              {getStatusOption(task.status)}
+            </Box>
+
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 1.5 }}>
+              Details
+            </Typography>
+
+            <DetailRow label="Assignee">
+              {assignedUsers.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  {assignedUsers.map((u) => (
+                    <Box key={u._id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar src={u.avatar} sx={{ width: 24, height: 24, fontSize: '0.65rem' }}>
+                        {u.firstName?.[0]}
+                        {u.lastName?.[0]}
+                      </Avatar>
+                      <Typography fontSize="0.82rem">
+                        {u.firstName} {u.lastName}
                       </Typography>
                     </Box>
-                  </Box>
-                );
-              })}
-            </Box>
-          </Box>
-        )}
+                  ))}
+                </Box>
+              ) : (
+                <Typography fontSize="0.82rem" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                  Unassigned
+                </Typography>
+              )}
+            </DetailRow>
 
-        {/* Comments Section */}
-        <CommentSection
-          taskId={task._id}
-          comments={comments}
-          onSubmit={handleSubmitComment}
-          onDelete={handleDeleteComment}
-          onUpdate={handleUpdateComment}
-          assignedUsers={allUsers}
-        />
-      </Box>
-
-      <Box
-        sx={{
-          width: '100%',
-          maxWidth: '40%',
-          flexShrink: 0,
-          borderLeft: (t) => `1px solid ${t.palette.divider}`,
-          overflowY: 'auto',
-          py: 3,
-          px: 2.5,
-          bgcolor: (t) => (t.palette.mode === 'dark' ? '#1a1a1a' : '#fafafa'),
-        }}
-      >
-        {/* Details Section */}
-        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
-            {getStatusOption(task.status)}
-          </Box>
-
-          <Typography variant="h5" fontWeight={700} sx={{ mb: 1.5 }}>
-            Details
-          </Typography>
-
-          <DetailRow label="Assignee">
-            {assignedUsers.length > 0 ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                {assignedUsers.map((u) => (
-                  <Box key={u._id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar src={u.avatar} sx={{ width: 24, height: 24, fontSize: '0.65rem' }}>
-                      {u.firstName?.[0]}
-                      {u.lastName?.[0]}
-                    </Avatar>
-                    <Typography fontSize="0.82rem">
-                      {u.firstName} {u.lastName}
-                    </Typography>
-                  </Box>
-                ))}
+            <DetailRow label="Priority">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography
+                  sx={{ color: currentPriority.color, fontWeight: 700, fontSize: '0.9rem' }}
+                >
+                  {currentPriority.icon}
+                </Typography>
+                <Typography
+                  fontSize="0.82rem"
+                  sx={{ color: currentPriority.color, fontWeight: 600 }}
+                >
+                  {currentPriority.label}
+                </Typography>
               </Box>
-            ) : (
-              <Typography fontSize="0.82rem" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                Unassigned
-              </Typography>
-            )}
-          </DetailRow>
+            </DetailRow>
 
-          <DetailRow label="Priority">
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Typography
-                sx={{ color: currentPriority.color, fontWeight: 700, fontSize: '0.9rem' }}
-              >
-                {currentPriority.icon}
+            <DetailRow label="Start date">
+              <Typography fontSize="0.82rem" color="text.secondary">
+                {task.startDate
+                  ? new Date(task.startDate).toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })
+                  : 'None'}
               </Typography>
-              <Typography fontSize="0.82rem" sx={{ color: currentPriority.color, fontWeight: 600 }}>
-                {currentPriority.label}
-              </Typography>
-            </Box>
-          </DetailRow>
+            </DetailRow>
 
-          <DetailRow label="Start date">
-            <Typography fontSize="0.82rem" color="text.secondary">
-              {task.startDate
-                ? new Date(task.startDate).toLocaleDateString('en-GB', {
+            <DetailRow label="Due date">
+              {calculateDays <= 0 ? (
+                <Typography fontSize="0.82rem" color="red">
+                  Expired
+                </Typography>
+              ) : task.endDate ? (
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    bgcolor: new Date(task.endDate) < new Date() ? '#FFEBE6' : 'transparent',
+                    color: new Date(task.endDate) < new Date() ? '#DE350B' : 'text.secondary',
+                    px: new Date(task.endDate) < new Date() ? 1 : 0,
+                    py: 0.3,
+                    borderRadius: 1,
+                    fontSize: '0.82rem',
+                    fontWeight: new Date(task.endDate) < new Date() ? 600 : 400,
+                  }}
+                >
+                  {new Date(task.endDate) < new Date() && '⚠ '}
+                  {new Date(task.endDate).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </Box>
+              ) : (
+                <Typography fontSize="0.82rem" color="text.secondary">
+                  None
+                </Typography>
+              )}
+            </DetailRow>
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          {/* Created / Updated */}
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+              Created{' '}
+              {task.createdAt
+                ? new Date(task.createdAt).toLocaleDateString('en-GB', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric',
                   })
-                : 'None'}
+                : '—'}
             </Typography>
-          </DetailRow>
-
-          <DetailRow label="Due date">
-            {task.endDate ? (
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  bgcolor: new Date(task.endDate) < new Date() ? '#FFEBE6' : 'transparent',
-                  color: new Date(task.endDate) < new Date() ? '#DE350B' : 'text.secondary',
-                  px: new Date(task.endDate) < new Date() ? 1 : 0,
-                  py: 0.3,
-                  borderRadius: 1,
-                  fontSize: '0.82rem',
-                  fontWeight: new Date(task.endDate) < new Date() ? 600 : 400,
-                }}
-              >
-                {new Date(task.endDate) < new Date() && '⚠ '}
-                {new Date(task.endDate).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </Box>
-            ) : (
-              <Typography fontSize="0.82rem" color="text.secondary">
-                None
-              </Typography>
-            )}
-          </DetailRow>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Created / Updated */}
-        <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-            Created{' '}
-            {task.createdAt
-              ? new Date(task.createdAt).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })
-              : '—'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-            Updated{' '}
-            {task.updatedAt
-              ? new Date(task.updatedAt).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                })
-              : '—'}
-          </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+              Updated{' '}
+              {task.updatedAt
+                ? new Date(task.updatedAt).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })
+                : '—'}
+            </Typography>
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </>
   );
 }
 

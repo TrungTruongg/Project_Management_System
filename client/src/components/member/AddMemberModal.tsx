@@ -26,11 +26,11 @@ function AddMemberModal({
   open,
   onClose,
   onSave,
-  leaderProjects = [],
+  taskLeader = [],
   allUsers = [],
-  allProjects = [],
+  allTasks = [],
 }: any) {
-  const [selectedProjectId, setSelectedProjectId] = useState<number | "">("");
+  const [selectedTaskId, setSelectedTaskId] = useState<string | "">("");
   const [emailOrName, setEmailOrName] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -41,13 +41,13 @@ function AddMemberModal({
       type: "success" as "success" | "error",
     });
 
-  // Filter user who are not in any project
+  // Filter user who are not in any task
   const getAvailableUsers = () => {
     return allUsers.filter((user: any) => {
-      const hasProject = allProjects.some((project: any) =>
-        project.leaderId === user._id || project.members?.includes(user._id)
+      const hasTask = allTasks.some((task: any) =>
+        task.leaderId === user._id || task.assignedTo?.includes(user._id)
       );
-      return !hasProject;
+      return !hasTask;
     });
   };
 
@@ -63,10 +63,10 @@ function AddMemberModal({
     const availableUsers = getAvailableUsers();
     const searchLower = value.toLowerCase();
 
-    const filtered = availableUsers.filter((u: any) =>
-      u.firstName.toLowerCase().includes(searchLower) ||
-      u.lastName.toLowerCase().includes(searchLower) ||
-      u.email.toLowerCase().includes(searchLower)
+    const filtered = availableUsers.filter((user: any) =>
+      user.firstName.toLowerCase().includes(searchLower) ||
+      user.lastName.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower)
     );
 
     setSuggestions(filtered.slice(0, 5));
@@ -83,8 +83,8 @@ function AddMemberModal({
     setLoading(true);
 
     try {
-      // Find selected project
-      const selectedProject = leaderProjects.find((p: any) => p._id === selectedProjectId);
+      // Find selected task
+      const selectedTask = taskLeader.find((task: any) => task._id === selectedTaskId);
 
       if (!selectedUser) {
         setSnackbar({
@@ -95,23 +95,23 @@ function AddMemberModal({
         return;
       }
 
-      if (!selectedProject?._id) {
+      if (!selectedTask?._id) {
         setSnackbar({
           open: true,
-          message: "Project not found!",
+          message: "Task not found!",
           type: "error",
         });
         return;
       }
 
-      // Update projects, add users to array members
-      const updatedProject = {
-        ...selectedProject,
-        members: [...(selectedProject.members || []), selectedUser._id],
+      // Update tasks, add users to array members
+      const updatedTask = {
+        ...selectedTask,
+        assignedTo: [...(selectedTask.assignedTo || []), selectedUser._id],
       };
 
-      await api.put(`/projects/update/${selectedProject._id}`,
-        updatedProject
+      await api.put(`/tasks/update/${selectedTask._id}`,
+        updatedTask
       );
 
       onSave();      
@@ -126,7 +126,7 @@ function AddMemberModal({
 
   useEffect(() => {
     if (open) {
-      setSelectedProjectId(leaderProjects.length === 1 ? leaderProjects[0]._id : "");
+      setSelectedTaskId(taskLeader.length === 1 ? taskLeader[0]._id : "");
       setEmailOrName("");
       setSelectedUser(null);
       setSuggestions([]);
@@ -149,7 +149,7 @@ function AddMemberModal({
         <Box className="relative bg-white rounded-xl w-125 overflow-y-auto shadow-xl mx-auto p-6">
           <Box className="flex items-center justify-between mb-6">
             <Typography sx={{ fontSize: "18px", fontWeight: 600 }}>
-              Add Member To Project
+              Add Member To Task
             </Typography>
             <Button
               onClick={onClose}
@@ -170,10 +170,10 @@ function AddMemberModal({
             </Button>
           </Box>
 
-          {leaderProjects.length === 0 ? (
+          {taskLeader.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 4 }}>
               <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
-                You dont own any projects.
+                You dont own any tasks.
               </Typography>
               <Button variant="outlined" onClick={onClose} sx={{ mt: 3 }}>
                 Close
@@ -184,7 +184,7 @@ function AddMemberModal({
               <Typography sx={{ color: "#6b7280", fontStyle: "italic" }}>
                 No available users to add.
                 <br />
-                All users are already in projects.
+                All users are already in tasks.
               </Typography>
               <Button variant="outlined" onClick={onClose} sx={{ mt: 3 }}>
                 Close
@@ -192,24 +192,22 @@ function AddMemberModal({
             </Box>
           ) : (
             <Box component="form" className="space-y-4" onSubmit={handleSave}>
-              {/* Choose Project */}
-              {leaderProjects.length > 1 && (
+              {/* Choose Task */}
+              {taskLeader.length > 1 && (
                 <Box>
                   <Typography sx={{ fontSize: "14px", fontWeight: 500, mb: 1 }}>
-                    Choose Project <span className="text-red-500">*</span>
+                    Choose Task <span className="text-red-500">*</span>
                   </Typography>
                   <FormControl fullWidth size="small">
                     <Select
-                      value={selectedProjectId}
-                      onChange={(e) => setSelectedProjectId(e.target.value as number)}
+                      value={selectedTaskId}
+                      onChange={(e) => setSelectedTaskId(e.target.value as string)}
                       displayEmpty
                     >
-                      <MenuItem value="" disabled>
-                        Choose a project
-                      </MenuItem>
-                      {leaderProjects.map((project: any) => (
-                        <MenuItem key={project._id} value={project._id}>
-                          {project.name}
+                     
+                      {taskLeader.map((task: any) => (
+                        <MenuItem key={task._id} value={task._id}>
+                          {task.name}
                         </MenuItem>
                       ))}
                     </Select>
@@ -217,7 +215,7 @@ function AddMemberModal({
                 </Box>
               )}
 
-              {/* Tìm kiếm User */}
+              {/* Search User */}
               <Box>
                 <TextField
                   fullWidth
@@ -310,7 +308,7 @@ function AddMemberModal({
                   fullWidth
                   variant="contained"
                   type="submit"
-                  disabled={loading || !selectedUser || !selectedProjectId}
+                  disabled={loading || !selectedUser || !selectedTaskId}
                   sx={{ bgcolor: "#9333ea", "&:hover": { bgcolor: "#7e22ce" } }}
                 >
                   {loading ? "Adding..." : "Add"}

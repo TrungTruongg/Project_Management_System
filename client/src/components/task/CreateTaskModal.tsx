@@ -35,13 +35,7 @@ interface AttachmentItem {
   previewUrl?: string;
 }
 
-function CreateTaskModal({
-  open,
-  onClose,
-  onSave,
-  onUpdate,
-  selectedTask = null,
-}: any) {
+function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null }: any) {
   const [isStatusOnly, setIsStatusOnly] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -62,6 +56,7 @@ function CreateTaskModal({
     type: 'success' as 'success' | 'error',
   });
 
+  const [tasks, setTasks] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
 
   const { user } = useUser();
@@ -72,11 +67,13 @@ function CreateTaskModal({
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseUser, responseAttachment] = await Promise.all([
+      const [responseTask, responseUser, responseAttachment] = await Promise.all([
+        api.get('/tasks'),
         api.get('/users'),
         api.get('/attachments'),
       ]);
 
+      setTasks(responseTask.data);
       setUsers(responseUser.data);
 
       if (selectedTask) {
@@ -170,15 +167,13 @@ function CreateTaskModal({
     setAttachments(attachments.filter((_, i) => i !== index));
   };
 
-  // const getProjectMembers = () => {
-  //   const selectedProjectId = currentProject?._id || projectId;
-  //   if (!selectedProjectId) return [];
+  const getTaskMembers = () => {
+    if (!selectedTask?._id) return [];
+    const task = tasks.find((task: any) => task._id === selectedTask._id);
+    if (!task?.assignedTo) return [];
 
-  //   const project = projects.find((p) => p._id === selectedProjectId);
-  //   if (!project?.members) return [];
-
-  //   return users.filter((u) => project.members.includes(u._id));
-  // };
+    return users.filter((u) => task.assignedTo.includes(u._id));
+  };
 
   const validateDates = () => {
     const start = new Date(startDate);
@@ -255,7 +250,7 @@ function CreateTaskModal({
         priority: priority.toLowerCase(),
         status,
         completion,
-        leaderId: user?._id
+        leaderId: user?._id,
       };
 
       let taskId: string;
@@ -263,26 +258,21 @@ function CreateTaskModal({
       if (isUpdate) {
         const response = await api.put(`/tasks/update/${selectedTask._id}`, taskData);
 
-        const updatedData = response.data.task;
-        taskId = selectedTask._id;
+        const updatedData = response.data.task || response.data;
+        taskId = updatedData._id || selectedTask?._id || selectedTask._id;
 
-        if (!updatedData._id) {
-          updatedData._id = selectedTask._id;
+        if (!updatedData._id && taskId) {
+          updatedData._id = taskId;
         }
 
         // Delete old attachments
-        // for (const attachmentId of deletedAttachmentIds) {
-        //   try {
-        //     await api.delete(`/attachments/delete/${attachmentId}`);
-
-        //     await new Promise((resolve) => setTimeout(resolve, 100));
-        //   } catch (error) {
-        //     console.error(`Error deleting attachment ${attachmentId}:`, error);
-        //   }
-        // }
-
-        for (const id of deletedAttachmentIds) {
-          await api.delete(`/attachments/delete/${id}`).catch(console.error);
+        for (const attachmentId of deletedAttachmentIds) {
+          try {
+            await api.delete(`/attachments/delete/${attachmentId}`);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          } catch (error) {
+            console.error(`Error deleting attachment ${attachmentId}:`, error);
+          }
         }
 
         if (assignedTo.length > 0) {
@@ -329,32 +319,33 @@ function CreateTaskModal({
       }
 
       for (const att of attachments) {
-        if (att.isExisting) continue;
+          if (att.isExisting) continue;
 
-        let finalUrl = att.url;
+          let finalUrl = att.url;
 
-        if (att.type === 'file' && att.file) {
+          if (att.type === 'file' && att.file) {
+            try {
+              finalUrl = await uploadFile(att.file, taskId);
+            } catch (error) {
+              console.error('Error uploading file:', error);
+              continue;
+            }
+          }
+
           try {
-            finalUrl = await uploadFile(att.file, taskId);
+            await api.post('/attachments/create', {
+              taskId: taskId,
+              url: finalUrl,
+              name: att.name,
+              type: att.type,
+              createdBy: user?._id,
+              uploadedAt: new Date().toISOString(),
+            });
           } catch (error) {
-            console.error('Error uploading file:', error);
-            continue;
+            console.error('Error saving attachment:', error);
           }
         }
 
-        try {
-          await api.post('/attachments/create', {
-            taskId: taskId,
-            url: finalUrl,
-            name: att.name,
-            type: att.type,
-            createdBy: user?._id,
-            uploadedAt: new Date().toISOString(),
-          });
-        } catch (error) {
-          console.error('Error saving attachment:', error);
-        }
-      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -369,7 +360,8 @@ function CreateTaskModal({
 
       if (selectedTask) {
         // Check if current user is project leader
-        const isLeader = selectedTask?.leaderId === user?._id;
+        const task = tasks.find((t) => t._id === selectedTask._id);
+        const isLeader = task?.leaderId === user?._id;
         const isAssigned = Array.isArray(selectedTask.assignedTo)
           ? selectedTask.assignedTo.includes(user?._id)
           : selectedTask.assignedTo === user?._id;
@@ -399,6 +391,7 @@ function CreateTaskModal({
     }
   }, [open, selectedTask]);
 
+  const taskMembers = getTaskMembers();
 
   return (
     <>
@@ -483,50 +476,6 @@ function CreateTaskModal({
                     </Typography>
                   )}
                 </Box>
-
-                {/* Project */}
-                {/* <Box>
-                  <Typography
-                    sx={{
-                      fontSize: '14px',
-                      fontWeight: 500,
-                      mb: 0.5,
-                    }}
-                  >
-                    Project <span className="text-red-500">*</span>
-                  </Typography>
-                  <Select
-                    fullWidth
-                    displayEmpty
-                    size="small"
-                    defaultValue=""
-                    value={projectId}
-                    error={showError && !projectId}
-                    onChange={(e) => handleProjectChange(String(e.target.value))}
-                    sx={{
-                      fontSize: '14px',
-                      color: projectId === '' ? '#9ca3af' : '',
-                    }}
-                    disabled={!!currentProject}
-                  >
-                    <MenuItem value="" disabled>
-                      Choose Project
-                    </MenuItem>
-                    {projects.map((project) => {
-                      return project.leaderId === user?._id ? (
-                        <MenuItem key={project._id} value={project._id}>
-                          {project.name}
-                        </MenuItem>
-                      ) : null;
-                    })}
-                  </Select>
-
-                  {showError && !projectId && (
-                    <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>
-                      Project name is required
-                    </Typography>
-                  )}
-                </Box> */}
 
                 <Box className="gap-4">
                   <Typography
@@ -717,7 +666,6 @@ function CreateTaskModal({
                     fullWidth
                     size="small"
                     displayEmpty
-                    // disabled={!projectId && !currentProject}
                     multiple
                     onChange={(e) => setAssignedTo(e.target.value as [])}
                     value={assignedTo}
@@ -747,7 +695,7 @@ function CreateTaskModal({
                     }}
                   >
                     {users.length === 0 ? (
-                      <MenuItem disabled>No members available</MenuItem>
+                      <MenuItem disabled>No user available</MenuItem>
                     ) : (
                       users.map((user: any) => (
                         <MenuItem value={user._id} key={user._id}>

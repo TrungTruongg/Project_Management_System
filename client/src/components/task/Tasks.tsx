@@ -298,7 +298,6 @@ function Tasks() {
           borderRadius: 2,
           border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
           width: '100%',
-          overflowY: 'auto'
         }}
         onClick={() => handleViewTask(task._id)}
       >
@@ -592,15 +591,6 @@ function Tasks() {
       ) : filteredTasks.length === 0 ? (
         <Typography fontStyle="italic">No tasks available!</Typography>
       ) : (
-        // <Box
-        //   sx={{
-        //     display: 'grid',
-        //     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        //     gap: 3,
-        //   }}
-        // >
-        //   {filteredTasks.map(renderTaskCard)}
-        // </Box>
         <Box
           sx={{
             display: 'grid',
@@ -610,56 +600,55 @@ function Tasks() {
           }}
         >
           <Box sx={{ bgcolor: '#f4f5f7', borderRadius: 2, p: 2 }}>
-            <Box
-              sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}
+            <Typography
+              fontWeight={700}
+              fontSize="0.85rem"
+              textTransform="uppercase"
+              color="text.secondary"
+              textAlign="left"
+              width="100%"
+              sx={{ mb: 2 }}
             >
-              <Typography
-                fontWeight={700}
-                fontSize="0.85rem"
-                textTransform="uppercase"
-                color="text.secondary"
-                textAlign="left"
-                width="100%"
-              >
-                To Do ({tasksByStatus.todo.length})
-              </Typography>
+              To Do ({tasksByStatus.todo.length})
+            </Typography>
 
+            <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 250px)' }}>
               {tasksByStatus.todo.map(renderTaskCard)}
             </Box>
           </Box>
 
           <Box sx={{ bgcolor: '#f4f5f7', borderRadius: 2, p: 2 }}>
-            <Box
-              sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}
+            <Typography
+              fontWeight={700}
+              fontSize="0.85rem"
+              textTransform="uppercase"
+              color="text.secondary"
+              textAlign="left"
+              width="100%"
+              sx={{ mb: 2 }}
             >
-              <Typography
-                fontWeight={700}
-                fontSize="0.85rem"
-                textTransform="uppercase"
-                color="text.secondary"
-                textAlign="left"
-                width="100%"
-              >
-                In Progress ({tasksByStatus.inProgress.length})
-              </Typography>
+              In Progress ({tasksByStatus.inProgress.length})
+            </Typography>
+
+            <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 250px)' }}>
               {tasksByStatus.inProgress.map(renderTaskCard)}
             </Box>
           </Box>
 
           <Box sx={{ bgcolor: '#f4f5f7', borderRadius: 2, p: 2 }}>
-            <Box
-              sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}
+            <Typography
+              fontWeight={700}
+              fontSize="0.85rem"
+              textTransform="uppercase"
+              color="text.secondary"
+              textAlign="left"
+              width="100%"
+              sx={{ mb: 2 }}
             >
-              <Typography
-                fontWeight={700}
-                fontSize="0.85rem"
-                textTransform="uppercase"
-                color="text.secondary"
-                textAlign="left"
-                width="100%"
-              >
-                Done ({tasksByStatus.done.length})
-              </Typography>
+              Done ({tasksByStatus.done.length})
+            </Typography>
+
+            <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 250px)' }}>
               {tasksByStatus.done.map(renderTaskCard)}
             </Box>
           </Box>

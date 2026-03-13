@@ -29,7 +29,7 @@ function Dashboard() {
           bgcolor: 'background.default'
         }}
       >     
-        
+        <Header />
         <Outlet />
       </Box>
     </Box>
