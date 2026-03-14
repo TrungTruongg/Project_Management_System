@@ -6,34 +6,31 @@ import LowPriority from "../../assets/LowPriority";
 import { useNavigate } from "react-router-dom";
 
 interface ChartsProps {
-    projects: any[];
     tasks: any[]
 }
 
-function ProjectCharts({ projects, tasks }: ChartsProps) {
+function TaskCharts({ tasks }: ChartsProps) {
 
     const navigate = useNavigate();
 
     const getUserTasks = () => {
-        const projectIds = projects.map(p => p._id);
-        return tasks.filter(task => projectIds.includes(task.projectId));
+        return tasks;
     };
 
     const userTasks = getUserTasks();
 
     const getStatusData = () => {
-        const completed = userTasks.filter(t => t.status === 'completed').length;
+        const completed = userTasks.filter(t => t.status === 'done').length;
         const inProgress = userTasks.filter(t => t.status === 'in-progress').length;
         const toDo = userTasks.filter(t => t.status === 'to-do').length;
 
         return [
-            { id: "completed", name: 'Completed', value: completed, color: '#3b82f6' },
+            { id: "done", name: 'Done', value: completed, color: '#3b82f6' },
             { id: "in-progress", name: 'In Progress', value: inProgress, color: '#22c55e' },
             { id: "to-do", name: 'To Do', value: toDo, color: '#a855f7' },
         ].filter(item => item.value > 0);
     };
 
-    // Tính toán data cho Priority Breakdown (Bar Chart)
     const getPriorityData = () => {
         const high = userTasks.filter(task => task.priority === 'high').length;
         const medium = userTasks.filter(task => task.priority === 'medium').length;
@@ -125,12 +122,12 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
 
     // Handle click on pie chart
     const handlePieClick = (status: any) => {
-        navigate(`/task?status=${status.id}`);
+        navigate(`/board?status=${status.id}`);
     };
 
     // Handle click on bar chart
     const handleBarClick = (priority: any) => {
-        navigate(`/task?priority=${priority.activeLabel.toLowerCase()}`);
+        navigate(`/board?priority=${priority.activeLabel.toLowerCase()}`);
     };
 
     // Custom label cho donut chart
@@ -216,7 +213,7 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                     Get a snapshot of the status of your projects
                 </Typography>
 
-                {projects.length === 0 ? (
+                {tasks.length === 0 ? (
                     <Box
                         sx={{
                             height: 200,
@@ -226,7 +223,7 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
                         }}
                     >
                         <Typography variant="body2" color="text.secondary">
-                            No projects available
+                            No tasks available
                         </Typography>
                     </Box>
                 ) : (
@@ -393,4 +390,4 @@ function ProjectCharts({ projects, tasks }: ChartsProps) {
     );
 }
 
-export default ProjectCharts;
+export default TaskCharts;

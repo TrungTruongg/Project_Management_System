@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from 'react';
 import {
   Modal,
   Box,
@@ -11,60 +11,72 @@ import {
   Paper,
   Fab,
   TextareaAutosize,
-} from "@mui/material";
-import {
-  Close as CloseIcon,
-} from "@mui/icons-material";
-import GeminiIcon from "../../assets/GeminiIcon"
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { useUser } from "../context/UserContext";
-import GeminiColorfulIcon from "../../assets/GeminiColorfulIcon";
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
+import GeminiIcon from '../../assets/GeminiIcon';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { useUser } from '../context/UserContext';
+import GeminiColorfulIcon from '../../assets/GeminiColorfulIcon';
 
 const GeminiChatBox = () => {
   const [openChat, setOpenChat] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errors, setError] = useState("");
+  const [errors, setError] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState('');
+  const [greetingSent, setGreetingSent] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef<any>(null);
   const { user } = useUser();
 
   const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-  const genAI = new GoogleGenerativeAI(API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  useEffect(() => {
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const chat = model.startChat({
-    history: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `Bạn là một Gemini chat bot, hãy nói chào người dùng với email là ${user?.email}. Ví dụ: Xin chào anh/chị ${user?.lastName.toUpperCase()}`,
-          },
-        ],
+    chatRef.current = model.startChat({
+      generationConfig: {
+        maxOutputTokens: 6000,
       },
-    ],
-    generationConfig: {
-      maxOutputTokens: 6000,
-    },
-  });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (openChat && !greetingSent && user && chatRef.current) {
+      const greetingPrompt = `Bạn là một Gemini chat bot hỗ trợ dự án. Hãy nói chào người dùng ${user?.firstName} ${user?.lastName} một cách thân thiện và ngắn gọn. Ví dụ: "Xin chào ${user?.firstName} ${user?.lastName}! Tôi có thể giúp gì cho bạn?"`;
+
+      const sendGreeting = async () => {
+        try {
+          const result = await chatRef.current.sendMessage(greetingPrompt);
+          const responseText = result.response.text();
+          setMessages([{ role: 'model', content: responseText }]);
+          setGreetingSent(true);
+        } catch (err) {
+          console.error('Error sending greeting:', err);
+          setGreetingSent(true);
+        }
+      };
+
+      sendGreeting();
+    }
+  }, [openChat, user, greetingSent]);
 
   const handleSend = async () => {
     if (!prompt.trim()) return;
 
-    const newMessages = [...messages, { role: "user", content: prompt }];
+    const newMessages = [...messages, { role: 'user', content: prompt }];
     setMessages(newMessages);
-    setPrompt("");
-    setError("");
+    setPrompt('');
+    setError('');
     setLoading(true);
     try {
-      const result = await chat.sendMessage(prompt);
+      const result = await chatRef.current.sendMessage(prompt);
       const responseText = result.response.text();
 
-      setMessages([...newMessages, { role: "model", content: responseText }]);
+      setMessages([...newMessages, { role: 'model', content: responseText }]);
     } catch (err) {
-      setError("Error connect to Gemini. Check API key or network.");
+      setError('Error connect to Gemini. Check API key or network.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -76,53 +88,61 @@ const GeminiChatBox = () => {
       {/* Floating Action Button */}
       <Fab
         aria-label="chat"
-        onClick={() => setOpenChat(!openChat)}
+        onClick={() => {
+          setOpenChat(!openChat);
+          if (openChat) {
+            setGreetingSent(false); // Reset greeting khi đóng modal
+          }
+        }}
         sx={{
-          position: "fixed",
+          position: 'fixed',
           bottom: 40,
           right: 25,
-          backgroundColor: "white",
+          backgroundColor: 'white',
           width: 40,
           height: 40,
         }}
       >
-        <GeminiIcon  />
+        <GeminiIcon />
       </Fab>
 
       {/* Modal Chat */}
       <Modal
         open={openChat}
-        onClose={() => setOpenChat(false)}
+        onClose={() => {
+          setOpenChat(false);
+          setGreetingSent(false);
+        }}
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
         <Paper
           sx={{
             width: 800,
-            maxWidth: "90vw",
+            maxWidth: '90vw',
             height: 700,
-            maxHeight: "90vh",
-            display: "flex",
-            flexDirection: "column",
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
             borderRadius: 3,
-            overflow: "hidden",
+            overflow: 'hidden',
           }}
         >
           {/* Header */}
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               p: 2,
-              bgcolor: "#4285F4",
-              color: "white",
+              bgcolor: '#4285F4',
+              color: 'white',
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <GeminiColorfulIcon />
               <Typography variant="h6" fontWeight="600">
                 Gemini AI Assistant
@@ -130,8 +150,11 @@ const GeminiChatBox = () => {
             </Box>
             <IconButton
               size="small"
-              onClick={() => setOpenChat(false)}
-              sx={{ color: "white" }}
+              onClick={() => {
+                setOpenChat(false);
+                setGreetingSent(false);
+              }}
+              sx={{ color: 'white' }}
             >
               <CloseIcon />
             </IconButton>
@@ -141,11 +164,11 @@ const GeminiChatBox = () => {
           <Box
             sx={{
               flex: 1,
-              overflowY: "auto",
+              overflowY: 'auto',
               p: 2,
-              bgcolor: "#f5f5f5",
-              display: "flex",
-              flexDirection: "column",
+              bgcolor: '#f5f5f5',
+              display: 'flex',
+              flexDirection: 'column',
               gap: 2,
             }}
           >
@@ -153,45 +176,45 @@ const GeminiChatBox = () => {
               <Box
                 key={index}
                 sx={{
-                  display: "flex",
+                  display: 'flex',
                   gap: 1,
-                  alignItems: "flex-start",
-                  flexDirection: msg.role === "user" ? "row-reverse" : "row",
+                  alignItems: 'flex-start',
+                  flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
                 }}
               >
                 <Avatar
                   sx={{
                     width: 36,
                     height: 36,
-                    bgcolor: msg.role === "user" ? "" : "#4285F4"
+                    bgcolor: msg.role === 'user' ? '' : '#4285F4',
                   }}
                 >
-                  {msg.role === "user" ? user?.firstName?.[0] : "G"}
+                  {msg.role === 'user' ? user?.firstName?.[0] : 'G'}
                 </Avatar>
 
                 <Paper
                   sx={{
                     p: 2,
-                    maxWidth: "70%",
-                    bgcolor: msg.role === "user" ? "#E8F5E9" : "white",
+                    maxWidth: '70%',
+                    bgcolor: msg.role === 'user' ? '#E8F5E9' : 'white',
                     borderRadius: 2,
                   }}
                 >
                   <Typography
                     variant="caption"
                     sx={{
-                      color: "text.secondary",
-                      display: "block",
-                      whiteSpace: "pre-wrap",
-                      lineHeight: "1.6"
+                      color: 'text.secondary',
+                      display: 'block',
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: '1.6',
                     }}
                   >
-                    {msg.role === "user" ? "You" : "Gemini"}
+                    {msg.role === 'user' ? 'You' : 'Gemini'}
                   </Typography>
                   <Typography
                     variant="body2"
                     sx={{
-                      whiteSpace: "pre-wrap",
+                      whiteSpace: 'pre-wrap',
                       lineHeight: 1.6,
                     }}
                   >
@@ -202,11 +225,9 @@ const GeminiChatBox = () => {
             ))}
 
             {loading && (
-              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-                <Avatar sx={{ bgcolor: "#4285F4", width: 36, height: 36 }}>
-                  G
-                </Avatar>
-                <Paper sx={{ p: 2, maxWidth: "70%", borderRadius: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                <Avatar sx={{ bgcolor: '#4285F4', width: 36, height: 36 }}>G</Avatar>
+                <Paper sx={{ p: 2, maxWidth: '70%', borderRadius: 2 }}>
                   <Skeleton variant="text" width={200} />
                   <Skeleton variant="text" width={150} />
                   <Skeleton variant="text" width={180} />
@@ -220,7 +241,7 @@ const GeminiChatBox = () => {
           {/* Error Alert */}
           {errors && (
             <Box sx={{ px: 2 }}>
-              <Alert severity="error" onClose={() => setError("")}>
+              <Alert severity="error" onClose={() => setError('')}>
                 {errors}
               </Alert>
             </Box>
@@ -230,46 +251,45 @@ const GeminiChatBox = () => {
           <Box
             sx={{
               p: 2,
-              bgcolor: "white",
-              borderTop: "1px solid #e0e0e0",
+              bgcolor: 'white',
+              borderTop: '1px solid #e0e0e0',
             }}
-          >   
-              <TextareaAutosize
-                minRows={3}
-                placeholder="Type your question... (Enter to send)"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  padding: "8px 12px",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  fontFamily: "inherit",
-                  resize: "none",
-                  outline: "none",
-                }}
-              />
-      
+          >
+            <TextareaAutosize
+              minRows={3}
+              placeholder="Type your question... (Enter to send)"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                resize: 'none',
+                outline: 'none',
+              }}
+            />
+
             <Button
               variant="contained"
               onClick={handleSend}
               disabled={!prompt.trim() || loading}
               sx={{
-               
-                bgcolor: "#4285F4",
-                "&:hover": {
-                  bgcolor: "#357AE8",
+                bgcolor: '#4285F4',
+                '&:hover': {
+                  bgcolor: '#357AE8',
                 },
                 mt: 0.5,
-                float: "right"
+                float: 'right',
               }}
             >
               Send

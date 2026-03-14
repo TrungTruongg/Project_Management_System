@@ -21,13 +21,13 @@ const GeminiColorfulIcon = () => (
                 width="55.501"
                 height="51.571"
                 filterUnits="userSpaceOnUse"
-                color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix" />
                 <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
                 <feGaussianBlur stdDeviation="7.273" result="effect1_foregroundBlur_2001_67" />
             </filter>
             <linearGradient id="prefix__paint0_linear_2001_67" x1="18.447" y1="43.42" x2="52.153" y2="15.004" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#4893FC" />
+                <stop stopColor="#4893FC" />
                 <stop offset=".27" stop-color="#4893FC" />
                 <stop offset=".777" stop-color="#969DFF" />
                 <stop offset="1" stop-color="#BD99FE" />

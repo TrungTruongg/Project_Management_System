@@ -23,7 +23,7 @@ function Dashboard() {
         sx={{
           p: 4,
           flex: 1,
-          overflowY: "hidden",
+          overflowY: "auto",
           height: "100vh",
           order: 1,
           bgcolor: 'background.default'

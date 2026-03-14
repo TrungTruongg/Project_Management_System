@@ -68,12 +68,12 @@ function SupportsView() {
   // Get tasks where the user is the leader
   const getLeaderTasks = () => {
     if (!user) return [];
-    return tasks.filter((t) => t.leaderId === user._id);
+    return tasks.filter((task) => task.leaderId === user._id);
   };
 
   const getUserTasks = () => {
     if (!user) return [];
-    return tasks.filter((t) => t.taskId === user._id);
+    return tasks.filter((task) => task.leaderId === user._id || task.assignedTo?.includes(user._id));
   };
 
   const userTasks = getUserTasks();

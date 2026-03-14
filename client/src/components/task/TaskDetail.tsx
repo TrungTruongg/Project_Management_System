@@ -254,7 +254,6 @@ function TaskDetail() {
         sx={{
           display: 'flex',
           width: '100%',
-          height: '80vh',
           gap: 2,
           bgcolor: (theme) => theme.palette.background.default,
         }}

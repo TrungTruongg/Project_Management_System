@@ -86,20 +86,20 @@ function MemberList() {
     });
 
     return Array.from(leadersSet).map((leaderId) => {
-      const leader = users.find((u) => u._id === leaderId);
+      const leader = users.find((user) => user._id === leaderId);
       return leader;
     }).filter(Boolean);
   };
 
   // Get guests (Tasks members who are not leaders)
   const getGuests = () => {
-    const leaderIds = new Set(taskLeader.map((t) => t.leaderId));
+    const leaderIds = new Set(taskMembers.map((task) => task.leaderId));
     const guestsMap = new Map<number, any>();
 
     taskMembers.forEach((task) => {
       task.assignedTo?.forEach((memberId: number) => {
         if (!leaderIds.has(memberId) && !guestsMap.has(memberId)) {
-          const member = users.find((u) => u._id === memberId);
+          const member = users.find((user) => user._id === memberId);
           if (member) {
             guestsMap.set(memberId, member);
           }
@@ -173,6 +173,8 @@ function MemberList() {
           startDate: task.startDate,
           endDate: task.endDate,
           leaderId: task.leaderId,
+          priority: task.priority,
+          status: task.status,
           assignedTo: updatedMembers,
         });
       }

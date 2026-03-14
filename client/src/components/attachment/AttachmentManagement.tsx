@@ -15,7 +15,7 @@ function AttachmentManagement() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedAttachment, setSelectedAttachment] = useState<any>(null);
     const [attachments, setAttachments] = useState<any[]>([]);
-    const [projects, setProjects] = useState<any[]>([]);
+    const [tasks, setTasks] = useState<any[]>([]);
     const [users, setUsers] = useState<any[]>([]);
     const navigate = useNavigate();
     const { user } = useUser();
@@ -93,31 +93,30 @@ function AttachmentManagement() {
     const fetchAllData = async () => {
         setLoading(true);
         try {
-            const [attachmentsRes, tasksRes, projectRes, userRes] = await Promise.all([
+            const [attachmentsRes, tasksRes, userRes] = await Promise.all([
                 api.get("/attachments"),
                 api.get("/tasks"),
-                api.get("/projects"),
                 api.get("/users")
             ]);
 
-            setProjects(projectRes.data);
+            setTasks(tasksRes.data);
             setUsers(userRes.data);
 
-            // Filter attachments based on user's project access
+            // Filter attachments based on user's task access
             if (user) {
-                const userProjectIds = projectRes.data
-                    .filter((p: any) => p.leaderId === user._id || p.members?.includes(user._id))
-                    .map((p: any) => p._id);
+                const userTaskIds = tasksRes.data
+                    .filter((task: any) => task.leaderId === user._id || task.assignedTo?.includes(user._id))
+                    .map((task: any) => task._id);
 
                 const userTasks = tasksRes.data.filter((t: any) =>
-                    userProjectIds.includes(t.projectId)
+                    userTaskIds.includes(t._id)
                 );
 
                 const attachmentsWithTask = attachmentsRes.data
-                    .filter((att: any) => userTasks.some((t: any) => t._id === att.taskId))
+                    .filter((att: any) => userTasks.some((task: any) => task._id === att.taskId))
                     .map((att: any) => ({
                         ...att,
-                        task: userTasks.find((t: any) => t._id === att.taskId),
+                        task: userTasks.find((task: any) => task._id === att.taskId),
                     }));
 
                 setAttachments(attachmentsWithTask);
@@ -135,15 +134,15 @@ function AttachmentManagement() {
         fetchAllData();
     }, []);
 
-    const getUserProjects = () => {
+    const getUserTasks = () => {
         if (!user) return [];
 
-        return projects.filter(
-            (p) => p?.leaderId === user._id || p?.members?.includes(user._id)
+        return tasks.filter(
+            (task) => task?.leaderId === user._id || task?.assignedTo?.includes(user._id)
         );
     };
 
-    const userProjects = getUserProjects();
+    const userTasks = getUserTasks();
 
     const filteredAttachments = attachments.filter((attachment: any) => {
         // Filter by search term
@@ -156,9 +155,9 @@ function AttachmentManagement() {
             if (!matchesSearch) return false;
         }
 
-        // Filter by created users (người upload)
+        // Filter by created users
         if (activeFilters.createdBy.length > 0) {
-            // Lấy danh sách userId từ createdBy (có thể là array hoặc single value)
+            // Lấy danh sách userId từ createdBy
             const createdByUsers = Array.isArray(attachment.createdBy)
                 ? attachment.createdBy
                 : [attachment.createdBy];
@@ -171,7 +170,7 @@ function AttachmentManagement() {
             if (!hasMatch) return false;
         }
 
-        // Filter by type (dựa vào extension của URL)
+        // Filter by type
         if (activeFilters.type.length > 0) {
             const fileType = getFileType(attachment.url);
 
@@ -275,9 +274,9 @@ function AttachmentManagement() {
                 >
                     <CircularProgress />
                 </Box>
-            ) : userProjects.length === 0 ? (
+            ) : userTasks.length === 0 ? (
                 <Typography fontStyle="italic">
-                    You are not part of any projects yet.
+                    You are not part of any tasks yet.
                 </Typography>
             ) : attachments.length === 0 ? (
                 <Typography fontStyle="italic" >No attachments available!</Typography>

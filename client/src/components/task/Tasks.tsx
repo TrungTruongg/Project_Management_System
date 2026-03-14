@@ -122,6 +122,8 @@ function Tasks() {
   };
 
   const filteredTasks = taskList.filter((task: any) => {
+
+    console.log(typeof task.assignedTo);
     // Filter by task ID
     if (taskId && task._id !== taskId) {
       return false;
@@ -138,9 +140,16 @@ function Tasks() {
 
     // Filter by assignees
     if (activeFilters.assignee.length > 0) {
-      const taskAssignees = [...task.assignedTo];
+      const taskAssignees = Array.isArray(task.assignedTo)
+        ? task.assignedTo
+        : task.assignedTo
+          ? [task.assignedTo]
+          : [];
 
-      const hasMatch = taskAssignees.some((userId) => activeFilters.assignee.includes(userId));
+      // Check if leader or any assignee matches the filter
+      const hasMatch = activeFilters.assignee.some(userId => 
+        task.leaderId === userId || taskAssignees.includes(userId)
+      );
 
       if (!hasMatch) return false;
     }

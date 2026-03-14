@@ -3,33 +3,33 @@ import {
   Phone,
   Email,
   LocationOn,
-  Edit,
-  AccessTime,
-  Delete,
   ArrowBack,
   Refresh as RefreshIcon,
+  MoreHoriz,
 } from '@mui/icons-material';
 import {
   Avatar,
-  AvatarGroup,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
   CircularProgress,
-  Divider,
+  Fade,
   Grid,
   IconButton,
+  Menu,
+  MenuItem,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import UpdateMemberProfileModal from './UpdateMemberProfileModal';
 import DeleteConfirmDialog from '../DeleteConfirmDialog';
-import { useUser } from '../context/UserContext';
 import { useSearch } from '../context/SearchContext';
 import api from '../api/axiosConfig';
+import { formatDate } from '../helper/helper';
+import { useUser } from '../context/UserContext';
 
 function MemberProfile() {
   const location = useLocation();
@@ -37,12 +37,11 @@ function MemberProfile() {
   const memberId = location.state?.memberId;
 
   const [profileUser, setProfileUser] = useState<any>(null);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [menuOpenMemberId, setMenuOpenMemberId] = useState<string | null>(null);
   const { searchTerm } = useSearch();
-
   const { user } = useUser();
 
   const [open, setOpen] = useState(false);
@@ -62,14 +61,14 @@ function MemberProfile() {
       const usersList = usersRes.data;
       const foundUser = usersList.find((u: any) => u._id === memberId);
       setProfileUser(foundUser);
-      setAllUsers(usersList);
 
-      // user tasks
+      // user tasks - include tasks where user is leader OR assigned
       const userTasks = tasksRes.data.filter((task: any) => {
-        if (Array.isArray(task.assignedTo)) {
-          return task.assignedTo.includes(memberId);
-        }
-        return task.assignedTo === memberId;
+        const isLeader = task.leaderId === memberId;
+        const isAssigned = Array.isArray(task.assignedTo)
+          ? task?.assignedTo.includes(memberId)
+          : task?.assignedTo === memberId;
+        return isLeader || isAssigned;
       });
 
       setTasks(userTasks);
@@ -99,6 +98,15 @@ function MemberProfile() {
     return diffDays;
   };
 
+  const getPriorityChip = (priority: 'high' | 'medium' | 'low') => {
+    const config = {
+      high: { label: 'HIGH PRIORITY', bgcolor: '#FFEBEE', color: '#C62828' },
+      medium: { label: 'MEDIUM PRIORITY', bgcolor: '#FFF9C4', color: '#F57F17' },
+      low: { label: 'LOW PRIORITY', bgcolor: '#C8E6C9', color: '#388E3C' },
+    };
+    return config[priority] || config.medium;
+  };
+
   const handleUpdateUser = (updatedUser: any) => {
     setProfileUser(updatedUser);
   };
@@ -111,32 +119,70 @@ function MemberProfile() {
     setOpen(true);
   };
 
-  const handleOpenDeleteDialog = () => {
+  const handleOpenRemoveFromTaskDialog = () => {
     setDeleteDialogOpen(true);
+    setMenuOpenMemberId(null);
   };
 
   const handleCloseDeleteDialog = () => {
     setDeleteDialogOpen(false);
   };
 
-  const handleDeleteMember = async () => {
+  const handleOpenMenu = (memberId: string) => {
+    setMenuOpenMemberId(memberId);
+  };
+  const handleCloseMenu = () => {
+    setMenuOpenMemberId(null);
+  };
+
+  // Check if current user is a task leader
+  const isCurrentUserTaskLeader = tasks.some((task: any) => task.leaderId === user?._id);
+
+  // Check if profile user is a member (assignedTo) of tasks where current user is leader
+  const isProfileUserTaskMember = tasks.some((task: any) => {
+    const isCurrentUserLeader = task.leaderId === user?._id;
+    const isProfileUserAssigned = Array.isArray(task.assignedTo)
+      ? task.assignedTo.includes(memberId)
+      : task.assignedTo === memberId;
+    return isCurrentUserLeader && isProfileUserAssigned;
+  });
+
+  const handleRemoveFromTask = async () => {
     setLoading(true);
     try {
-      await api.delete(`/users/delete/${profileUser._id}`);
+      // Remove profile user from all tasks where current user is leader
+      for (const task of tasks) {
+        const isCurrentUserLeader = task.leaderId === user?._id;
+        const isProfileUserAssigned = Array.isArray(task.assignedTo)
+          ? task.assignedTo.includes(memberId)
+          : task.assignedTo === memberId;
+
+        if (isCurrentUserLeader && isProfileUserAssigned) {
+          const updatedMembers = Array.isArray(task.assignedTo)
+            ? task.assignedTo.filter((id: string) => id !== memberId)
+            : [];
+
+          await api.put(`/tasks/update/${task._id}`, {
+            name: task.name,
+            description: task.description,
+            startDate: task.startDate,
+            endDate: task.endDate,
+            priority: task.priority,
+            leaderId: task.leaderId,
+            status: task.status,
+            assignedTo: updatedMembers,
+          });
+        }
+      }
 
       handleCloseDeleteDialog();
-
-      navigate('/member');
+      await fetchAllData();
     } catch (error) {
-      console.error('Error deleting member:', error);
+      console.error('Error removing member from tasks:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  const isLeader = tasks.some(
-    (task) => task.leaderId === user?._id && task.assignedTo.includes(memberId)
-  );
 
   if (!profileUser && !loading) {
     return (
@@ -148,6 +194,10 @@ function MemberProfile() {
       </Box>
     );
   }
+
+  const handleViewTask = (taskId: any) => {
+    navigate(`/task-detail?id=${taskId}`);
+  };
 
   return (
     <>
@@ -216,24 +266,56 @@ function MemberProfile() {
                       >
                         {profileUser?.firstName} {profileUser?.lastName}
                       </Typography>
-                      {isLeader && (
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <IconButton
-                            size="small"
-                            sx={{ color: '#4CAF50' }}
-                            onClick={handleEditMemberProfile}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            sx={{ color: '#EF5350' }}
-                            onClick={handleOpenDeleteDialog}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      )}
+
+                      <Box sx={{ display: 'flex', gap: 1 }} onClick={(e) => e.stopPropagation()}>
+                        <IconButton
+                          id={`fade-button-${memberId}`}
+                          aria-controls={
+                            menuOpenMemberId === memberId ? `fade-menu-${memberId}` : undefined
+                          }
+                          aria-haspopup="true"
+                          aria-expanded={menuOpenMemberId === memberId ? 'true' : undefined}
+                          onClick={() => handleOpenMenu(memberId)}
+                        >
+                          <MoreHoriz fontSize="small" />
+                        </IconButton>
+                        <Menu
+                          id={`fade-menu-${memberId}`}
+                          slotProps={{
+                            list: {
+                              'aria-labelledby': `fade-button-${memberId}`,
+                            },
+                          }}
+                          slots={{ transition: Fade }}
+                          anchorEl={
+                            menuOpenMemberId === memberId
+                              ? document.getElementById(`fade-button-${memberId}`)
+                              : null
+                          }
+                          open={menuOpenMemberId === memberId}
+                          onClose={handleCloseMenu}
+                        >
+                          {isCurrentUserTaskLeader && (
+                            <MenuItem onClick={handleEditMemberProfile}>
+                              <Typography>Edit</Typography>
+                            </MenuItem>
+                          )}
+
+                          {isCurrentUserTaskLeader && isProfileUserTaskMember && (
+                            <MenuItem onClick={handleOpenRemoveFromTaskDialog}>
+                              <Typography color="error">Remove from task</Typography>
+                            </MenuItem>
+                          )}
+
+                          {!isCurrentUserTaskLeader && (
+                            <MenuItem disabled>
+                              <Typography color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                No permission
+                              </Typography>
+                            </MenuItem>
+                          )}
+                        </Menu>
+                      </Box>
                     </Box>
 
                     <Chip
@@ -334,79 +416,58 @@ function MemberProfile() {
                   Current Tasks
                 </Typography>
 
-                {tasks.length > 0 ? (
+                {filteredTasks.length > 0 ? (
                   filteredTasks.map((task) => {
+                    const priorityConfig = getPriorityChip(task.priority);
                     const calculateTaskDays = calculateDeadline(task.startDate, task.endDate);
+
                     return (
                       <Card
                         key={task._id}
-                        onClick={() => navigate('/task')}
                         sx={{
                           mb: 2,
+                          cursor: 'pointer',
+                          boxShadow: 1,
+                          borderRadius: 2,
                           border: (theme) =>
                             `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
-                          borderRadius: 2,
-                          transition: 'all 0.3s',
-                          '&:hover': {
-                            boxShadow: 3,
-                            transform: 'translateY(-4px)',
-                          },
+                          width: '100%',
                         }}
+                        onClick={() => handleViewTask(task._id)}
                       >
-                        <CardContent>
+                        <CardContent sx={{ p: 2 }}>
                           <Box
                             sx={{
                               display: 'flex',
                               justifyContent: 'space-between',
-                              mb: 1,
+                              mb: 2,
                             }}
                           >
                             <Chip
-                              label={task.name}
-                              size="small"
+                              label={priorityConfig.label}
+                              size="medium"
                               sx={{
-                                bgcolor: '#E8F5E9',
-                                color: '#2E7D32',
-                                fontWeight: 600,
-                                fontSize: '0.75rem',
+                                ...priorityConfig,
+                                fontSize: '13px',
+                                fontWeight: 700,
+                                height: 23,
                               }}
                             />
-
-                            {/* <Box sx={{ display: "flex", gap: 1 }}>
-                              <IconButton
-                                size="small"
-                                sx={{ color: "#4CAF50" }}
-                              >
-                                <Edit fontSize="small" />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                sx={{ color: "#EF5350" }}
-                              >
-                                <Delete fontSize="small" />
-                              </IconButton>
-                            </Box> */}
                           </Box>
 
-                          <Box sx={{ mb: 2 }}>
-                            <AvatarGroup max={5} sx={{ justifyContent: 'flex-end' }}>
-                              <Avatar
-                                src={profileUser?.avatar}
-                                sx={{
-                                  width: 32,
-                                  height: 32,
-                                  fontSize: '12px',
-                                  bgcolor: '#E0E0E0',
-                                  color: '#484c7f',
-                                  fontWeight: 600,
-                                  textTransform: 'uppercase',
-                                }}
-                              >
-                                {profileUser?.firstName?.[0]}
-                                {profileUser?.lastName?.[0]}
-                              </Avatar>
-                            </AvatarGroup>
-                          </Box>
+                          <Typography
+                            variant="h3"
+                            fontSize="18px"
+                            color="text.secondary"
+                            sx={{
+                              mb: 2,
+                              lineHeight: 1.25,
+                              fontWeight: 600,
+                              textTransform: 'capitalize',
+                            }}
+                          >
+                            {task.name}
+                          </Typography>
 
                           {task.description ? (
                             <Typography
@@ -437,13 +498,36 @@ function MemberProfile() {
                             </Typography>
                           )}
 
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(task.startDate).toLocaleDateString('en-GB')} -{' '}
-                            {new Date(task.endDate).toLocaleDateString('en-GB')}
-                          </Typography>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            {calculateTaskDays <= 0 ? (
+                              <Typography variant="caption" color="red">
+                                Expired
+                              </Typography>
+                            ) : task.startDate ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <CalendarToday sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                <Typography variant="caption">
+                                  {formatDate(task.endDate)}
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Typography
+                                variant="caption"
+                                sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+                              >
+                                No Dates provided
+                              </Typography>
+                            )}
+                          </Box>
 
                           {/* Progress */}
-                          <Box>
+                          {/* <Box>
                             <Box
                               sx={{
                                 display: 'flex',
@@ -494,7 +578,7 @@ function MemberProfile() {
                             >
                               {task.completion}% Complete
                             </Typography>
-                          </Box>
+                          </Box> */}
                         </CardContent>
                       </Card>
                     );
@@ -528,8 +612,8 @@ function MemberProfile() {
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
-        onDelete={handleDeleteMember}
-        selected={profileUser ? profileUser.email : ''}
+        onDelete={handleRemoveFromTask}
+        selected={profileUser ? `${profileUser.firstName} ${profileUser.lastName}` : ''}
         loading={loading}
       />
     </>
