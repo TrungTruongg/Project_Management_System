@@ -168,11 +168,8 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
   };
 
   const getTaskMembers = () => {
-    if (!selectedTask?._id) return [];
-    const task = tasks.find((task: any) => task._id === selectedTask._id);
-    if (!task?.assignedTo) return [];
-
-    return users.filter((u) => task.assignedTo.includes(u._id));
+    if (!user) return [];
+    return users.filter((u: any) => u._id !== user._id);
   };
 
   const validateDates = () => {
@@ -651,6 +648,7 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
                   </Box>
                 </Box>
 
+                 {/* Asigned To */}
                 <Box>
                   <Typography
                     sx={{
@@ -697,7 +695,7 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
                     {users.length === 0 ? (
                       <MenuItem disabled>No user available</MenuItem>
                     ) : (
-                      users.map((user: any) => (
+                      taskMembers.map((user: any) => (
                         <MenuItem value={user._id} key={user._id}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Avatar

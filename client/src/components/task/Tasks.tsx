@@ -107,13 +107,26 @@ function Tasks() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseTask, responseUser] = await Promise.all([
+      const [tasksRes, usersRes] = await Promise.all([
         api.get('/tasks'),
         api.get('/users'),
       ]);
 
-      setUsers(responseUser.data);
-      setTaskList(responseTask.data);
+      let filteredTasks = tasksRes.data;
+
+      // Filter tasks based on user's project access
+      if (user) {
+        const userTaskIds = filteredTasks
+          .filter((t: any) => t.leaderId === user._id || t.assigned?.includes(user._id))
+          .map((p: any) => p._id);
+
+        filteredTasks = filteredTasks.filter((task: any) =>
+          userTaskIds.includes(task._id)
+        );
+      }
+
+      setUsers(usersRes.data);
+      setTaskList(filteredTasks);
     } catch (error) {
       console.error(error);
     } finally {
@@ -122,8 +135,6 @@ function Tasks() {
   };
 
   const filteredTasks = taskList.filter((task: any) => {
-
-    console.log(typeof task.assignedTo);
     // Filter by task ID
     if (taskId && task._id !== taskId) {
       return false;

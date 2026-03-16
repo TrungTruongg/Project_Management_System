@@ -2,7 +2,7 @@ import { Close, Search } from "@mui/icons-material";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
 import { useSearch } from "./context/SearchContext";
 
-function SearchInput() {
+function SearchInput({ width = 350, height = 40, fontSize = '1rem', paddingLeft = 14 }) {
   const { searchTerm, setSearchTerm } = useSearch();
 
   return (
@@ -15,9 +15,12 @@ function SearchInput() {
       onChange={(e) => setSearchTerm(e.target.value)}
       value={searchTerm}
       sx={{
-        width: 350,
+        width: width,
         "& .MuiOutlinedInput-root": {
           borderRadius: 2,
+          height: height,
+          fontSize: fontSize,
+          pl: `${paddingLeft}px`,
           "& fieldset": {
             borderColor: (theme) =>
               theme.palette.mode === "light" ? "#e0e0e0" : "#444",
@@ -38,13 +41,13 @@ function SearchInput() {
         input: {
           startAdornment: (
             <InputAdornment position="start">
-              <Search />
+              <Search fontSize="small" />
             </InputAdornment>
           ),
           endAdornment: searchTerm && (
             <InputAdornment position="end">
-              <IconButton size="small" onClick={() => setSearchTerm("")}>
-                <Close fontSize="small" />
+              <IconButton size="small" onClick={() => setSearchTerm("")} sx={{ p: 0.5 }}>
+                <Close fontSize="small" sx={{ fontSize: '0.9rem' }} />
               </IconButton>
             </InputAdornment>
           ),

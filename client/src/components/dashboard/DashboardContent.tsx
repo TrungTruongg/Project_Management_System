@@ -3,12 +3,12 @@ import { BsJournalCheck as TotalTaskIcon } from 'react-icons/bs';
 import { BsListCheck as CompleteTaskIcon } from 'react-icons/bs';
 import { BsClipboardData as ProgressTaskIcon } from 'react-icons/bs';
 import WelcomeIcon from '../icons/WelcomeIcon';
-import DashboardProjectInformation from './DashboardProjectInformation';
+import DashboardTasksInformation from './DashboardTasksInformation';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import api from '../api/axiosConfig';
-import TaskCharts from './DashboardProjectCharts';
+import DashboardCharts from './DashboardCharts';
 
 function DashboardContent() {
   const [tasks, setTasks] = useState<any[]>([]);
@@ -25,7 +25,7 @@ function DashboardContent() {
 
   const totalTask = userTasks.length;
   const totalToDoTasks = userTasks.filter((task: any) => task.status === 'to-do').length;
-  const totalCompletedTasks = userTasks.filter((task: any) => task.status === 'completed').length;
+  const totalDoneTasks = userTasks.filter((task: any) => task.status === 'done').length;
   const totalProgressTasks = userTasks.filter((task: any) => task.status === 'in-progress').length;
 
   const fetchAllDatas = async () => {
@@ -284,7 +284,7 @@ function DashboardContent() {
                   variant="h5"
                   sx={{ marginBottom: 0, fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' } }}
                 >
-                  {userTasks.length === 0 ? 0 : totalCompletedTasks}
+                  {userTasks.length === 0 ? 0 : totalDoneTasks}
                 </Typography>
               </Box>
             </CardContent>
@@ -427,11 +427,11 @@ function DashboardContent() {
 
         {/* Task Charts - Status Overview & Priority Breakdown */}
         <Grid size={{ xs: 12 }}>
-          <TaskCharts tasks={tasks} />
+          <DashboardCharts tasks={tasks} />
         </Grid>
       </Grid>
      
-      <DashboardProjectInformation />
+      <DashboardTasksInformation />
     </>
   );
 }

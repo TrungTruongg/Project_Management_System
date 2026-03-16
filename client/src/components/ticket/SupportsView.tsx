@@ -4,7 +4,10 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Fade,
   IconButton,
+  Menu,
+  MenuItem,
   Paper,
   Table,
   TableBody,
@@ -17,10 +20,9 @@ import {
 } from '@mui/material';
 import { GoPlusCircle as AddTaskIcon } from 'react-icons/go';
 import {
-  Delete,
-  Edit,
   CheckCircle as CheckCompleteIcon,
   Refresh as RefreshIcon,
+  MoreHoriz,
 } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import DeleteConfirmDialog from '../DeleteConfirmDialog';
@@ -39,6 +41,7 @@ function SupportsView() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [menuOpenTicketId, setMenuOpenTicketId] = useState<string | null>(null);
   const { user } = useUser();
   const navigate = useNavigate();
 
@@ -73,11 +76,20 @@ function SupportsView() {
 
   const getUserTasks = () => {
     if (!user) return [];
-    return tasks.filter((task) => task.leaderId === user._id || task.assignedTo?.includes(user._id));
+    return tasks.filter(
+      (task) => task.leaderId === user._id || task.assignedTo?.includes(user._id)
+    );
   };
 
   const userTasks = getUserTasks();
   const leaderTasks = getLeaderTasks();
+
+  const handleOpenMenu = (ticketId: string) => {
+    setMenuOpenTicketId(ticketId);
+  };
+  const handleCloseMenu = () => {
+    setMenuOpenTicketId(null);
+  };
 
   const handleOpenModal = () => {
     setSelectedTicket(null);
@@ -92,6 +104,7 @@ function SupportsView() {
   const handleEditTicket = (ticket: any) => {
     setSelectedTicket(ticket);
     setOpen(true);
+    setMenuOpenTicketId(null);
   };
 
   const handleSaveTicket = (newTicket: any) => {
@@ -107,6 +120,7 @@ function SupportsView() {
   const handleOpenDeleteDialog = (ticket: any) => {
     setSelectedTicket(ticket);
     setDeleteDialogOpen(true);
+    setMenuOpenTicketId(null);
   };
 
   const handleCloseDeleteDialog = () => {
@@ -361,25 +375,39 @@ function SupportsView() {
                         {(user?.role === 'leader' || ticket.assignedBy === user?._id) && (
                           <>
                             <IconButton
-                              size="small"
-                              sx={{ color: '#4CAF50' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditTicket(ticket);
-                              }}
+                              id={`fade-button-${ticket._id}`}
+                              aria-controls={
+                                menuOpenTicketId === ticket._id ? `fade-menu-${ticket._id}` : undefined
+                              }
+                              aria-haspopup="true"
+                              aria-expanded={menuOpenTicketId === ticket._id ? 'true' : undefined}
+                              onClick={() => handleOpenMenu(ticket._id)}
                             >
-                              <Edit fontSize="small" />
+                              <MoreHoriz fontSize="small" />
                             </IconButton>
-                            <IconButton
-                              size="small"
-                              sx={{ color: '#EF5350' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenDeleteDialog(ticket);
+                            <Menu
+                              id={`fade-menu-${ticket._id}`}
+                              slotProps={{
+                                list: {
+                                  'aria-labelledby': `fade-button-${ticket._id}`,
+                                },
                               }}
+                              slots={{ transition: Fade }}
+                              anchorEl={
+                                menuOpenTicketId === ticket._id
+                                  ? document.getElementById(`fade-button-${ticket._id}`)
+                                  : null
+                              }
+                              open={menuOpenTicketId === ticket._id}
+                              onClose={handleCloseMenu}
                             >
-                              <Delete fontSize="small" />
-                            </IconButton>
+                              <MenuItem onClick={() => handleEditTicket(ticket)}>
+                                <Typography>Edit</Typography>
+                              </MenuItem>
+                              <MenuItem onClick={() => handleOpenDeleteDialog(ticket)}>
+                                <Typography color="error">Delete</Typography>
+                              </MenuItem>
+                            </Menu>
                           </>
                         )}
                       </TableCell>
@@ -413,7 +441,7 @@ function SupportsView() {
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
         onDelete={handleDeleteTicket}
-        selected={selectedTicket ? selectedTicket.ticketId : ''}
+        selected={selectedTicket ? selectedTicket.name : ''}
         loading={loading}
       />
     </>

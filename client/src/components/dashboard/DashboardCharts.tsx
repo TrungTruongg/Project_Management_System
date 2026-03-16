@@ -9,7 +9,7 @@ interface ChartsProps {
     tasks: any[]
 }
 
-function TaskCharts({ tasks }: ChartsProps) {
+function DashboardCharts({ tasks }: ChartsProps) {
 
     const navigate = useNavigate();
 
@@ -390,4 +390,4 @@ function TaskCharts({ tasks }: ChartsProps) {
     );
 }
 
-export default TaskCharts;
+export default DashboardCharts;
