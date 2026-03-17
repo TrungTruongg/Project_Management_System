@@ -9,7 +9,6 @@ import { connectDB } from "./src/config/database.js";
 // Import routes
 import userRoutes from "./src/routes/userRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
-import projectRoutes from "./src/routes/projectRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import notificationRoutes from "./src/routes/notificationRoutes.js";
 import attachmentRoutes from "./src/routes/attachmentRoutes.js";
@@ -46,7 +45,6 @@ app.use(express.json());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/attachments", attachmentRoutes);

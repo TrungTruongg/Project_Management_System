@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import Sidebar from '../Sidebar';
 import { Outlet } from 'react-router-dom';
 import Header from '../Header';
 import GeminiChatBox from '../ai/GeminiChatBot';
 
 function Dashboard() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    1: true,
+    1: !isMobile,
     2: false,
   });
 
@@ -34,11 +37,16 @@ function Dashboard() {
           bgcolor: 'background.default',
           display: 'flex',
           flexDirection: 'column',
+          minWidth: 0,
         }}
       >
         <Box
           sx={{
-            px: 4,
+            px: {
+              xs: 2,
+              sm: 3,
+              md: 4,
+            },
             pt: 4,
             position: 'sticky',
             top: 0,
@@ -51,7 +59,18 @@ function Dashboard() {
           <Header />
         </Box>
 
-        <Box sx={{ flex: 1, overflowY: 'auto', px: 4, py: 3 }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            px: {
+              xs: 2,
+              sm: 3,
+              md: 4,
+            },
+            py: 3,
+          }}
+        >
           <Outlet />
         </Box>
       </Box>

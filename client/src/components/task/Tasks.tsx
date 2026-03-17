@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Card,
-  CardContent,
   Chip,
   CircularProgress,
   Fade,
@@ -107,22 +106,30 @@ function Tasks() {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [tasksRes, usersRes] = await Promise.all([
-        api.get('/tasks'),
-        api.get('/users'),
-      ]);
+      const [tasksRes, usersRes] = await Promise.all([api.get('/tasks'), api.get('/users')]);
 
       let filteredTasks = tasksRes.data;
 
-      // Filter tasks based on user's project access
+      // Filter tasks based on user's task access
       if (user) {
         const userTaskIds = filteredTasks
-          .filter((t: any) => t.leaderId === user._id || t.assigned?.includes(user._id))
+          .filter((t: any) => {
+            // Check if user is the leader
+            const isLeader = t.leaderId === user._id;
+
+            // Check if user is assigned to the task (handle both string and array)
+            const assignedTo = Array.isArray(t.assignedTo)
+              ? t.assignedTo
+              : t.assignedTo
+                ? [t.assignedTo]
+                : [];
+            const isAssigned = assignedTo.includes(user._id);
+
+            return isLeader || isAssigned;
+          })
           .map((p: any) => p._id);
 
-        filteredTasks = filteredTasks.filter((task: any) =>
-          userTaskIds.includes(task._id)
-        );
+        filteredTasks = filteredTasks.filter((task: any) => userTaskIds.includes(task._id));
       }
 
       setUsers(usersRes.data);
@@ -158,8 +165,8 @@ function Tasks() {
           : [];
 
       // Check if leader or any assignee matches the filter
-      const hasMatch = activeFilters.assignee.some(userId => 
-        task.leaderId === userId || taskAssignees.includes(userId)
+      const hasMatch = activeFilters.assignee.some(
+        (userId) => task.leaderId === userId || taskAssignees.includes(userId)
       );
 
       if (!hasMatch) return false;
@@ -189,9 +196,9 @@ function Tasks() {
 
   const getPriorityChip = (priority: 'high' | 'medium' | 'low') => {
     const config = {
-      high: { label: 'HIGH PRIORITY', bgcolor: '#FFEBEE', color: '#C62828' },
-      medium: { label: 'MEDIUM PRIORITY', bgcolor: '#FFF9C4', color: '#F57F17' },
-      low: { label: 'LOW PRIORITY', bgcolor: '#C8E6C9', color: '#388E3C' },
+      high: { label: 'High', bgcolor: '#FFEBEE', color: '#C62828' },
+      medium: { label: 'Medium', bgcolor: '#FFF9C4', color: '#F57F17' },
+      low: { label: 'Low', bgcolor: '#C8E6C9', color: '#388E3C' },
     };
     return config[priority] || config.medium;
   };
@@ -318,10 +325,10 @@ function Tasks() {
           borderRadius: 2,
           border: (theme) => `1px solid ${theme.palette.mode === 'light' ? '#f0f0f0' : '#2a2a2a'}`,
           width: '100%',
+          p: 2
         }}
         onClick={() => handleViewTask(task._id)}
       >
-        <CardContent sx={{ p: 2 }}>
           <Box
             sx={{
               display: 'flex',
@@ -330,8 +337,9 @@ function Tasks() {
             }}
           >
             <Chip
-              label={priorityConfig.label}
+              label={priorityConfig.label.toUpperCase()}
               size="medium"
+              title={`Priority: ${priorityConfig.label}`}
               sx={{
                 ...priorityConfig,
                 fontSize: '13px',
@@ -419,17 +427,29 @@ function Tasks() {
                 Expired
               </Typography>
             ) : task.startDate ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                title={`Due on ${formatDate(task.endDate)}`}
+              >
                 <CalendarToday sx={{ fontSize: 14, color: 'text.secondary' }} />
                 <Typography variant="caption">{formatDate(task.endDate)}</Typography>
               </Box>
             ) : (
               <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                No Dates provided
+                No Due Date provided
               </Typography>
             )}
 
-            <AvatarGroup max={5}>
+            <AvatarGroup
+              max={3}
+              sx={{
+                '& .MuiAvatar-root': {
+                  width: 24,
+                  height: 24,
+                  fontSize: '10px',
+                },
+              }}
+            >
               {task?.leaderId && (
                 <Avatar
                   key={`leader-${task.leaderId}`}
@@ -462,7 +482,7 @@ function Tasks() {
                       bgcolor: '#E0E0E0',
                       textTransform: 'uppercase',
                     }}
-                    title={`Members: ${user.firstName} ${user.lastName}`}
+                    title={`Assignee: ${user.firstName} ${user.lastName}`}
                   >
                     {user.firstName?.[0]}
                     {user.lastName?.[0]}
@@ -527,7 +547,6 @@ function Tasks() {
               {task.completion}% Done
             </Typography>
           </Box> */}
-        </CardContent>
       </Card>
     );
   };
@@ -555,7 +574,7 @@ function Tasks() {
             label={filteredTasks.length}
             size="small"
             sx={{
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: 500,
             }}
           />

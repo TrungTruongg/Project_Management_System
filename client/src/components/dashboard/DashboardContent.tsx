@@ -427,7 +427,7 @@ function DashboardContent() {
 
         {/* Task Charts - Status Overview & Priority Breakdown */}
         <Grid size={{ xs: 12 }}>
-          <DashboardCharts tasks={tasks} />
+          <DashboardCharts tasks={tasks} user={user} />
         </Grid>
       </Grid>
      

@@ -12,12 +12,26 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { AttachFile as AttachmentIcon, Add as AddIcon, ArrowBack } from '@mui/icons-material';
+import { Add as AddIcon, ArrowBack } from '@mui/icons-material';
 import CommentSection from '../comment/CommentSection';
 import api from '../api/axiosConfig';
 import MediumPriority from '../../assets/MediumPriority';
 import HighPriority from '../../assets/HighPriority';
 import LowPriority from '../../assets/LowPriority';
+import AttachmentList from './attachments/AttachmentList';
+import AttachmentPreviewModal from './attachments/AttachmentPreviewModal';
+import DeleteConfirmDialog from '../DeleteConfirmDialog';
+
+interface AttachmentItem {
+  _id?: string;
+  name: string;
+  url: string;
+  type: 'file' | 'link' | 'image' | 'video';
+  file?: File;
+  isExisting: boolean;
+  uploadedAt?: string;
+  previewUrl?: string;
+}
 
 function TaskDetail() {
   const [searchParams] = useSearchParams();
@@ -26,10 +40,14 @@ function TaskDetail() {
   const [task, setTask] = useState<any>(null);
   const [assignedUsers, setAssignedUsers] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
-  const [attachments, setAttachments] = useState<any>(null);
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const [deletedAttachmentIds, setDeletedAttachmentIds] = useState<string[]>([]);
+  const [previewAtt, setPreviewAtt] = useState<AttachmentItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [status, setStatus] = useState('');
+  const [attachmentToDelete, setAttachmentToDelete] = useState<{ index: number; attachment: any } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const navigate = useNavigate();
 
@@ -75,7 +93,14 @@ function TaskDetail() {
         const mergedComments = [...taskComments, ...taskReplies];
         setComments(mergedComments);
 
-        setAttachments(attachments.filter((att: any) => att.taskId === foundTask._id));
+        const taskAttachments = attachments
+          .filter((att: any) => att.taskId === foundTask._id)
+          .map((att: any) => ({
+            ...att,
+            isExisting: true,
+            previewUrl: att.url,
+          }));
+        setAttachments(taskAttachments);
       }
     } catch (error) {
       console.error('Error fetching task detail:', error);
@@ -125,6 +150,32 @@ function TaskDetail() {
       console.error('Failed to update status:', error);
       setStatus(task.status);
       setTask(task);
+    }
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    const attachment = attachments[index];
+    setAttachmentToDelete({ index, attachment });
+  };
+
+  const confirmDeleteAttachment = async () => {
+    if (!attachmentToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const attachment = attachmentToDelete.attachment;
+
+      if (attachment.isExisting && attachment._id) {
+        await api.delete(`/attachments/delete/${attachment._id}`);
+        setDeletedAttachmentIds([...deletedAttachmentIds, attachment._id]);
+      }
+
+      setAttachments(attachments.filter((_, i) => i !== attachmentToDelete.index));
+      setAttachmentToDelete(null);
+    } catch (error) {
+      console.error('Error deleting attachment:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -323,14 +374,14 @@ function TaskDetail() {
                   <Chip
                     label={attachments.length}
                     size="small"
-                    sx={{ ml: 1, height: 18, fontSize: '0.7rem' }}
+                    sx={{ ml: 1, height: 17, fontSize: '0.7rem' }}
                   />
                 </Typography>
                 <IconButton size="small">
                   <AddIcon fontSize="small" />
                 </IconButton>
               </Box>
-              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              {/* <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
                 {attachments.map((att: any, index: number) => {
                   let url = att.url;
 
@@ -353,8 +404,6 @@ function TaskDetail() {
                         overflow: 'hidden',
                         textDecoration: 'none',
                         color: 'inherit',
-                        transition: 'box-shadow 0.2s',
-                        '&:hover': { boxShadow: 3 },
                       }}
                     >
                       <Box
@@ -401,7 +450,28 @@ function TaskDetail() {
                     </Box>
                   );
                 })}
-              </Box>
+              </Box> */}
+              {attachments.length > 0 && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    overflowX: 'auto',
+                    overflowY: 'hidden',
+                    padding: '8px 4px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  {attachments.map((att, i) => (
+                    <AttachmentList
+                      key={i}
+                      att={att}
+                      onRemove={() => handleRemoveAttachment(i)}
+                      onPreview={() => setPreviewAtt(att)}
+                    />
+                  ))}
+                </Box>
+              )}
             </Box>
           )}
 
@@ -550,6 +620,22 @@ function TaskDetail() {
           </Box>
         </Box>
       </Box>
+
+      {/* Preview Modal */}
+      {previewAtt && (
+        <AttachmentPreviewModal attachment={previewAtt} onClose={() => setPreviewAtt(null)} />
+      )}
+
+      {/* Delete Confirm Dialog */}
+      {attachmentToDelete && (
+        <DeleteConfirmDialog
+          open={!!attachmentToDelete}
+          selected={attachmentToDelete.attachment ? attachmentToDelete.attachment.name : ''}
+          onDelete={confirmDeleteAttachment}
+          onClose={() => setAttachmentToDelete(null)}
+          loading={isDeleting}
+        />
+      )}
     </>
   );
 }

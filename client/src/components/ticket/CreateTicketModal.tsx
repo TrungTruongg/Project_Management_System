@@ -67,7 +67,7 @@ function CreateTicketModal({
           name,
           description,
           assignedBy: user?._id,
-          projectId: selectedTask?._id,
+          taskId: selectedTask?._id,
           status,
           priority,
           createdDate: new Date().toISOString().split("T")[0],
@@ -77,7 +77,7 @@ function CreateTicketModal({
           newTicket
         );
 
-        //Send notify to project leader only
+        //Send notify to task leader only
         if (selectedTask?.leaderId) {
           await createNotification({
             userId: [selectedTask.leaderId],

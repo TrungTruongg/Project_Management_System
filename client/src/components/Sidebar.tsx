@@ -63,17 +63,38 @@ function Sidebar({ openMenus }: any) {
     <>
       <Box
         sx={{
-          width: isCollapsed ? 100 : 260,
+          width: {
+            xs: isCollapsed ? 70 : 100,
+            sm: isCollapsed ? 80 : 120,
+            md: isCollapsed ? 100 : 260,
+            lg: isCollapsed ? 100 : 260,
+          },
           backgroundColor: '#484c7f',
           color: 'white',
           overflowY: 'auto',
-          p: 3,
-          borderRadius: '1.1rem',
+          p: {
+            xs: 1.5,
+            sm: 2,
+            md: 3,
+          },
+          borderRadius: {
+            xs: '0.7rem',
+            md: '1.1rem',
+          },
           height: 'calc(100vh - 50px)',
-          margin: '25px',
+          margin: {
+            xs: '12px',
+            sm: '15px',
+            md: '25px',
+          },
           order: 1,
           zIndex: 1,
           transition: 'width 0.3s ease',
+          mr: {
+            xs: '8px',
+            sm: '12px',
+            md: 0,
+          },
         }}
       >
         <Box
@@ -90,9 +111,15 @@ function Sidebar({ openMenus }: any) {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              gap: 2,
+              gap: {
+                xs: 0.5,
+                md: 2,
+              },
               justifyContent: isCollapsed ? 'center' : 'flex-start',
-              pb: 5,
+              pb: {
+                xs: 2,
+                md: 5,
+              },
             }}
           >
             <Box
@@ -100,13 +127,29 @@ function Sidebar({ openMenus }: any) {
                 aligItems: 'center',
                 backgroundColor: 'white',
                 display: 'flex',
-                height: '60px',
+                height: {
+                  xs: '45px',
+                  sm: '50px',
+                  md: '60px',
+                },
                 justifyContent: 'center',
-                lineHeight: '60px',
-                minWidth: '60px',
+                lineHeight: {
+                  xs: '45px',
+                  sm: '50px',
+                  md: '60px',
+                },
+                minWidth: {
+                  xs: '45px',
+                  sm: '50px',
+                  md: '60px',
+                },
                 borderRadius: '50%',
                 margin: 'inherit',
                 alignItems: 'center',
+                fontSize: {
+                  xs: '1rem',
+                  md: '1.2rem',
+                },
               }}
             >
               <TaskIcon />
@@ -119,13 +162,15 @@ function Sidebar({ openMenus }: any) {
                   flexDirection: 'column',
                   gap: 0.5,
                   overflow: 'hidden',
-                  whiteSpace: 'nowrap',
+                  whiteSpace: 'nowrap',              
                 }}
               >
-                <Typography variant="h5" fontWeight="bold">
+                <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '0.9rem', md: '1.25rem' } }}>
                   My-Task
                 </Typography>
-                <Typography fontSize="0.8rem">Project Management</Typography>
+                <Typography fontSize={{ xs: '0.65rem', md: '0.8rem' }}>
+                  Project Management
+                </Typography>
               </Box>
             )}
           </Box>
@@ -142,24 +187,38 @@ function Sidebar({ openMenus }: any) {
               msOverflowStyle: 'none',
             }}
           >
-            <List sx={{ py: 2, flexGrow: 1 }}>
+            <List sx={{ py: { xs: 1, md: 2 }, flexGrow: 1 }}>
               {menuItems.map((item: any) => {
                 const isActive = isMenuActive(item);
 
                 return (
                   <Box key={item.id}>
-                    <ListItem disablePadding sx={{ mb: 0.5 }}>
+                    <ListItem disablePadding sx={{ mb: { xs: 0.3, md: 0.5 } }}>
                       <ListItemButton
                         onClick={() => {handleMenuClick(item?.text)}}
                         sx={{
                           borderRadius: 1,
-                          fontSize: '20px',
+                          fontSize: {
+                            xs: '14px',
+                            md: '20px',
+                          },
+                          py: {
+                            xs: 1,
+                            md: 1.5,
+                          },
                         }}
                       >
                         <ListItemIcon
                           sx={{
                             color: isActive ? '#FFA726' : 'white',
-                            minWidth: 40,
+                            minWidth: {
+                              xs: 28,
+                              md: 40,
+                            },
+                            fontSize: {
+                              xs: '1.2rem',
+                              md: '1.5rem',
+                            },
                           }}
                         >
                           {item.icon}
@@ -173,22 +232,27 @@ function Sidebar({ openMenus }: any) {
                                 gap: 1,
                               }}
                             >
-                              <span>{isCollapsed ? '' : item.text}</span>
+                              <span>
+                                {isCollapsed ? '' : item.text}
+                              </span>
                             </Box>
                           }
                           slotProps={{
                             primary: {
                               color: isActive ? '#FFA726' : 'white',
-                              fontSize: '18px',
+                              fontSize: {
+                                xs: '12px',
+                                md: '18px',
+                              },
                               fontWeight: 400,
                             },
                           }}
                         />
                         {item.submenu &&
                           (openMenus[item.id] ? (
-                            <ExpandLess />
+                            <ExpandLess sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
                           ) : isCollapsed ? null : (
-                            <ExpandMore />
+                            <ExpandMore sx={{ fontSize: { xs: '1.2rem', md: '1.5rem' } }} />
                           ))}
                       </ListItemButton>
                     </ListItem>
@@ -204,9 +268,16 @@ function Sidebar({ openMenus }: any) {
                                 <ListItemButton
                                   onClick={() => handleMenuClick(subitem)}
                                   sx={{
-                                    pl: 6,
+                                    pl: {
+                                      xs: 4,
+                                      md: 6,
+                                    },
                                     borderRadius: 1,
                                     color: isSubActive ? '#FFA726' : 'rgba(255,255,255,0.7)',
+                                    py: {
+                                      xs: 0.8,
+                                      md: 1,
+                                    },
                                   }}
                                 >
                                   <ListItemText
@@ -225,6 +296,10 @@ function Sidebar({ openMenus }: any) {
                                       primary: {
                                         textAlign: 'left',
                                         fontWeight: 400,
+                                        fontSize: {
+                                          xs: '11px',
+                                          md: '0.9rem',
+                                        },
                                       },
                                     }}
                                   />
@@ -244,7 +319,10 @@ function Sidebar({ openMenus }: any) {
           {/* Bottom Section - Dark Mode và RTL */}
           <Box
             sx={{
-              py: 2.5,
+              py: {
+                xs: 1.5,
+                md: 2.5,
+              },
               borderTop: '1px solid rgba(255,255,255,0.1)',
               flexShrink: 0,
               mt: 'auto',
@@ -255,31 +333,63 @@ function Sidebar({ openMenus }: any) {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                mb: 2,
+                mb: {
+                  xs: 1,
+                  md: 2,
+                },
+                gap: 0.5,
               }}
             >
               <Switch
                 checked={mode === 'dark'}
                 onChange={handleModeToggle}
                 size="small"
-                sx={{ mr: 1 }}
+                sx={{ mr: { xs: 0, md: 1 } }}
               />
               {!isCollapsed && (
-                <Typography variant="body2">
+                <Typography
+                  variant="body2"
+                  sx={{
+                    display: {
+                      xs: 'none',
+                      md: 'block',
+                    },
+                    fontSize: {
+                      xs: '0.7rem',
+                      md: '0.875rem',
+                    },
+                  }}
+                >
                   {mode === 'dark' ? 'Dark Mode' : 'Light Mode'}
                 </Typography>
               )}
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 1, md: 2 } }}>
               {!isCollapsed ? (
                 <ArrowBack
-                  sx={{ color: 'white', opacity: 0.7, cursor: 'pointer' }}
+                  sx={{
+                    color: 'white',
+                    opacity: 0.7,
+                    cursor: 'pointer',
+                    fontSize: {
+                      xs: '1.2rem',
+                      md: '1.5rem',
+                    },
+                  }}
                   onClick={() => setIsCollapsed(!isCollapsed)}
                 />
               ) : (
                 <ArrowForward
-                  sx={{ color: 'white', opacity: 0.7, cursor: 'pointer' }}
+                  sx={{
+                    color: 'white',
+                    opacity: 0.7,
+                    cursor: 'pointer',
+                    fontSize: {
+                      xs: '1.2rem',
+                      md: '1.5rem',
+                    },
+                  }}
                   onClick={() => setIsCollapsed(!isCollapsed)}
                 />
               )}

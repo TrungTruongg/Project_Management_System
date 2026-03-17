@@ -28,18 +28,18 @@ function Header() {
   const navigate = useNavigate();
   const [hasNotification, setHasNotification] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [project, setProject] = useState<any[]>([]);
+  const [tasks, setTask] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
 
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [responseProject, responseUser] = await Promise.all([
-        api.get("/projects"),
+      const [responseTasks, responseUser] = await Promise.all([
+        api.get("/tasks"),
         api.get("/users"),
       ]);
 
-      setProject(responseProject.data);
+      setTask(responseTasks.data);
       setUsers(responseUser.data);
     } catch (error) {
       console.error(error);
@@ -72,8 +72,11 @@ function Header() {
   };
 
   useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  useEffect(() => {
     if (user) checkHasNotification();
-    else if (!user) fetchAllData();
     else setHasNotification(false);
   }, [user]);
 
@@ -133,9 +136,9 @@ function Header() {
           max={5}
           sx={{
             '& .MuiAvatar-root': {
-              width: 35,
-              height: 35,
-              fontSize: 15,
+              width: 28,
+              height: 28,
+              fontSize: 10,
             }
           }}
         >
@@ -151,11 +154,10 @@ function Header() {
               />
             ))
           ) : (
-            project.map((project) => {
-              const projectMembers = users.filter((user) => project.members.includes(user._id));
+            tasks.map((task) => {
+              const tasksMembers = users.filter((user) => task?.assignedTo?.includes(user._id));
               return (
-
-                projectMembers.map((member) => (
+                tasksMembers.map((member) => (
                   <Avatar
                     key={member._id}
                     src={member.avatar}

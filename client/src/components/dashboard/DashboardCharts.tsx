@@ -6,15 +6,33 @@ import LowPriority from "../../assets/LowPriority";
 import { useNavigate } from "react-router-dom";
 
 interface ChartsProps {
-    tasks: any[]
+    tasks: any[];
+    user?: any;
 }
 
-function DashboardCharts({ tasks }: ChartsProps) {
+function DashboardCharts({ tasks, user }: ChartsProps) {
 
     const navigate = useNavigate();
 
     const getUserTasks = () => {
-        return tasks;
+        if (!user) {
+            return tasks;
+        }
+
+        // Filter tasks where user is leader or assigned
+        return tasks.filter((task: any) => {
+            const isLeader = task.leaderId === user._id;
+            
+            // Handle both string and array for assignedTo
+            const assignedTo = Array.isArray(task.assignedTo)
+                ? task.assignedTo
+                : task.assignedTo
+                  ? [task.assignedTo]
+                  : [];
+            const isAssigned = assignedTo.includes(user._id);
+
+            return isLeader || isAssigned;
+        });
     };
 
     const userTasks = getUserTasks();
@@ -210,7 +228,7 @@ function DashboardCharts({ tasks }: ChartsProps) {
                     Status Overview
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '13px' }}>
-                    Get a snapshot of the status of your projects
+                    Get a snapshot of the status of your tasks
                 </Typography>
 
                 {tasks.length === 0 ? (

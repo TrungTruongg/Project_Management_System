@@ -271,9 +271,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                 return (
                   <Box key={notification._id}>
                     <ListItem
-                      onClick={notification.type === "project"
-                        ? () => navigate("/project")
-                        : notification.type === "task"
+                      onClick={notification.type === "task"
                           ? () => navigate("/task")
                           : () => navigate("/supports-view")
                       }
@@ -292,7 +290,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                         <Avatar
                           sx={{
                             bgcolor:
-                              notification.type === "project"
+                              notification.type === "task"
                                 ? "#2196F3"
                                 : user?.role === "leader" && notification.type === "support"
                                   ? "#9C27B0"
@@ -301,7 +299,7 @@ function NotificationModal({ open, onClose, currentUser }: any) {
                             height: 48,
                           }}
                         >
-                          {notification.type === "project" ? (
+                          {notification.type === "task" ? (
                             <Assignment />
                           ) : user?.role === "leader" && notification.type === "support" ? (
                             <SupportIcon />

@@ -17,13 +17,13 @@ export const createTicket = async (req, res) => {
   try {
     const collection = getDB().collection("support_tickets");
 
-    const { name, description, assignedBy, projectId, status, priority } = req.body;
+    const { name, description, assignedBy, taskId, status, priority } = req.body;
 
     const newTicket = {
       name: name,
       description: description,
       assignedBy: assignedBy,
-      projectId: projectId,
+      taskId: taskId,
       status: status,
       priority: priority,
       createdAt: new Date(),
@@ -41,13 +41,13 @@ export const updateTicket = async (req, res) => {
   try {
     const collection = getDB().collection("support_tickets");
     const { id } = req.params;
-    const { name, description, assignedBy, projectId, status, priority } = req.body;
+    const { name, description, assignedBy, taskId, status, priority } = req.body;
 
     const updateFields = {
       name: name,
       description: description,
       assignedBy: assignedBy,
-      projectId: projectId,
+      taskId: taskId,
       status: status,
       priority: priority,
       updatedAt: new Date(),
