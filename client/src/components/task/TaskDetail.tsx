@@ -46,7 +46,10 @@ function TaskDetail() {
   const [loading, setLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [status, setStatus] = useState('');
-  const [attachmentToDelete, setAttachmentToDelete] = useState<{ index: number; attachment: any } | null>(null);
+  const [attachmentToDelete, setAttachmentToDelete] = useState<{
+    index: number;
+    attachment: any;
+  } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const navigate = useNavigate();
@@ -141,9 +144,15 @@ function TaskDetail() {
     setTask({ ...task, status: newStatus });
     const taskData = {
       name: task.name,
+      description: task.description,
+      startDate: task.startDate,
+      endDate: task.endDate,
+      assignedTo: task.assignedTo,
       priority: task.priority,
       status: newStatus,
+      leaderId: task.leaderId,
     };
+
     try {
       await api.put(`/tasks/update/${taskId}`, taskData);
     } catch (error) {

@@ -189,7 +189,6 @@ function Tasks() {
     return true;
   });
 
-  // Handler cho filter change
   const handleFilterChange = (filters: FilterState) => {
     setActiveFilters(filters);
   };
