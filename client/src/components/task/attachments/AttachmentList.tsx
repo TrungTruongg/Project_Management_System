@@ -51,6 +51,14 @@ function AttachmentList({
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
+  const handleLinkClick = () => {
+    if (att.type === 'link') {
+      window.open(att.url, '_blank');
+    } else {
+      onPreview();
+    }
+  };
+
   const getFileIcon = (ext: string) => {
     switch (ext) {
       case 'xlsx':
@@ -86,7 +94,7 @@ function AttachmentList({
           borderColor: '#9333ea',
         },
       }}
-      onClick={onPreview}
+      onClick={att.type === 'link' ? handleLinkClick : onPreview}
     >
       {/* Thumbnail */}
       <Box
@@ -135,7 +143,7 @@ function AttachmentList({
             </Typography>
           </Box>
         ) : att.type === 'link' ? (
-          <MdLink style={{ fontSize: 22, color: '#9333ea' }} />
+          <MdLink style={{ fontSize: 22 }} />
         ) : (
           <MdInsertDriveFile style={{ fontSize: 22, color: '#6b7280' }} />
         )}

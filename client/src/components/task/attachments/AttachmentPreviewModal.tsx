@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, Modal, Typography } from '@mui/material';
-import { MdClose, MdInsertDriveFile, MdLink } from 'react-icons/md';
+import { MdClose, MdInsertDriveFile } from 'react-icons/md';
 
 interface AttachmentItem {
   _id?: string;
@@ -103,19 +103,6 @@ function AttachmentPreviewModal({
               style={{ width: '100%', height: '65vh', border: 'none', borderRadius: 4 }}
               title={attachment.name}
             />
-          ) : attachment.type === 'link' ? (
-            <Box sx={{ textAlign: 'center' }}>
-              <MdLink style={{ fontSize: 48, color: '#9333ea' }} />
-              <Typography sx={{ mt: 1, fontSize: '14px', color: '#374151' }}>{url}</Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                sx={{ mt: 2 }}
-                onClick={() => window.open(url, '_blank')}
-              >
-                Open link
-              </Button>
-            </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
               <MdInsertDriveFile style={{ fontSize: 64, color: '#9ca3af' }} />
