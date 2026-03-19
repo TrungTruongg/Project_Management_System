@@ -19,17 +19,18 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  AvatarGroup,
 } from '@mui/material';
 import api from '../api/axiosConfig';
 import { MoreHoriz } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../context/SearchContext';
-import { formatLastLogin } from '../helper/helper';
+import { formatDate } from '../helper/helper';
 
-const UserManagement = () => {
+const TaskManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [actionAnchorEl, setActionAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { searchTerm } = useSearch();
   const [snackbar, setSnackbar] = useState({
@@ -39,37 +40,44 @@ const UserManagement = () => {
   });
   const navigate = useNavigate();
 
-  const totalUsers = users.length;
-  const activeUsers = users.filter((user) => !user.isLocked).length;
-  const onlineUsers = users.filter((user) => user.isOnline).length;
+  const totalTasks = tasks.length;
+  const toDoTasks = tasks.filter((task) => task.status === 'to-do').length;
+  const inProgressTasks = tasks.filter((task) => task.status === 'in-progress').length;
+  const doneTasks = tasks.filter((task) => task.status === 'done').length;
 
-  const usersTotalCards = [
+  const tasksTotalCards = [
     {
-      title: 'Total users',
+      title: 'Total tasks',
       description: '',
-      total: totalUsers,
+      total: totalTasks,
     },
     {
-      title: 'Active users',
+      title: 'To do tasks',
       description: '',
-      total: activeUsers,
+      total: toDoTasks,
     },
     {
-      title: 'Online users',
+      title: 'In-progress tasks',
       description: '',
-      total: onlineUsers,
+      total: inProgressTasks,
+    },
+    {
+      title: 'Done tasks',
+      description: '',
+      total: doneTasks,
     },
   ];
 
   useEffect(() => {
-    fetchUsers();
+    fetchData();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/users');
-      setUsers(response.data);
+      const [tasksRes, usersRes] = await Promise.all([api.get('/tasks'), api.get('/users')]);
+      setTasks(tasksRes.data);
+      setUsers(usersRes.data);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
     } finally {
@@ -77,13 +85,12 @@ const UserManagement = () => {
     }
   };
 
-  const filteredUsers = users.filter((user: any) => {
+  const filteredTasks = tasks.filter((task: any) => {
     // Filter by search term
     if (searchTerm.trim()) {
       const matchesSearch =
-        user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        task.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
       if (!matchesSearch) return false;
     }
@@ -91,49 +98,40 @@ const UserManagement = () => {
     return true;
   });
 
-  const handleLockUser = async (userId: string, isLocked: boolean) => {
-    try {
-      if (isLocked) {
-        await api.delete(`/locks/${userId}`);
-        setSnackbar({ open: true, message: 'Access has been restored', type: 'success' });
-      } else {
-        await api.post(`/locks/${userId}`);
-        setSnackbar({
-          open: true,
-          message: 'Access has been temporarily suspended',
-          type: 'success',
-        });
-      }
-      fetchUsers();
-      setActionAnchorEl(null);
-    } catch (error: any) {
-      console.error('Failed to lock/unlock user:', error);
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.message || 'Action failed',
-        type: 'error',
-      });
-    }
+  const getPriorityChip = (priority: 'high' | 'medium' | 'low') => {
+    const config = {
+      high: { label: 'High', bgcolor: '#FFEBEE', color: '#C62828' },
+      medium: { label: 'Medium', bgcolor: '#FFF9C4', color: '#F57F17' },
+      low: { label: 'Low', bgcolor: '#C8E6C9', color: '#388E3C' },
+    };
+    return config[priority] || config.medium;
   };
 
-  const handleViewProfile = (user: any) => {
-    navigate('/admin/user-profile', { state: { userId: user._id } });
+  const getStatusChip = (status: 'toDo' | 'inProgress' | 'done') => {
+    const config = {
+      toDo: { label: 'To do', bgcolor: '#DFE1E6', color: '#42526E' },
+      inProgress: { label: 'In progress', bgcolor: '#DEEBFF', color: '#0052CC' },
+      done: { label: 'Done', bgcolor: '#E3FCEF', color: '#006644' },
+    };
+    return config[status] || config.toDo;
   };
 
-  const handleOpenAction = (event: React.MouseEvent<HTMLElement>, user: any) => {
+  const handleViewTaskDetail = (task: any) => {
+    navigate('/admin/task-detail', { state: { taskId: task._id } });
+  };
+
+  const handleOpenAction = (event: React.MouseEvent<HTMLElement>) => {
     setActionAnchorEl(event.currentTarget);
-    setSelectedUser(user);
   };
 
   const handleCloseAction = () => {
     setActionAnchorEl(null);
-    setSelectedUser(null);
   };
 
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h4" sx={{ mb: 2, fontWeight: 600, color: '#172B4D' }}>
-        Users
+        Tasks
       </Typography>
 
       <Box sx={{ mb: 4 }}>
@@ -148,8 +146,8 @@ const UserManagement = () => {
         ) : (
           <>
             <Grid container spacing={2}>
-              {usersTotalCards.map((userCard, index) => (
-                <Grid size={{ xs: 10, md: 4 }} key={index}>
+              {tasksTotalCards.map((taskCard, index) => (
+                <Grid size={{ xs: 10, md: 3 }} key={index}>
                   <Card
                     elevation={0}
                     sx={{
@@ -164,10 +162,10 @@ const UserManagement = () => {
                       }}
                     >
                       <Typography fontSize="14px" sx={{ color: '#292A2E' }}>
-                        {userCard.title}
+                        {taskCard.title}
                       </Typography>
                       <Typography fontSize="20px" sx={{ fontWeight: 500, color: '#292A2E' }}>
-                        {userCard.total}
+                        {taskCard.total}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -191,7 +189,7 @@ const UserManagement = () => {
                   borderBottom: '2px solid #f0f0f0',
                 }}
               >
-                FULL NAME
+                TASK NAME
               </TableCell>
               <TableCell
                 sx={{
@@ -202,7 +200,7 @@ const UserManagement = () => {
                   borderBottom: '2px solid #f0f0f0',
                 }}
               >
-                EMAIL
+                ASSIGNED TO
               </TableCell>
               <TableCell
                 sx={{
@@ -213,7 +211,7 @@ const UserManagement = () => {
                   borderBottom: '2px solid #f0f0f0',
                 }}
               >
-                ROLE
+                PRIORITY
               </TableCell>
               <TableCell
                 sx={{
@@ -224,7 +222,7 @@ const UserManagement = () => {
                   borderBottom: '2px solid #f0f0f0',
                 }}
               >
-                LAST LOGIN
+                DUE DATE
               </TableCell>
               <TableCell
                 sx={{
@@ -256,20 +254,32 @@ const UserManagement = () => {
               <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
                 <CircularProgress />
               </TableCell>
-            ) : users.length === 0 ? (
+            ) : tasks.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
                   <Typography fontStyle="italic" color="text.secondary">
-                    No users available!
+                    No task available!
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              filteredUsers.map((user: any) => {
+              filteredTasks.map((task: any) => {
+                const priorityConfig = getPriorityChip(task.priority);
+                const statusConfig = getStatusChip(task.status);
+                const assignedUserIds = Array.isArray(task.assignedTo)
+                  ? task.assignedTo
+                  : task.assignedTo
+                    ? [task.assignedTo]
+                    : [];
+
+                const assignedUsers = assignedUserIds
+                  .map((userId: string) => users.find((u) => u._id === userId))
+                  .filter(Boolean);
+
                 return (
                   <TableRow
-                    key={user._id}
-                    onClick={() => handleViewProfile(user)}
+                    key={task._id}
+                    onClick={() => handleViewTaskDetail(task)}
                     sx={{
                       '&:hover': { bgcolor: 'action.hover' },
                       '& td': {
@@ -280,73 +290,83 @@ const UserManagement = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    <TableCell
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                      }}
-                    >
-                      <Avatar
-                        src={user.avatar}
+                    <TableCell>
+                      <Typography
                         sx={{
-                          width: 40,
-                          height: 40,
-                          fontSize: 16,
-                          color: 'white',
+                          fontSize: '14px',
                           fontWeight: 600,
-                          textTransform: 'uppercase',
+                          textTransform: 'capitalize',
                         }}
                       >
-                        {user.firstName?.[0]}
-                        {user.lastName?.[0]}
-                      </Avatar>
-
-                      <Box sx={{ flex: 1 }}>
-                        <Typography
-                          sx={{
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            textTransform: 'capitalize',
-                          }}
-                        >
-                          {user.firstName} {user.lastName}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="caption" color="text.secondary">
-                        {user.email}
+                        {task.name}
                       </Typography>
                     </TableCell>
 
                     <TableCell>
-                      <Typography variant="caption" color="text.secondary">
-                        <Chip
-                          label={user.role === 'user' ? 'User' : 'Admin'}
-                          color={user.role === 'user' ? 'default' : 'info'}
-                          size="small"
-                        />
-                      </Typography>
+                      <AvatarGroup
+                        max={3}
+                        sx={{
+                          '& .MuiAvatar-root': {
+                            width: 24,
+                            height: 24,
+                            fontSize: '10px',
+                          },
+                          justifyContent: 'flex-end',
+                        }}
+                      >
+                        {assignedUsers.length > 0 &&
+                          assignedUsers.map((user: any) => (
+                            <Avatar
+                              key={user._id}
+                              src={user.avatar}
+                              sx={{
+                                width: 20,
+                                height: 20,
+                                fontSize: '10px',
+                                bgcolor: '#E0E0E0',
+                                textTransform: 'uppercase',
+                              }}
+                              title={`Assignee: ${user.firstName} ${user.lastName}`}
+                            >
+                              {user.firstName?.[0]}
+                              {user.lastName?.[0]}
+                            </Avatar>
+                          ))}
+                      </AvatarGroup>
                     </TableCell>
 
                     <TableCell>
-                      {formatLastLogin(user.lastLogin)}
+                      <Chip
+                        label={priorityConfig.label.toUpperCase()}
+                        size="small"
+                        title={`Priority: ${priorityConfig.label}`}
+                        sx={{
+                          ...priorityConfig,
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          height: 23,
+                        }}
+                      />
                     </TableCell>
 
+                    <TableCell>{formatDate(task.endDate)}</TableCell>
+
                     <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Chip
-                          label={user.isLocked ? 'Locked' : 'Active'}
-                          color={user.isLocked ? 'error' : 'default'}
-                          size="small"
-                        />
-                      </Box>
+                      <Chip
+                        label={statusConfig.label.toUpperCase()}
+                        size="small"
+                        title={`Status: ${statusConfig.label}`}
+                        sx={{
+                          ...statusConfig,
+                          fontSize: '12px',
+                          fontWeight: 700,
+ 
+                        }}
+                      />
                     </TableCell>
 
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <IconButton onClick={(e) => handleOpenAction(e, user)}>
+                      <IconButton onClick={(e) => handleOpenAction(e)}>
                         <MoreHoriz />
                       </IconButton>
                     </TableCell>
@@ -373,20 +393,12 @@ const UserManagement = () => {
         }}
       >
         <MenuItem>
-          <Typography fontSize="14px">Add to group</Typography>
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => selectedUser && handleLockUser(selectedUser._id, selectedUser.isLocked)}
-        >
-          <Typography fontSize="14px">
-            {selectedUser?.isLocked ? 'Unlock access' : 'Temporarily suspend access'}
-          </Typography>
+          <Typography fontSize="14px">Edit</Typography>
         </MenuItem>
 
         <MenuItem>
           <Typography fontSize="14px" color="warning">
-            Delete User
+            Delete Task
           </Typography>
         </MenuItem>
       </Menu>
@@ -405,4 +417,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default TaskManagement;

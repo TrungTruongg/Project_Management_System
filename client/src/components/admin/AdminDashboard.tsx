@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Box, Typography, Card, CardContent, Grid, Button, Chip } from '@mui/material';
-import { PersonAdd, Apps, Language, ArrowForward, } from '@mui/icons-material';
+import { PersonAdd, Apps, Language } from '@mui/icons-material';
 import {
   LineChart,
   Line,
@@ -71,53 +71,12 @@ const AdminDashboard = () => {
     },
   ];
 
-  // Feature cards ở phần "Khám phá"
-  const featureCards = [
-    {
-      icon: '📈',
-      iconBg: '#E3FCEF',
-      title: 'Sử dụng nền tảng',
-      description:
-        'Theo dõi cách tổ chức của bạn sử dụng tín dụng Rovo và các tính năng khác trên toàn bộ nền tảng Atlassian.',
-      link: 'Xem mức sử dụng',
-      linkPath: '/admin/platform-usage',
-    },
-    {
-      icon: '🛡️',
-      iconBg: '#F4F5F7',
-      title: 'Atlassian Guard',
-      description:
-        'Thực thi các chính sách bảo mật, hiểu hố sơi rủi ro của bạn và nhanh chóng khắc phục các vấn đề.',
-      link: 'Khám phá',
-      linkPath: '/admin/atlassian-guard',
-    },
-    {
-      icon: '🎯',
-      iconBg: '#FFF0B3',
-      title: 'Trải nghiệm nền tảng',
-      description:
-        'Kết nối công việc (do đối ngữ của bạn thực hiện) trên nhiều ứng dụng Atlassian khác nhau.',
-      link: 'Bắt đầu',
-      linkPath: '/admin/platform-experience',
-    },
-    {
-      icon: '🔐',
-      iconBg: '#F4EBFF',
-      title: 'Chính sách xác thực',
-      description: 'Chi định cài đặt bảo mật cho các nhóm người dùng và các ứng dụng khác nhau.',
-      link: 'Thiết lập ngay',
-      linkPath: '/admin/auth-policies',
-    },
-  ];
-
   return (
     <Box sx={{ p: 3 }}>
-      {/* Page Title */}
       <Typography variant="h4" sx={{ mb: 4, fontWeight: 600, color: '#172B4D' }}>
         My-Task Overview
       </Typography>
 
-      {/* Thao tác nhanh Section */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#172B4D' }}>
           Quick start
@@ -348,74 +307,6 @@ const AdminDashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-        </Grid>
-      </Box>
-
-      {/* Khám phá Section */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#172B4D' }}>
-          Khám phá
-        </Typography>
-        <Grid container spacing={2}>
-          {featureCards.map((card, index) => (
-            <Grid size={{ xs: 12, md: 6, lg: 3 }} key={index}>
-              <Card
-                elevation={0}
-                sx={{
-                  border: '1px solid #DFE1E6',
-                  borderRadius: 2,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)',
-                  },
-                }}
-              >
-                <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Box
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      bgcolor: card.iconBg,
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 24,
-                      mb: 2,
-                    }}
-                  >
-                    {card.icon}
-                  </Box>
-                  <Typography variant="body1" sx={{ fontWeight: 600, mb: 1, color: '#172B4D' }}>
-                    {card.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#5E6C84', mb: 2, flex: 1 }}>
-                    {card.description}
-                  </Typography>
-                  <Button
-                    endIcon={<ArrowForward />}
-                    sx={{
-                      textTransform: 'none',
-                      color: '#0052CC',
-                      justifyContent: 'flex-start',
-                      p: 0,
-                      '&:hover': {
-                        bgcolor: 'transparent',
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
-                    {card.link}
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
         </Grid>
       </Box>
     </Box>

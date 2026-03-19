@@ -10,13 +10,11 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-  InputBase,
   Avatar,
   Collapse,
 } from '@mui/material';
 import {
   HelpOutline,
-  Search,
   Notifications,
   ExpandLess,
   ExpandMore,
@@ -26,6 +24,7 @@ import { menuSections } from './constant/constants';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import TaskIcon from '../icons/TaskIcon';
 import { useUser } from '../context/UserContext';
+import SearchInput from '../SearchInput';
 
 const DRAWER_WIDTH = 240;
 
@@ -75,15 +74,13 @@ const AdminLayout = () => {
             sx={{
               display: 'flex',
               alignItems: 'center',
-              bgcolor: '#f4f5f7',
               borderRadius: 1,
               px: 2,
               py: 0.5,
               width: '40%',
             }}
           >
-            <Search sx={{ color: '#5e6c84', mr: 1 }} />
-            <InputBase placeholder="Search..." fullWidth sx={{ fontSize: 14 }} />
+            <SearchInput />
           </Box>
 
           {/* Right side - Icons */}
@@ -149,7 +146,7 @@ const AdminLayout = () => {
             <TaskIcon />
           </Box>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            my-task
+            My-task
           </Typography>
         </Box>
 

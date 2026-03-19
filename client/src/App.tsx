@@ -32,6 +32,7 @@ import AdminDashboard from "./components/admin/AdminDashboard";
 import UserManagement from "./components/admin/UserManagement";
 import UserProfile from "./components/admin/UserProfile";
 import SecurityPage from "./components/admin/SecurityPage";
+import TaskManagement from "./components/admin/TaskManagement";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -100,6 +101,7 @@ function App() {
 
                   <Route path="/admin" element={<AdminLayout />} >
                     <Route index element={<AdminDashboard />} />
+                    <Route path="tasks" element={<TaskManagement />} />
                     <Route path="users" element={<UserManagement />} />
                     <Route path="user-profile" element={<UserProfile />} />
                     <Route path="security" element={<SecurityPage />} />

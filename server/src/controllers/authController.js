@@ -33,22 +33,13 @@ export const login = async (req, res) => {
       });
     }
 
-    if (!user.active) {
-      return res.status(403).json({
-        success: false,
-        message: 'Your account has been deactivated',
-      });
-    }
-
     if (user.isLocked) {
       return res.status(403).json({
         success: false,
-        message: `${email} doesn't have access `,
-        isLocked: true,
-        email: email,
+        message: 'Your account has been locked',
       });
     }
-
+    
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
@@ -110,11 +101,11 @@ export const register = async (req, res) => {
       phone: phone || null,
       location: location || null,
       role: 'user',
-      active: true,
+      isOnline: true,
+      isLocked: false,
       createdAt: new Date(),
       updatedAt: new Date(),
       lastLogin: null,
-      isLocked: false,
     };
 
     const result = await collection.insertOne(user);
@@ -125,6 +116,29 @@ export const register = async (req, res) => {
       email,
       phone,
       location,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const collection = getDB().collection('users');
+    const { email } = req.body;
+    
+    const user = await collection.findOne({
+      email,
+    });
+
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: new Date(), isOnline: false } }
+    );
+
+    res.json({
+      success: true, 
+      message: 'Logout successful',
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -339,7 +353,9 @@ export const googleAuth = async (req, res, next) => {
         avatar: picture || null,
         phone: null,
         location: null,
-        active: true,
+        role: "user",
+        isOnline: true,
+        isLocked: false,
         createdAt: new Date(),
         updatedAt: new Date(),
         lastLogin: new Date(),
@@ -362,6 +378,7 @@ export const googleAuth = async (req, res, next) => {
           $set: {
             lastLogin: new Date(),
             avatar: picture || user.avatar,
+            isOnline: true
           },
         }
       );
