@@ -322,7 +322,7 @@ function UserProfile() {
                       <TableRow>
                         <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4 }}>
                           <Typography fontStyle="italic" color="text.secondary">
-                            No projects available!
+                            No tasks available!
                           </Typography>
                         </TableCell>
                       </TableRow>

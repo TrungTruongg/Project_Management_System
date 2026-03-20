@@ -25,11 +25,13 @@ import { MoreHoriz } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../context/SearchContext';
 import { formatLastLogin } from '../helper/helper';
+import ResetPasswordDialog from './ResetPasswordDialog';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [actionAnchorEl, setActionAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [openResetPasswordDialog, setOpenResetPasswordDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const { searchTerm } = useSearch();
   const [snackbar, setSnackbar] = useState({
@@ -91,6 +93,14 @@ const UserManagement = () => {
     return true;
   });
 
+  const handleOpenChangeEmailDialog = () => {
+    setOpenResetPasswordDialog(true);
+  };
+
+  const handleCloseChangeEmailDialog = () => {
+    setOpenResetPasswordDialog(false);
+  };
+
   const handleLockUser = async (userId: string, isLocked: boolean) => {
     try {
       if (isLocked) {
@@ -133,7 +143,7 @@ const UserManagement = () => {
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h4" sx={{ mb: 2, fontWeight: 600, color: '#172B4D' }}>
-        Users
+        Users and Security Management
       </Typography>
 
       <Box sx={{ mb: 4 }}>
@@ -331,9 +341,7 @@ const UserManagement = () => {
                       </Typography>
                     </TableCell>
 
-                    <TableCell>
-                      {formatLastLogin(user.lastLogin)}
-                    </TableCell>
+                    <TableCell>{formatLastLogin(user.lastLogin)}</TableCell>
 
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -372,8 +380,8 @@ const UserManagement = () => {
           horizontal: 'right',
         }}
       >
-        <MenuItem>
-          <Typography fontSize="14px">Add to group</Typography>
+        <MenuItem onClick={handleOpenChangeEmailDialog}>
+          <Typography fontSize="14px">Reset password</Typography>
         </MenuItem>
 
         <MenuItem
@@ -390,6 +398,12 @@ const UserManagement = () => {
           </Typography>
         </MenuItem>
       </Menu>
+
+      <ResetPasswordDialog
+        open={openResetPasswordDialog}
+        onClose={handleCloseChangeEmailDialog}
+        selectedUser={selectedUser}
+      />
 
       <Snackbar
         open={snackbar.open}

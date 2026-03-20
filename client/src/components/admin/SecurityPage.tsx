@@ -271,7 +271,7 @@ function SecurityPage() {
             </TableHead>
             <TableBody>
               {locks.map((lock) => {
-                const isActive = lock.lockUntil && new Date(lock.lockUntil).getTime() > Date.now();
+                const isLocked = lock.lockUntil && new Date(lock.lockUntil).getTime() > Date.now();
 
                 return (
                   <TableRow
@@ -295,7 +295,7 @@ function SecurityPage() {
                     </TableCell>
 
                     <TableCell>
-                      {isActive ? (
+                      {isLocked ? (
                         <Chip
                           label="Locked"
                           size="small"
@@ -341,12 +341,12 @@ function SecurityPage() {
 
                     <TableCell>
                       <Typography variant="body2">
-                        {isActive && lock.lockUntil ? formatDateTime(lock.lockUntil) : '-'}
+                        {isLocked && lock.lockUntil ? formatDateTime(lock.lockUntil) : '-'}
                       </Typography>
                     </TableCell>
 
                     <TableCell>
-                      {isActive ? (
+                      {isLocked ? (
                         <Chip
                           label={getRemainingTime(lock.lockUntil)}
                           size="small"
@@ -371,7 +371,7 @@ function SecurityPage() {
                           justifyContent: 'center',
                         }}
                       >
-                        {isActive ? (
+                        {isLocked ? (
                           <Tooltip title="Unlock Account">
                             <IconButton
                               size="small"

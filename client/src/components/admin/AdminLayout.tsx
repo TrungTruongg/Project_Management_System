@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Drawer,
@@ -12,14 +12,14 @@ import {
   IconButton,
   Avatar,
   Collapse,
+  Tooltip,
+  Button,
+  Menu,
+  MenuItem,
 } from '@mui/material';
-import {
-  HelpOutline,
-  Notifications,
-  ExpandLess,
-  ExpandMore,
-  Home,
-} from '@mui/icons-material';
+import { ExpandLess, ExpandMore, Home } from '@mui/icons-material';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PersonIcon from '@mui/icons-material/Person';
 import { menuSections } from './constant/constants';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import TaskIcon from '../icons/TaskIcon';
@@ -31,10 +31,32 @@ const DRAWER_WIDTH = 240;
 const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useUser();
+  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+  const { user, setUser } = useUser();
   const [openSections, setOpenSections] = React.useState({
     users: false,
   });
+
+  const handleLogout = () => {
+      localStorage.removeItem('auth');
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      setUser(null);
+      navigate('/login'); 
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
 
   const handleToggleSection = (section: string) => {
     setOpenSections((prev) => ({
@@ -84,28 +106,107 @@ const AdminLayout = () => {
           </Box>
 
           {/* Right side - Icons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton>
-              <Notifications />
-            </IconButton>
-            <IconButton>
-              <HelpOutline />
-            </IconButton>
-            {user && (
-            <Avatar
-              src={user?.avatar || '/images/user_avatar.jpg'}
-              sx={{
-                width: { xs: 10, sm: 36, md: 40 },
-                height: { xs: 10, sm: 36, md: 40 },
-                fontSize: '15px',
-                textTransform: 'uppercase',
-              }}
-            >
-              {user?.firstName?.[0]}
-              {user?.lastName?.[0]}
-            </Avatar>
+          <Box sx={{ display: "flex", alignItem: "center", gap: 2 }}>
+            <Box sx={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Typography variant="body2" fontWeight="bold" sx={{ textTransform: 'capitalize' }}>
+              {`${user?.firstName} ${user?.lastName}`}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {user?.email}
+            </Typography>
+          </Box>
+          <Box sx={{ flexShrink: 0 }}>
+            {user ? (
+              <Tooltip
+                title={`${user.firstName} ${user.lastName}`}
+                sx={{ textTransform: 'capitalize' }}
+              >
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0.5 }}>
+                  <Avatar
+                    src={user?.avatar || '/images/user_avatar.jpg'}
+                    sx={{
+                      width: { xs: 10, sm: 36, md: 40 },
+                      height: { xs: 10, sm: 36, md: 40 },
+                      fontSize: '15px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {user.firstName?.[0]}
+                    {user.lastName?.[0]}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Button
+                onClick={handleLogin}
+                variant="contained"
+                sx={{
+                  fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                  px: { xs: 1.5, sm: 2 },
+                  py: { xs: 0.6, sm: 0.8 },
+                  backgroundColor: '#00ed64',
+                  color: '#001e2b',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  border: '1px solid #001e2b',
+                  borderRadius: '6px',
+                  whiteSpace: 'nowrap',
+                  '&:hover': {
+                    backgroundColor: '#00d957',
+                  },
+                }}
+              >
+                Sign In
+              </Button>
+            )}
+            {anchorElUser && (
+              <Menu
+                anchorEl={anchorElUser}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+                sx={{
+                  mt: 2,
+                  '& .MuiList-root': {
+                    pb: 0,
+                  },
+                }}
+                disableScrollLock={true}
+              >
+                <MenuItem key="profile" sx={{ display: 'block', gap: 2 }} divider>
+                  <Typography
+                    sx={{
+                      fontWeight: 'bold',
+                      alignItems: 'center',
+                      textTransform: 'none',
+                      color: '#001e2b',
+                    }}
+                  >
+                    Signed in as:
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                    <PersonIcon sx={{ mr: '8px' }} />
+                    <Typography sx={{ textTransform: 'capitalize' }}>
+                      {user?.firstName} {user?.lastName}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+
+                <MenuItem
+                  key="logout"
+                  sx={{ gap: 2, alignItems: 'center', color: '#d32f2f' }}
+                  onClick={handleLogout}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <LogoutIcon sx={{ mr: '8px' }} />
+                    <Typography>Logout</Typography>
+                  </Box>
+                </MenuItem>
+              </Menu>
             )}
           </Box>
+          </Box>
+          
         </Toolbar>
       </AppBar>
 

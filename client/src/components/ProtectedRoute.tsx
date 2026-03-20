@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useUser } from "./context/UserContext";
 import { Box, Button, Typography } from "@mui/material";
-import { Lock as LockIcon } from "@mui/icons-material";
+import notFound from '../assets/not_found.svg';
 
 const ProtectedRoute = ({ allowedRoles }: any) => {
   const { user, setUser } = useUser();
@@ -38,30 +38,32 @@ const ProtectedRoute = ({ allowedRoles }: any) => {
             p: 3,
           }}
         >
-          <LockIcon sx={{ fontSize: 80, color: "#dc3545", mb: 2 }} />
+          <img
+            src={notFound}
+            alt="404 Not Found"
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              height: 'auto',
+            }}
+          />
           <Typography
             variant="h4"
             sx={{ fontWeight: 600, mb: 1, color: "#2c3e50" }}
           >
-            Access Denied
+            OOP! PAGE NOT FOUND
           </Typography>
           <Typography
             variant="body1"
-            sx={{ color: "#6c757d", mb: 1, textAlign: "center" }}
-          >
-            You dont have permisson to access this page.
-          </Typography>
-          <Typography
-            variant="body2"
             sx={{ color: "#6c757d", mb: 3, textAlign: "center" }}
           >
-            Only <strong>Leader</strong> can access{" "}
-            <strong>Security Config</strong>.
+            Sorry, the page you're looking for doesn't exist.
           </Typography>
+        
           <Box sx={{ display: "flex", gap: 2 }}>
             <Button
               variant="outlined"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/")}
               sx={{
                 borderColor: "#484c7f",
                 color: "#484c7f",
@@ -71,19 +73,7 @@ const ProtectedRoute = ({ allowedRoles }: any) => {
                 },
               }}
             >
-              Return
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => navigate("/")}
-              sx={{
-                backgroundColor: "#484c7f",
-                "&:hover": {
-                  backgroundColor: "#3a3e66",
-                },
-              }}
-            >
-              Return Dashboard
+              BACK TO HOME
             </Button>
           </Box>
         </Box>

@@ -1,4 +1,4 @@
-import { Dashboard, People, Security, Settings, AssignmentOutlined } from '@mui/icons-material';
+import { Dashboard, People, Settings, AssignmentOutlined } from '@mui/icons-material';
 
 export const menuSections = [
   {
@@ -6,7 +6,7 @@ export const menuSections = [
     items: [{ text: 'Dashboard', icon: <Dashboard />, path: '/admin', id: 'overview' }],
   },
   {
-    title: 'Tasks',
+    title: 'Active Tasks',
     items: [{ text: 'Tasks', icon: <AssignmentOutlined />, path: '/admin/tasks', id: 'tasks' }],
   },
   {
@@ -20,10 +20,10 @@ export const menuSections = [
       },
     ],
   },
-  {
-    title: 'System',
-    items: [{ text: 'Security', icon: <Security />, path: '/admin/security', id: 'security' }],
-  },
+  // {
+  //   title: 'System',
+  //   items: [{ text: 'Security', icon: <Security />, path: '/admin/security', id: 'security' }],
+  // },
   {
     title: 'Configuration',
     items: [{ text: 'Settings', icon: <Settings />, path: '/admin/settings', id: 'settings' }],

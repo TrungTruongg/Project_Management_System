@@ -259,7 +259,7 @@ function Tasks() {
 
       // Delete every attachment
       for (const attachment of taskAttachments) {
-        await api.delete(`/attachments/${attachment._id}`);
+        await api.delete(`/attachments/delete/${attachment._id}`);
       }
 
       setTaskList(taskList.filter((task: any) => task._id !== selectedTask._id));
@@ -591,7 +591,7 @@ function Tasks() {
             onClick={fetchAllData}
             disabled={loading}
             sx={{ color: 'text.secondary' }}
-            title="Refresh members"
+            title="Refresh tasks"
           >
             <RefreshIcon />
           </IconButton>

@@ -211,7 +211,7 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
   };
 
   const validateForm = () => {
-    if (!name.trim() || !priority || !status) {
+    if (!name.trim() || !priority || !status || !startDate || !endDate) {
       setShowError(true);
       return false;
     }
@@ -316,33 +316,32 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
       }
 
       for (const att of attachments) {
-          if (att.isExisting) continue;
+        if (att.isExisting) continue;
 
-          let finalUrl = att.url;
+        let finalUrl = att.url;
 
-          if (att.type === 'file' && att.file) {
-            try {
-              finalUrl = await uploadFile(att.file, taskId);
-            } catch (error) {
-              console.error('Error uploading file:', error);
-              continue;
-            }
-          }
-
+        if (att.type === 'file' && att.file) {
           try {
-            await api.post('/attachments/create', {
-              taskId: taskId,
-              url: finalUrl,
-              name: att.name,
-              type: att.type,
-              createdBy: user?._id,
-              uploadedAt: new Date().toISOString(),
-            });
+            finalUrl = await uploadFile(att.file, taskId);
           } catch (error) {
-            console.error('Error saving attachment:', error);
+            console.error('Error uploading file:', error);
+            continue;
           }
         }
 
+        try {
+          await api.post('/attachments/create', {
+            taskId: taskId,
+            url: finalUrl,
+            name: att.name,
+            type: att.type,
+            createdBy: user?._id,
+            uploadedAt: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error('Error saving attachment:', error);
+        }
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -605,7 +604,7 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
                         mb: 0.5,
                       }}
                     >
-                      Start Date
+                      Start Date <span className="text-red-500">*</span>
                     </Typography>
                     <TextField
                       fullWidth
@@ -620,6 +619,11 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
                         },
                       }}
                     />
+                    {showError && !startDate && (
+                      <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>
+                        Start Date is required
+                      </Typography>
+                    )}
                   </Box>
 
                   <Box className="w-full">
@@ -630,7 +634,7 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
                         mb: 0.5,
                       }}
                     >
-                      End Date
+                      End Date <span className="text-red-500">*</span>
                     </Typography>
                     <TextField
                       fullWidth
@@ -645,10 +649,15 @@ function CreateTaskModal({ open, onClose, onSave, onUpdate, selectedTask = null 
                         },
                       }}
                     />
+                    {showError && !endDate && (
+                      <Typography sx={{ fontSize: '12px', color: '#ef4444', mt: 0.5 }}>
+                        Due date is required
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
 
-                 {/* Asigned To */}
+                {/* Asigned To */}
                 <Box>
                   <Typography
                     sx={{

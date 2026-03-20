@@ -20,18 +20,27 @@ import {
   Snackbar,
   Alert,
   AvatarGroup,
+  Fade,
 } from '@mui/material';
 import api from '../api/axiosConfig';
 import { MoreHoriz } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../context/SearchContext';
 import { formatDate } from '../helper/helper';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
+import CreateTaskModal from '../task/CreateTaskModal';
+import DeleteConfirmDialog from '../DeleteConfirmDialog';
 
 const TaskManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [openCreateTaskModal, setOpenCreateTaskModal] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actionAnchorEl, setActionAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuOpenTaskId, setMenuOpenTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { searchTerm } = useSearch();
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -120,25 +129,123 @@ const TaskManagement = () => {
     navigate('/admin/task-detail', { state: { taskId: task._id } });
   };
 
-  const handleOpenAction = (event: React.MouseEvent<HTMLElement>) => {
-    setActionAnchorEl(event.currentTarget);
-  };
-
   const handleCloseAction = () => {
     setActionAnchorEl(null);
   };
 
+  const handleCloseModal = () => {
+    setOpenCreateTaskModal(false);
+    setSelectedTask(null);
+  };
+
+  const handleEditTask = (task: any) => {
+    setSelectedTask(task);
+    setOpenCreateTaskModal(true);
+    setMenuOpenTaskId(null);
+  };
+
+  const handleOpenMenu = (taskId: string) => {
+    setMenuOpenTaskId(taskId);
+  };
+  const handleCloseMenu = () => {
+    setMenuOpenTaskId(null);
+  };
+
+  // New task
+  const handleSaveTask = async (newTask: any) => {
+    setTasks([...tasks, newTask]);
+  };
+
+  // Update Task
+  const handleUpdateTask = async (updatedTask: any) => {
+    const oldTask = tasks.find((t) => t._id === updatedTask._id);
+
+    const taskToUpdate = {
+      ...updatedTask,
+      _id: updatedTask._id || oldTask?._id,
+    };
+
+    setTasks(tasks.map((task: any) => (task._id === taskToUpdate._id ? taskToUpdate : task)));
+  };
+
+  // Delete Task
+  const handleDeleteTask = async () => {
+    setDeleteLoading(true);
+
+    if (!selectedTask) return;
+
+    try {
+      await api.delete(`/tasks/delete/${selectedTask._id}`);
+
+      // Delete attachments related to the task
+      const attachmentsRes = await api.get('/attachments');
+
+      const taskAttachments = attachmentsRes.data.filter(
+        (att: any) => att.taskId === selectedTask._id
+      );
+
+      // Delete every attachment
+      for (const attachment of taskAttachments) {
+        await api.delete(`/attachments/delete/${attachment._id}`);
+      }
+
+      setTasks(tasks.filter((task: any) => task._id !== selectedTask._id));
+
+      handleCloseDeleteDialog();
+      setSnackbar({
+        open: true,
+        message: 'Deleted task successfully!',
+        type: 'success',
+      });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleOpenDeleteDialog = (task: any) => {
+    setSelectedTask(task);
+    setDeleteDialogOpen(true);
+    setMenuOpenTaskId(null);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setSelectedTask(null);
+  };
+
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h4" sx={{ mb: 2, fontWeight: 600, color: '#172B4D' }}>
-        Tasks
-      </Typography>
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          mb: 3,
+          gap: 1.5,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 600, color: '#172B4D' }}>
+          Tasks
+        </Typography>
+
+        <IconButton
+          onClick={fetchData}
+          disabled={loading}
+          sx={{ color: 'text.secondary' }}
+          title="Refresh tasks"
+        >
+          <RefreshIcon />
+        </IconButton>
+      </Box>
 
       <Box sx={{ mb: 4 }}>
         <Typography fontSize="14px" sx={{ mb: 2, color: '#292A2E' }}>
-          Audit account activity, manage hierarchical permissions, and enforce security protocols
-          across the enterprise architectural network.
+          Manage project deliverables and structural deadlines.
         </Typography>
+
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <CircularProgress />
@@ -323,7 +430,6 @@ const TaskManagement = () => {
                                 width: 20,
                                 height: 20,
                                 fontSize: '10px',
-                                bgcolor: '#E0E0E0',
                                 textTransform: 'uppercase',
                               }}
                               title={`Assignee: ${user.firstName} ${user.lastName}`}
@@ -360,15 +466,45 @@ const TaskManagement = () => {
                           ...statusConfig,
                           fontSize: '12px',
                           fontWeight: 700,
- 
                         }}
                       />
                     </TableCell>
 
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <IconButton onClick={(e) => handleOpenAction(e)}>
+                      <IconButton
+                        id={`fade-button-${task._id}`}
+                        aria-controls={
+                          menuOpenTaskId === task._id ? `fade-menu-${task._id}` : undefined
+                        }
+                        aria-haspopup="true"
+                        aria-expanded={menuOpenTaskId === task._id ? 'true' : undefined}
+                        onClick={() => handleOpenMenu(task._id)}
+                      >
                         <MoreHoriz />
                       </IconButton>
+                      <Menu
+                        id={`fade-menu-${task._id}`}
+                        slotProps={{
+                          list: {
+                            'aria-labelledby': `fade-button-${task._id}`,
+                          },
+                        }}
+                        slots={{ transition: Fade }}
+                        anchorEl={
+                          menuOpenTaskId === task._id
+                            ? document.getElementById(`fade-button-${task._id}`)
+                            : null
+                        }
+                        open={menuOpenTaskId === task._id}
+                        onClose={handleCloseMenu}
+                      >
+                        <MenuItem onClick={() => handleEditTask(task)}>
+                          <Typography>Edit</Typography>
+                        </MenuItem>
+                        <MenuItem onClick={() => handleOpenDeleteDialog(task)}>
+                          <Typography color="error">Delete</Typography>
+                        </MenuItem>
+                      </Menu>
                     </TableCell>
                   </TableRow>
                 );
@@ -403,11 +539,29 @@ const TaskManagement = () => {
         </MenuItem>
       </Menu>
 
+      <CreateTaskModal
+        open={openCreateTaskModal}
+        onClose={handleCloseModal}
+        onSave={handleSaveTask}
+        onUpdate={handleUpdateTask}
+        onDelete={handleDeleteTask}
+        taskList={tasks}
+        selectedTask={selectedTask}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        onDelete={handleDeleteTask}
+        selected={selectedTask ? selectedTask.name : ''}
+        loading={deleteLoading}
+      />
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={5000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ mt: 10 }}
       >
         <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.type}>
           {snackbar.message}

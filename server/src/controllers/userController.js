@@ -2,7 +2,7 @@ import client from "../config/database.js";
 import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
-import { transporter, generateVerificationCode, sendVerificationEmail } from "../utils/helper.js";
+import { transporter, generateVerificationCode, sendVerificationEmail, sendPasswordResetEmail } from "../utils/helper.js";
 
 const getDB = () => client.db("db_pms");
 
@@ -344,6 +344,271 @@ export const verifyEmailChange = async (req, res) => {
     });
   } catch (err) {
     console.error("Verify email change error:", err);
+    res.status(500).json({
+      success: false,
+      error: "An error occurred. Please try again later.",
+    });
+  }
+};
+
+// Set password for Google Auth users
+export const requestSetPasswordForGoogleAuth = async (req, res) => {
+  try {
+    const collection = getDB().collection("users");
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: "User ID is required",
+      });
+    }
+
+    const user = await collection.findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    // Check if user is from Google auth
+    if (user.authProvider !== 'google') {
+      return res.status(400).json({
+        success: false,
+        error: "This endpoint is only for Google auth users",
+      });
+    }
+
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        code: verificationCode,
+        purpose: 'set-password',
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // Save to database
+    await collection.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          setPasswordCode: verificationCode,
+          setPasswordToken: token,
+          setPasswordExpires: new Date(Date.now() + 10 * 60 * 1000),
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(user.email, verificationCode);
+
+      res.json({
+        success: true,
+        message: 'Verification code has been sent to your email',
+      });
+    } catch (err) {
+      console.error('Failed to send set password code:', err);
+
+      await collection.updateOne(
+        { _id: user._id },
+        {
+          $unset: {
+            setPasswordCode: '',
+            setPasswordToken: '',
+            setPasswordExpires: '',
+          },
+        }
+      );
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to send verification email. Please try again.',
+      });
+    }
+  } catch (err) {
+    console.error('Request set password error:', err);
+    res.status(500).json({
+      success: false,
+      error: 'An error occurred. Please try again later.',
+    });
+  }
+};
+
+// Verify set password code and update password
+export const verifyAndSetPasswordForGoogleAuth = async (req, res) => {
+  try {
+    const collection = getDB().collection("users");
+    const { userId, verificationCode, newPassword, confirmPassword } = req.body;
+
+    if (!userId || !verificationCode || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "All fields are required",
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Passwords do not match",
+      });
+    }
+
+    const user = await collection.findOne({
+      _id: new ObjectId(userId),
+      setPasswordCode: verificationCode.trim(),
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid verification code",
+      });
+    }
+
+    // Check if code is expired
+    if (new Date() > new Date(user.setPasswordExpires)) {
+      await collection.updateOne(
+        { _id: user._id },
+        {
+          $unset: {
+            setPasswordCode: '',
+            setPasswordToken: '',
+            setPasswordExpires: '',
+          },
+        }
+      );
+
+      return res.status(400).json({
+        success: false,
+        error: "Verification code has expired. Please request a new one.",
+      });
+    }
+
+    // Hash new password and update
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const result = await collection.findOneAndUpdate(
+      { _id: user._id },
+      {
+        $set: {
+          password: hashedPassword,
+          updatedAt: new Date(),
+        },
+        $unset: {
+          setPasswordCode: '',
+          setPasswordToken: '',
+          setPasswordExpires: '',
+        },
+      },
+      { returnDocument: 'after' }
+    );
+
+    const { password: _, ...userResponse } = result;
+
+    res.json({
+      success: true,
+      message: 'Password set successfully',
+      user: userResponse,
+    });
+  } catch (err) {
+    console.error('Verify and set password error:', err);
+    res.status(500).json({
+      success: false,
+      error: 'An error occurred. Please try again later.',
+    });
+  }
+};
+
+// Admin send password reset link
+export const sendAdminResetPasswordLink = async (req, res) => {
+  try {
+    const collection = getDB().collection("users");
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: "User ID is required",
+      });
+    }
+
+    const user = await collection.findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    // Generate reset token
+    const resetToken = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        purpose: "password-reset",
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Save reset token to database
+    await collection.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          passwordResetToken: resetToken,
+          passwordResetExpires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    // Build reset link (adjust CLIENT_URL based on your environment)
+    const clientURL = process.env.CLIENT_URL;
+    const resetLink = `${clientURL}/reset-password?token=${resetToken}&email=${encodeURIComponent(
+      user.email
+    )}`;
+
+    try {
+      await sendPasswordResetEmail(user.email, resetLink);
+
+      res.json({
+        success: true,
+        message: `Password reset link has been sent to ${user.email}`,
+      });
+    } catch (err) {
+      console.error("Failed to send password reset email:", err);
+
+      // Delete reset token if email sending failed
+      await collection.updateOne(
+        { _id: user._id },
+        {
+          $unset: {
+            passwordResetToken: "",
+            passwordResetExpires: "",
+          },
+        }
+      );
+
+      res.status(500).json({
+        success: false,
+        error: "Failed to send password reset email. Please try again.",
+      });
+    }
+  } catch (err) {
+    console.error("Send admin reset password error:", err);
     res.status(500).json({
       success: false,
       error: "An error occurred. Please try again later.",

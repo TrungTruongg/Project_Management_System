@@ -99,12 +99,14 @@ function App() {
                   <Route path="/2-step-authentication" element={<PasswordAuthentication />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
 
-                  <Route path="/admin" element={<AdminLayout />} >
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="tasks" element={<TaskManagement />} />
-                    <Route path="users" element={<UserManagement />} />
-                    <Route path="user-profile" element={<UserProfile />} />
-                    <Route path="security" element={<SecurityPage />} />
+                  <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]} />}>
+                    <Route element={<AdminLayout />}>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="tasks" element={<TaskManagement />} />
+                      <Route path="users" element={<UserManagement />} />
+                      <Route path="user-profile" element={<UserProfile />} />
+                      <Route path="security" element={<SecurityPage />} />
+                    </Route>
                   </Route>
                 </Routes>
               </Router>

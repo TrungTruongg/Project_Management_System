@@ -15,6 +15,7 @@ type User = {
   avatar: string;
   active?: Boolean;
   role: string;
+  authProvider?: 'google' | 'emailPassword';
 } | null;
 
 type UserContextType = {

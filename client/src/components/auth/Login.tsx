@@ -50,7 +50,7 @@ function Login() {
 
     setLoading(true);
 
-    try {   
+    try {
       const response = await api.post('/auth/login', {
         email: email.trim(),
         password: password,
@@ -67,12 +67,17 @@ function Login() {
           return;
         }
 
-        localStorage.setItem("token", token);
+        localStorage.setItem('token', token);
         localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('auth', 'true');
         localStorage.setItem('user', JSON.stringify(userData));
 
         setUser(userData);
+
+        if (userData.role === 'admin') {
+          navigate('/admin', { replace: true });
+          return;
+        }
         navigate('/', { replace: true });
       }
     } catch (error: any) {
@@ -128,6 +133,10 @@ function Login() {
 
           setUser(user);
 
+          if (user.role === 'admin') {
+            navigate('/admin', { replace: true });
+            return;
+          }
           navigate('/', { replace: true });
         }
       } catch (error: any) {

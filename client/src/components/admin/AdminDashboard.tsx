@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Box, Typography, Card, CardContent, Grid, Button, Chip } from '@mui/material';
-import { PersonAdd, Apps, Language } from '@mui/icons-material';
+import { PersonAdd, Apps } from '@mui/icons-material';
 import {
   LineChart,
   Line,
@@ -11,30 +11,23 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts';
-import api from '../api/axiosConfig';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({
-    rovoUsage: 0,
-    activeUsersMonthly: 1,
-    openRequests: 0,
-  });
 
-  // Data giả cho charts (thay bằng API thực)
   const rovoUsageData = [
-    { date: '24 thg 11', value: 0 },
-    { date: '25 thg 1', value: 0 },
-    { date: '26 thg 1', value: 0 },
-    { date: '27 thg 1', value: 0 },
-    { date: '28 thg 1', value: 0 },
-    { date: '29 thg 1', value: 0 },
-    { date: '30 thg 1', value: 0 },
+    { date: 'Nov 24', value: 0 },
+    { date: 'Jan 25', value: 0 },
+    { date: 'Jan 26', value: 0 },
+    { date: 'Jan 27', value: 0 },
+    { date: 'Jan 28', value: 0 },
+    { date: 'Jan 29', value: 0 },
+    { date: 'Jan 30', value: 0 },
   ];
 
   const activeUsersData = [
-    { date: 'thg 10 2025', value: 0 },
-    { date: 'thg 11 2025', value: 0.2 },
-    { date: 'thg 12 2025', value: 0.8 },
+    { date: 'Oct 2025', value: 0 },
+    { date: 'Nov 2025', value: 0.2 },
+    { date: 'Dec 2025', value: 0.8 },
   ];
 
   const requestsData = [{ date: 'Jira', value: 0 }];
@@ -44,31 +37,26 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchStats = async () => {
-    try {
-      const response = await api.get('/admin/dashboard-stats');
-      setStats(response.data);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    }
+   
   };
 
   // Quick action cards ở phần "Thao tác nhanh"
   const quickActions = [
     {
       icon: <PersonAdd sx={{ fontSize: 24 }} />,
-      title: 'Mời người dùng',
+      title: 'Invite members',
       description: '',
     },
     {
       icon: <Apps sx={{ fontSize: 24 }} />,
-      title: 'Thêm ứng dụng',
+      title: 'Add tasks',
       description: '',
     },
-    {
-      icon: <Language sx={{ fontSize: 24 }} />,
-      title: 'Xác minh miền',
-      description: '',
-    },
+    // {
+    //   icon: <Language sx={{ fontSize: 24 }} />,
+    //   title: 'Xác minh miền',
+    //   description: '',
+    // },
   ];
 
   return (
@@ -83,7 +71,7 @@ const AdminDashboard = () => {
         </Typography>
         <Grid container spacing={2}>
           {quickActions.map((action, index) => (
-            <Grid size={{ xs: 12, md: 4 }} key={index}>
+            <Grid size={{ xs: 10, md: 4 }} key={index}>
               <Card
                 elevation={0}
                 sx={{
@@ -143,7 +131,7 @@ const AdminDashboard = () => {
                       Useage limit
                     </Typography>
                     <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-                      {stats.rovoUsage}
+                      {/* {stats.rovoUsage || ""} */}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#5E6C84' }}>
                       used in the last 7 days
@@ -196,7 +184,7 @@ const AdminDashboard = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
                       <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                        {stats.activeUsersMonthly}
+                        {/* {stats.activeUsersMonthly} */}
                       </Typography>
                       <Chip
                         label="0% FROM BEGIN TO NOW"
@@ -263,7 +251,7 @@ const AdminDashboard = () => {
                       Yêu cầu mở về quyền truy cập ứng dụng
                     </Typography>
                     <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-                      {stats.openRequests}
+                      {/* {stats.openRequests} */}
                     </Typography>
                     <Box
                       sx={{
