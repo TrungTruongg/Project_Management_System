@@ -82,7 +82,7 @@ function Header() {
     try {
       const response = await api.put('/auth/logout', {
         email: user?.email.trim(),
-        active: false,
+        isOnline: false,
       });
 
       setUsers(response.data);
